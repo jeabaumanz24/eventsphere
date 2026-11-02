@@ -1,0 +1,6 @@
+{
+  "name": "EventSphere",
+  "description": "AI-Powered Multicultural Event Planning & Vendor Discovery Platform for modern Australian celebrations in Adelaide, South Australia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
