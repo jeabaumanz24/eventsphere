@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Search, MapPin, Sparkles, Heart, ShieldCheck, Award } from 'lucide-react';
 import { heroWeddingImg } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   onStartPlanning: () => void;
@@ -11,6 +12,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onStartPlanning,
   onExploreVendors,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="home" className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-gradient-to-b from-[#FFF8F6] via-[#FFF8F6] to-[#F2CCC3]/25">
       {/* Subtle background ambient glow */}
@@ -24,19 +27,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Context location badge (text kicker, zero-pill discipline) */}
             <div className="inline-flex items-center gap-2 text-xs font-medium tracking-wide uppercase text-[#8A5A44]">
               <span className="w-2 h-2 rounded-full bg-[#8A5A44]/60" />
-              <span>Adelaide, South Australia</span>
-              <span aria-hidden="true" className="text-[#8A5A44]/40">·</span>
-              <span>Next-Gen Celebration Platform</span>
+              <span>{t('hero.locationKicker')}</span>
             </div>
 
             {/* Headline with balanced wrap */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#724319] leading-[1.12] tracking-tight [text-wrap:balance]">
-              AI-Powered Event Planning for <span className="italic font-normal text-[#8A5A44]">Modern Celebrations</span>
+              {t('hero.titleMain')}{' '}
+              <span className="italic font-normal text-[#8A5A44]">
+                {t('hero.titleHighlight')}
+              </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-base sm:text-lg text-[#724319]/85 leading-relaxed max-w-2xl">
-              Discover trusted vendors, plan smarter, and create unforgettable multicultural events with intelligent recommendations and planning tools.
+              {t('hero.subtitle')}
             </p>
 
             {/* Dual CTAs */}
@@ -45,7 +49,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onStartPlanning}
                 className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 text-base font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
               >
-                <span>Start Planning</span>
+                <span>{t('hero.startPlanning')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -53,7 +57,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onExploreVendors}
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-medium text-[#724319] bg-white/90 hover:bg-white border border-[#EBC1B6] hover:border-[#8A5A44] rounded-full shadow-xs hover:shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                <span>Explore Vendors</span>
+                <span>{t('hero.exploreVendors')}</span>
               </button>
             </div>
 
@@ -61,17 +65,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-[#724319]/75">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-[#8A5A44]" />
-                <span>100% Verified Adelaide Vendors</span>
+                <span>{t('hero.trust1')}</span>
               </div>
               <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
               <div className="flex items-center gap-1.5">
                 <Heart className="w-4 h-4 text-[#8A5A44]" />
-                <span>Multicultural Traditions Welcomed</span>
+                <span>{t('hero.trust2')}</span>
               </div>
               <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
               <div className="flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-[#8A5A44]" />
-                <span>Zero Hidden Commissions</span>
+                <span>{t('hero.trust3')}</span>
               </div>
             </div>
           </div>

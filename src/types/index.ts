@@ -1,3 +1,16 @@
+export interface VendorReview {
+  id: string;
+  author: string;
+  role: string;
+  eventDate: string;
+  eventType: string;
+  location: string;
+  rating: number;
+  comment: string;
+  culturalElements?: string[];
+  helpfulCount?: number;
+}
+
 export interface Vendor {
   id: string;
   name: string;
@@ -12,6 +25,7 @@ export interface Vendor {
   description: string;
   features: string[];
   featured?: boolean;
+  reviews?: VendorReview[];
 }
 
 export interface BlogPost {

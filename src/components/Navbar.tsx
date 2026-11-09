@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import logoImg from '../assets/images/eventsphere_logo_transparent.png';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface NavbarProps {
   onGetStarted: () => void;
+  onLanguageChange?: (langName: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,13 +37,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
   }, []);
 
   const navLinks = [
-    { label: 'Home', href: '#home', id: 'home' },
-    { label: 'About', href: '#about', id: 'about' },
-    { label: 'Services', href: '#services', id: 'services' },
-    { label: 'AI Planner', href: '#ai-planner', id: 'ai-planner' },
-    { label: 'Vendor Marketplace', href: '#marketplace', id: 'marketplace' },
-    { label: 'Blog', href: '#blog', id: 'blog' },
-    { label: 'Contact', href: '#contact', id: 'contact' },
+    { label: t('nav.home'), href: '#home', id: 'home' },
+    { label: t('nav.about'), href: '#about', id: 'about' },
+    { label: t('nav.services'), href: '#services', id: 'services' },
+    { label: t('nav.aiPlanner'), href: '#ai-planner', id: 'ai-planner' },
+    { label: t('nav.marketplace'), href: '#marketplace', id: 'marketplace' },
+    { label: t('nav.blog'), href: '#blog', id: 'blog' },
+    { label: t('nav.contact'), href: '#contact', id: 'contact' },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -60,8 +64,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Bar Contract: Zone 1 (Wordmark) — Zone 2 (Nav Links) — Zone 3 (Primary CTA) */}
-        <div className="flex items-center justify-between gap-8">
+        {/* Top Bar Contract: Zone 1 (Wordmark) — Zone 2 (Nav Links) — Zone 3 (Language Switcher + Primary CTA) */}
+        <div className="flex items-center justify-between gap-6 lg:gap-8">
           {/* Zone 1: Brand wordmark (single element in display face) */}
           <a
             href="#home"
@@ -79,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
           </a>
 
           {/* Zone 2: 4-7 single-line concise navigation links */}
-          <nav className="hidden lg:flex items-center gap-7 text-[13px] font-medium text-[#724319]/80">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-[13px] font-medium text-[#724319]/80">
             {navLinks.map((link) => {
               const isActive = activeSection === link.id;
               return (
@@ -100,28 +104,30 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
             })}
           </nav>
 
-          {/* Zone 3: 1 primary action */}
-          <div className="hidden lg:flex items-center gap-4 shrink-0">
+          {/* Zone 3: Language Switcher Dropdown + 1 primary action */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
+            <LanguageSwitcher onLanguageChange={onLanguageChange} />
             <button
               onClick={onGetStarted}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-xs hover:shadow-md transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <span>Get Started</span>
+              <span>{t('nav.getStarted')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Mobile hamburger button */}
-          <div className="flex lg:hidden items-center gap-3">
+          {/* Mobile controls */}
+          <div className="flex lg:hidden items-center gap-2">
+            <LanguageSwitcher onLanguageChange={onLanguageChange} />
             <button
               onClick={onGetStarted}
-              className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full"
+              className="px-3 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full shrink-0"
             >
-              Get Started
+              {t('nav.getStarted')}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#724319] hover:bg-[#EBC1B6]/30 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#724319] hover:bg-[#EBC1B6]/30 rounded-lg transition-colors cursor-pointer shrink-0"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -142,7 +148,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
                 {link.label}
               </a>
             ))}
-            <div className="pt-2">
+
+            {/* Mobile Community Language Selector */}
+            <LanguageSwitcher
+              isMobile={true}
+              onLanguageChange={(langName) => {
+                setMobileMenuOpen(false);
+                if (onLanguageChange) onLanguageChange(langName);
+              }}
+            />
+
+            <div className="pt-3">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -150,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#724319] rounded-xl cursor-pointer"
               >
-                <span>Get Started</span>
+                <span>{t('nav.getStarted')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

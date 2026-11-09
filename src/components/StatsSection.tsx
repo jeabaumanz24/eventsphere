@@ -1,15 +1,23 @@
 import React from 'react';
 import { Users, CalendarHeart, Globe2, Sparkles } from 'lucide-react';
-import { statsData } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 export const StatsSection: React.FC = () => {
+  const { t } = useLanguage();
   const statIcons = [Users, CalendarHeart, Globe2, Sparkles];
+
+  const stats = [
+    { value: '500+', label: t('stats.stat1'), description: 'Hand-picked across Greater Adelaide & Barossa' },
+    { value: '2,000+', label: t('stats.stat2'), description: 'From intimate vineyard vows to 500-guest galas' },
+    { value: '50+', label: t('stats.stat3'), description: 'Honoring Greek, Filipino, South Asian, Italian & more' },
+    { value: '95%', label: t('stats.stat4'), description: 'Verified reviews from couples and event hosts' },
+  ];
 
   return (
     <section className="py-12 bg-[#F2CCC3]/40 border-y border-[#EBC1B6]/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {statsData.map((stat, idx) => {
+          {stats.map((stat, idx) => {
             const Icon = statIcons[idx % statIcons.length];
             return (
               <div

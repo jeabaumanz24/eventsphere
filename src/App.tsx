@@ -17,8 +17,9 @@ import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { Vendor, BlogPost } from './types';
+import { LanguageProvider } from './context/LanguageContext';
 
-export default function App() {
+function EventSphereApp() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
@@ -40,8 +41,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F6] text-[#724319] font-sans flex flex-col selection:bg-[#EBC1B6] selection:text-[#724319]">
-      {/* 1. Navigation Bar */}
-      <Navbar onGetStarted={() => scrollTo('ai-planner')} />
+      {/* 1. Navigation Bar with Language Switcher */}
+      <Navbar
+        onGetStarted={() => scrollTo('ai-planner')}
+        onLanguageChange={(langName) => {
+          showToast(`Language switched to ${langName}`);
+        }}
+      />
 
       <main className="flex-grow">
         {/* 2. Hero Section */}
@@ -71,6 +77,7 @@ export default function App() {
         <AIPlannerSection
           onExploreVendors={() => scrollTo('marketplace')}
           onOpenConsult={() => scrollTo('contact')}
+          onScheduleExported={(msg) => showToast(msg)}
         />
 
         {/* 9. Customer and Vendor Personas */}
@@ -124,5 +131,13 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <EventSphereApp />
+    </LanguageProvider>
   );
 }

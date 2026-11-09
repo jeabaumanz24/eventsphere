@@ -13,24 +13,23 @@ import {
   ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
+import { EventTimeline } from './EventTimeline';
 
 interface AIPlannerSectionProps {
   onExploreVendors?: () => void;
   onOpenConsult?: () => void;
+  onScheduleExported?: (msg: string) => void;
 }
 
 export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   onExploreVendors,
   onOpenConsult,
+  onScheduleExported,
 }) => {
   const [totalBudget, setTotalBudget] = useState<number>(55000);
   const [guestCount, setGuestCount] = useState<number>(180);
   const [selectedCulture, setSelectedCulture] = useState<string>('filipino');
   const [activeTab, setActiveTab] = useState<'budget' | 'timeline' | 'insights'>('budget');
-  const [completedMilestones, setCompletedMilestones] = useState<Record<string, boolean>>({
-    m1: true,
-    m2: true,
-  });
 
   const cultures = [
     { id: 'filipino', label: 'Filipino-Australian Fusion', ritualFocus: 'Veil, Cord & Arras Coins' },
@@ -52,52 +51,6 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   }, []);
 
   const costPerGuest = Math.round(totalBudget / guestCount);
-
-  // Timeline events dynamic to culture
-  const timelineMilestones = useMemo(() => {
-    const base = [
-      { id: 'm1', time: '12 Months Out', task: 'Lock Adelaide Venue Estate & Date Hold', category: 'Venue' },
-      { id: 'm2', time: '9 Months Out', task: 'Book Photographer & Videographer (Maria Santos shortlisted)', category: 'Media' },
-      { id: 'm3', time: '6 Months Out', task: 'Custom Floristry & Native Tablescape Mockup', category: 'Styling' },
-      { id: 'm4', time: '4 Months Out', task: 'Tasting Menu & Adelaide Hills Wine Pairings', category: 'Catering' },
-    ];
-
-    if (selectedCulture === 'filipino') {
-      base.splice(3, 0, {
-        id: 'm-fil',
-        time: '5 Months Out',
-        task: 'Confirm Ninong/Ninang Sponsors and Heirloom Veil & Cord artisans',
-        category: 'Tradition',
-      });
-    } else if (selectedCulture === 'southasian') {
-      base.splice(3, 0, {
-        id: 'm-sa',
-        time: '5 Months Out',
-        task: 'Coordinate Sangeet Choreography & Fire Safety permit for Mandap',
-        category: 'Tradition',
-      });
-    } else if (selectedCulture === 'mediterranean') {
-      base.splice(3, 0, {
-        id: 'm-med',
-        time: '5 Months Out',
-        task: 'Source Artisan Koufeta Favors & Orthodox Crowning Ribbons',
-        category: 'Tradition',
-      });
-    }
-
-    base.push({
-      id: 'm5',
-      time: 'Day-Of Timeline',
-      task: 'EventSphere Synchronized Master Schedule deployed to all vendor mobile apps',
-      category: 'Coordination',
-    });
-
-    return base;
-  }, [selectedCulture]);
-
-  const toggleMilestone = (id: string) => {
-    setCompletedMilestones((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   return (
     <section id="ai-planner" className="py-20 md:py-28 bg-[#F2CCC3]/25 relative">
@@ -309,62 +262,14 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
             </div>
           )}
 
-          {/* Tab 2: Timeline Generator */}
+          {/* Tab 2: Event Timeline Component */}
           {activeTab === 'timeline' && (
-            <div className="p-6 sm:p-8 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-semibold text-[#724319]">
-                    Personalized Cultural Event Milestones
-                  </h4>
-                  <p className="text-xs text-[#8A5A44]">
-                    Configured for {cultures.find((c) => c.id === selectedCulture)?.label}
-                  </p>
-                </div>
-                <span className="text-xs text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] px-3 py-1 rounded-full">
-                  Auto-synced with Adelaide seasons
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {timelineMilestones.map((m) => {
-                  const isDone = !!completedMilestones[m.id];
-                  return (
-                    <div
-                      key={m.id}
-                      onClick={() => toggleMilestone(m.id)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
-                        isDone
-                          ? 'bg-white border-[#EBC1B6]/80'
-                          : 'bg-[#FFF8F6] border-[#8A5A44]/30 shadow-xs'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                            isDone ? 'bg-[#724319] text-white' : 'border border-[#8A5A44] text-transparent'
-                          }`}
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="text-[11px] font-mono font-bold text-[#8A5A44] uppercase">
-                            {m.time} · {m.category}
-                          </span>
-                          <p className={`text-xs sm:text-sm font-medium mt-0.5 ${
-                            isDone ? 'line-through text-[#724319]/50' : 'text-[#724319]'
-                          }`}>
-                            {m.task}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-medium text-[#8A5A44] bg-white px-2 py-0.5 rounded border border-[#EBC1B6]">
-                        {isDone ? 'Completed' : 'Action Required'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="p-6 sm:p-8">
+              <EventTimeline
+                selectedCulture={selectedCulture}
+                onExploreVendors={onExploreVendors}
+                onExportSchedule={onScheduleExported}
+              />
             </div>
           )}
 
