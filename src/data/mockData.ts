@@ -2,15 +2,24 @@ import heroWeddingImg from '../assets/images/hero_wedding_celebration_1793613514
 import aiEcosystemImg from '../assets/images/ai_event_ecosystem_1793613514541.jpg';
 import photographerMariaImg from '../assets/images/vendor_photographer_maria_1793613516394.jpg';
 import customerDiwataImg from '../assets/images/customer_diwata_portrait_1793613517155.jpg';
-import floralDesignImg from '../assets/images/vendor_floral_design_1793613516461.jpg';
+import floralDesignImg from '../assets/images/vendor_aria_floral_sculptural_1794612616539.jpg';
 import multiculturalPhotoImg from '../assets/images/vendor_multicultural_photo_1794606848195.jpg';
 import fusionCateringImg from '../assets/images/vendor_fusion_catering_1794606848517.jpg';
-import marigoldFloralsImg from '../assets/images/vendor_marigold_florals_1794606848328.jpg';
+import marigoldFloralsImg from '../assets/images/vendor_jasmine_marigold_studio_1794611907128.jpg';
 import bridalMakeupImg from '../assets/images/vendor_bridal_makeup_1794606849496.jpg';
 import vineyardPlannerImg from '../assets/images/vendor_vineyard_planner_1794606849504.jpg';
 import culturalCeremonyImg from '../assets/images/vendor_cultural_ceremony_1794606850446.jpg';
+import hanaBeautyImg from '../assets/images/vendor_hana_beauty_atelier_1794610175295.jpg';
+import barossaCateringImg from '../assets/images/vendor_barossa_multicultural_feast_1794611366407.jpg';
+import elysianPlanningImg from '../assets/images/vendor_elysian_planning_1794610373962.jpg';
+import harmoniaCulturalImg from '../assets/images/vendor_harmonia_cultural_1794610374069.jpg';
+import heritageHearthImg from '../assets/images/vendor_heritage_hearth_1794610374408.jpg';
+import kindredWeddingsImg from '../assets/images/vendor_kindred_weddings_planning_1794610579621.jpg';
+import littleDayImg from '../assets/images/vendor_little_day_styling_1794611001787.jpg';
+import saffronStoneImg from '../assets/images/vendor_saffron_stone_kitchen_1794611693384.jpg';
+import islaPinoyTableImg from '../assets/images/vendor_isla_pinoy_table_1794612486274.jpg';
+import wattleWillowFloralsImg from '../assets/images/vendor_wattle_willow_florals_1794612779605.jpg';
 
-const kindredPlannerImg = `${import.meta.env.BASE_URL}assets/aistudio/Gemini_Generated_Image_3srkni3srkni3srk_cfa32c8d.jpeg`;
 const lotusLensImg = `${import.meta.env.BASE_URL}assets/aistudio/Gemini_Generated_Image_nldw00nldw00nldw_e4efff23.jpeg`;
 const santosPortfolioImg = `${import.meta.env.BASE_URL}assets/aistudio/Santos_Fine_Art_Wedding_Portfolio_393d84a8.png`;
 const goldenHourImg = `${import.meta.env.BASE_URL}assets/aistudio/Golden_Hour_Wedding_Stories_c81f7bc4.png`;
@@ -29,6 +38,16 @@ export {
   bridalMakeupImg,
   vineyardPlannerImg,
   culturalCeremonyImg,
+  hanaBeautyImg,
+  barossaCateringImg,
+  elysianPlanningImg,
+  harmoniaCulturalImg,
+  heritageHearthImg,
+  kindredWeddingsImg,
+  littleDayImg,
+  saffronStoneImg,
+  islaPinoyTableImg,
+  wattleWillowFloralsImg,
 };
 
 export const statsData = [
@@ -205,7 +224,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 97,
     location: 'Tanunda & Adelaide Metro',
     startingPrice: '$95 AUD / guest',
-    image: heroWeddingImg,
+    image: barossaCateringImg,
     culturalSpecialties: ['South Asian Banquets', 'Greek Feast Tables', 'Filipino Lechon Roasts'],
     description: 'Award-winning multicultural feasts blending Barossa Valley produce and local wines with authentic family recipes and strict dietary certifications.',
     features: ['Halal, Kosher & Vegetarian certified', 'Sommelier wine pairing', 'Live cooking culinary stations'],
@@ -233,7 +252,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 51,
     location: 'North Adelaide',
     startingPrice: '$3,400 AUD',
-    image: aiEcosystemImg,
+    image: elysianPlanningImg,
     culturalSpecialties: ['Fusion Ceremonies', 'Multi-day Celebrations', 'Luxury Private Galas'],
     description: 'End-to-end luxury coordination specializing in honoring dual heritage families without stress, language barriers, or scheduling confusion.',
     features: ['Bilingual coordinator staffing', 'Vendor dispute mediation', '24/7 day-of executive control'],
@@ -290,7 +309,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 38,
     location: 'Henley Beach & State-wide',
     startingPrice: '$1,200 AUD',
-    image: heroWeddingImg,
+    image: harmoniaCulturalImg,
     culturalSpecialties: ['Chinese Tea Ceremonies', 'Indian Mandap & Pandit Booking', 'Lebanese Zaffe Drummers'],
     description: 'Authentic cultural consultancies and ceremonial master-of-ceremonies who preserve ancestral rituals with modern elegance.',
     features: ['Ritual prop rental inventories', 'Cultural etiquette bride/groom briefing', 'Bilingual MCs'],
@@ -445,7 +464,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 4,
     location: 'Unley & Adelaide Metro',
     startingPrice: '$2,600 AUD',
-    image: kindredPlannerImg,
+    image: kindredWeddingsImg,
     culturalSpecialties: ['Nigerian Traditional Engagements', 'Caribbean Celebrations', 'Blended Faith Ceremonies'],
     description: 'Warm, culturally fluent planning for African, Caribbean and mixed-heritage couples, with fully managed timelines and family coordination.',
     features: [
@@ -515,7 +534,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 2,
     location: 'McLaren Vale & Southern Vales',
     startingPrice: '$1,800 AUD',
-    image: vineyardPlannerImg,
+    image: littleDayImg,
     culturalSpecialties: ['Italian Engagement Parties', 'Intimate Weddings (under 60 guests)', 'Greek Baptism & Name Day Celebrations'],
     description: 'Budget-conscious partial planning and styling for smaller weddings, engagement parties and cultural milestones in wine country venues.',
     features: [
@@ -560,7 +579,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 6,
     location: 'Adelaide Metro & Hills',
     startingPrice: '$78 AUD / guest',
-    image: fusionCateringImg,
+    image: saffronStoneImg,
     culturalSpecialties: ['North & South Indian Banquets', 'Lebanese Mezze Feasts', 'Vegan & Jain-Friendly Menus'],
     description: 'Modern Indian and Middle Eastern banquets cooked from scratch, with generous shared tables and live tandoor service.',
     features: [
@@ -654,7 +673,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 2,
     location: 'Salisbury & Northern Adelaide',
     startingPrice: '$62 AUD / guest',
-    image: fusionCateringImg,
+    image: islaPinoyTableImg,
     culturalSpecialties: ['Filipino Celebration Feasts', 'Pacific Islander Umu-Style Menus', 'Debut (18th) & Christening Parties'],
     description: 'Hearty, family-style Filipino and Pacific feasts, with party trays and full-service weddings at an accessible price.',
     features: [
@@ -699,7 +718,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 4,
     location: 'Mount Barker & Adelaide Hills',
     startingPrice: '$1,200 AUD',
-    image: floralDesignImg,
+    image: wattleWillowFloralsImg,
     culturalSpecialties: ['Native Australian Florals', 'Seasonal Garden Styling', 'Dried & Preserved Keepsake Bouquets'],
     description: 'Soft, wild-style arrangements using seasonal local blooms and native foliage, with a focus on sustainability and low waste.',
     features: [
@@ -908,7 +927,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 2,
     location: 'Adelaide CBD & Mobile SA',
     startingPrice: '$160 AUD / look',
-    image: bridalMakeupImg,
+    image: hanaBeautyImg,
     culturalSpecialties: ['East Asian Bridal Makeup', 'Hanbok & Qipao-Coordinated Looks', 'Monolid-Specialist Techniques'],
     description: 'Soft, natural “skin-first” makeup with East Asian beauty techniques, suited to Korean, Chinese and Japanese wedding traditions.',
     features: [
@@ -1010,7 +1029,7 @@ export const vendorsData: Vendor[] = [
     reviewCount: 2,
     location: 'Thebarton & State-wide',
     startingPrice: '$1,400 AUD',
-    image: heroWeddingImg,
+    image: heritageHearthImg,
     culturalSpecialties: ['Greek Orthodox Stefana (Crowning)', 'Italian Bomboniere & Confetti Traditions', 'Folk Dance Troupe Booking'],
     description: 'Greek, Italian and Eastern European traditions staged with care, from crown ceremonies to folk dancing and family rituals.',
     features: [
