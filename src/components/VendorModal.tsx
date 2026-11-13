@@ -105,15 +105,16 @@ export const VendorModal: React.FC<VendorModalProps> = ({
   const handleVoteHelpful = (reviewId: string) => {
     const hasVoted = !!helpfulVotes[reviewId];
     setHelpfulVotes((prev) => ({ ...prev, [reviewId]: !hasVoted }));
-    setReviewsList((prev) =>
+    const updateFn = (prev: VendorReview[]) =>
       prev.map((r) => {
         if (r.id === reviewId) {
           const current = r.helpfulCount || 0;
           return { ...r, helpfulCount: hasVoted ? Math.max(0, current - 1) : current + 1 };
         }
         return r;
-      })
-    );
+      });
+    setReviewsList(updateFn);
+    setAddedReviews(updateFn);
   };
 
   const handleAddReview = (e: React.FormEvent) => {
@@ -133,7 +134,7 @@ export const VendorModal: React.FC<VendorModalProps> = ({
       helpfulCount: 1,
     };
 
-    setReviewsList([newRev, ...reviewsList]);
+    setAddedReviews((prev) => [newRev, ...prev]);
     setNewReviewAuthor('');
     setNewReviewEvent('');
     setNewReviewComment('');
@@ -142,19 +143,29 @@ export const VendorModal: React.FC<VendorModalProps> = ({
     setTimeout(() => setReviewSubmittedToast(false), 3500);
   };
 
+  const [addedReviews, setAddedReviews] = useState<VendorReview[]>([]);
+  const combinedReviews = useMemo(
+    () => [...addedReviews, ...reviewsList],
+    [addedReviews, reviewsList]
+  );
+
   // Filtered reviews
   const filteredReviews = useMemo(() => {
-    if (selectedStarFilter === 'all') return reviewsList;
-    return reviewsList.filter((r) => r.rating === selectedStarFilter);
-  }, [reviewsList, selectedStarFilter]);
+    if (selectedStarFilter === 'all') return combinedReviews;
+    return combinedReviews.filter((r) => r.rating === selectedStarFilter);
+  }, [combinedReviews, selectedStarFilter]);
 
-  // Average calculation
-  const totalReviewsCount = reviewsList.length;
+  // Accurate total count & average rating anchored to vendor baseline
+  const totalReviewsCount = vendor.reviewCount + addedReviews.length;
   const averageRating = useMemo(() => {
-    if (reviewsList.length === 0) return vendor.rating;
-    const sum = reviewsList.reduce((acc, r) => acc + r.rating, 0);
-    return Number((sum / reviewsList.length).toFixed(2));
-  }, [reviewsList, vendor.rating]);
+    if (addedReviews.length === 0) {
+      return Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating.toString();
+    }
+    const baseTotal = vendor.rating * vendor.reviewCount;
+    const addedTotal = addedReviews.reduce((acc, r) => acc + r.rating, 0);
+    const avg = (baseTotal + addedTotal) / totalReviewsCount;
+    return avg.toFixed(1);
+  }, [vendor.rating, vendor.reviewCount, addedReviews, totalReviewsCount]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
@@ -415,7 +426,7 @@ export const VendorModal: React.FC<VendorModalProps> = ({
                             : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]'
                         }`}
                       >
-                        All ({reviewsList.length})
+                        All ({combinedReviews.length})
                       </button>
                       <button
                         onClick={() => setSelectedStarFilter(5)}
@@ -425,7 +436,7 @@ export const VendorModal: React.FC<VendorModalProps> = ({
                             : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]'
                         }`}
                       >
-                        5 Stars ({reviewsList.filter((r) => r.rating === 5).length})
+                        5 Stars ({combinedReviews.filter((r) => r.rating === 5).length})
                       </button>
                     </div>
 

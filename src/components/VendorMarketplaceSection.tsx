@@ -35,11 +35,21 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
         vendor.name.toLowerCase().includes(q) ||
         vendor.businessName.toLowerCase().includes(q) ||
         vendor.location.toLowerCase().includes(q) ||
+        vendor.description.toLowerCase().includes(q) ||
+        vendor.features.some((feat) => feat.toLowerCase().includes(q)) ||
         vendor.culturalSpecialties.some((spec) => spec.toLowerCase().includes(q));
 
       return matchesCategory && matchesSearch;
     });
   }, [selectedCategory, searchQuery]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: vendorsData.length };
+    for (const v of vendorsData) {
+      counts[v.category] = (counts[v.category] || 0) + 1;
+    }
+    return counts;
+  }, []);
 
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -89,17 +99,18 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {categories.map((cat) => {
               const isActive = selectedCategory === cat;
+              const count = categoryCounts[cat] ?? 0;
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-[#724319] text-white shadow-xs font-semibold'
                       : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]/60'
                   }`}
                 >
-                  {cat}
+                  {cat} <span className={`ml-1 tabular-nums ${isActive ? 'text-white/75' : 'text-[#8A5A44]'}`}>({count})</span>
                 </button>
               );
             })}
@@ -172,9 +183,9 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                         <h3 className="text-lg font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] transition-colors leading-snug">
                           {vendor.businessName}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0">
+                        <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0 tabular-nums">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          <span>{vendor.rating.toFixed(2)}</span>
+                          <span>{Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating}</span>
                           <span className="text-[11px] text-[#724319]/50 font-normal">({vendor.reviewCount})</span>
                         </div>
                       </div>
