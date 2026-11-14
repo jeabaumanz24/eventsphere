@@ -1,4 +1,4 @@
-import heroWeddingImg from '../assets/images/hero_wedding_celebration_1793613514585.jpg';
+import heroWeddingImg from '../assets/images/hero_aus_filipino_couple_1794614353550.jpg';
 import aiEcosystemImg from '../assets/images/ai_event_ecosystem_1793613514541.jpg';
 import photographerMariaImg from '../assets/images/vendor_photographer_maria_1793613516394.jpg';
 import customerDiwataImg from '../assets/images/customer_diwata_portrait_1793613517155.jpg';
