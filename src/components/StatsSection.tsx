@@ -7,8 +7,8 @@ export const StatsSection: React.FC = () => {
   const statIcons = [Users, CalendarHeart, Globe2, Sparkles];
 
   const stats = [
-    { value: '500+', label: t('stats.stat1'), description: 'Hand-picked across Greater Adelaide & Barossa' },
-    { value: '2,000+', label: t('stats.stat2'), description: 'From intimate vineyard vows to 500-guest galas' },
+    { value: '50', label: t('stats.stat1'), description: 'Hand-picked across Greater Adelaide & Barossa' },
+    { value: '500+', label: t('stats.stat2'), description: 'From intimate vineyard vows to 500-guest galas' },
     { value: '50+', label: t('stats.stat3'), description: 'Honoring Greek, Filipino, South Asian, Italian & more' },
     { value: '95%', label: t('stats.stat4'), description: 'Verified reviews from couples and event hosts' },
   ];
