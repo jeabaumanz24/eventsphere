@@ -19,6 +19,7 @@ import littleDayImg from '../assets/images/vendor_little_day_styling_17946110017
 import saffronStoneImg from '../assets/images/vendor_saffron_stone_kitchen_1794611693384.jpg';
 import islaPinoyTableImg from '../assets/images/vendor_isla_pinoy_table_1794612486274.jpg';
 import wattleWillowFloralsImg from '../assets/images/vendor_wattle_willow_florals_1794612779605.jpg';
+import { pillarAndClusterPosts } from './blogClusterData';
 
 const lotusLensImg = `${import.meta.env.BASE_URL}assets/aistudio/Gemini_Generated_Image_nldw00nldw00nldw_e4efff23.jpeg`;
 const santosPortfolioImg = `${import.meta.env.BASE_URL}assets/aistudio/Santos_Fine_Art_Wedding_Portfolio_393d84a8.png`;
@@ -1141,8 +1142,11 @@ export const testimonialsData: Testimonial[] = [
 ];
 
 export const blogPostsData: BlogPost[] = [
+  ...pillarAndClusterPosts,
   {
     id: 'b1',
+    slug: 'plan-multicultural-wedding-australia',
+    clusterRole: 'editorial',
     title: 'How to Plan a Multicultural Wedding in Australia',
     category: 'Cultural Planning',
     readTime: '6 min read',
@@ -1158,6 +1162,8 @@ export const blogPostsData: BlogPost[] = [
   },
   {
     id: 'b2',
+    slug: 'wedding-budget-checklist-save-splurge',
+    clusterRole: 'editorial',
     title: 'Wedding Budget Checklist: Where to Save & Where to Splurge',
     category: 'Budgeting & Finance',
     readTime: '5 min read',
@@ -1172,6 +1178,8 @@ export const blogPostsData: BlogPost[] = [
   },
   {
     id: 'b3',
+    slug: 'best-wedding-vendors-adelaide-2026',
+    clusterRole: 'editorial',
     title: 'Best Wedding Vendors in Adelaide: Curated 2026 Guide',
     category: 'Local Spotlight',
     readTime: '7 min read',
@@ -1186,6 +1194,8 @@ export const blogPostsData: BlogPost[] = [
   },
   {
     id: 'b4',
+    slug: 'ai-trends-event-planning',
+    clusterRole: 'editorial',
     title: 'AI Trends in Event Planning: The Future of Celebrations',
     category: 'Technology & Innovation',
     readTime: '4 min read',

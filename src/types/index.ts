@@ -28,15 +28,74 @@ export interface Vendor {
   reviews?: VendorReview[];
 }
 
+export interface BlogArticleGroup {
+  title: string;
+  subtitle?: string;
+  items: string[];
+}
+
+export interface BlogArticleSubsection {
+  heading: string;
+  paragraphs?: string[];
+  bullets?: string[];
+}
+
+export interface BlogArticleCalloutLink {
+  promptPrefix: string;
+  linkLabel: string;
+  targetSlug: string;
+}
+
+export interface BlogArticleSection {
+  id: string;
+  heading: string;
+  paragraphs?: string[];
+  subsections?: BlogArticleSubsection[];
+  bulletLabel?: string;
+  bullets?: string[];
+  groupIntro?: string;
+  groups?: BlogArticleGroup[];
+  closingNote?: string;
+  calloutLink?: BlogArticleCalloutLink;
+  isChecklist?: boolean;
+}
+
+export interface BlogFAQ {
+  question: string;
+  answer: string;
+}
+
+export interface BlogSEOMetadata {
+  seoTitle: string;
+  metaDescription: string;
+  urlSlug: string;
+  primaryKeyword: string;
+  secondaryKeywords?: string[];
+  featuredImageRecommendation: string;
+  featuredImageAlt: string;
+  internalLinkingOpportunities: {
+    anchorText: string;
+    targetSlug: string;
+    context: string;
+  }[];
+}
+
 export interface BlogPost {
   id: string;
+  slug?: string;
+  clusterRole?: 'pillar' | 'cluster' | 'editorial';
   title: string;
   category: string;
   readTime: string;
   publishedDate: string;
   summary: string;
   content: string[];
+  sections?: BlogArticleSection[];
+  faqs?: BlogFAQ[];
+  seo?: BlogSEOMetadata;
+  featuredImage?: string;
   author: string;
+  featured?: boolean;
 }
 
 export interface Testimonial {

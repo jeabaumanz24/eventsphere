@@ -5,10 +5,21 @@ import logoImg from '../assets/images/eventsphere_logo_transparent.png';
 interface FooterProps {
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
+  onOpenBlogPage?: () => void;
+  onNavigateHomeSection?: (sectionId: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenPrivacy,
+  onOpenTerms,
+  onOpenBlogPage,
+  onNavigateHomeSection,
+}) => {
   const scrollTo = (id: string) => {
+    if (onNavigateHomeSection) {
+      onNavigateHomeSection(id);
+      return;
+    }
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -80,7 +91,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
             </h4>
             <ul className="space-y-2.5 text-xs text-[#724319]/80">
               <li>
-                <button onClick={() => scrollTo('blog')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <button
+                  onClick={() => (onOpenBlogPage ? onOpenBlogPage() : scrollTo('blog'))}
+                  className="hover:text-[#724319] transition-colors cursor-pointer"
+                >
                   Blog & Editorial
                 </button>
               </li>

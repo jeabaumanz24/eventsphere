@@ -7,9 +7,18 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 interface NavbarProps {
   onGetStarted: () => void;
   onLanguageChange?: (langName: string) => void;
+  currentPage?: 'home' | 'blog';
+  onOpenBlogPage?: () => void;
+  onNavigateHomeSection?: (sectionId: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onGetStarted,
+  onLanguageChange,
+  currentPage = 'home',
+  onOpenBlogPage,
+  onNavigateHomeSection,
+}) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -18,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+      if (currentPage === 'blog') return;
 
       const sections = ['home', 'about', 'services', 'ai-planner', 'marketplace', 'blog', 'contact'];
       for (const sectionId of sections) {
@@ -34,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [currentPage]);
 
   const navLinks = [
     { label: t('nav.home'), href: '#home', id: 'home' },
@@ -42,13 +52,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
     { label: t('nav.services'), href: '#services', id: 'services' },
     { label: t('nav.aiPlanner'), href: '#ai-planner', id: 'ai-planner' },
     { label: t('nav.marketplace'), href: '#marketplace', id: 'marketplace' },
-    { label: t('nav.blog'), href: '#blog', id: 'blog' },
+    { label: t('nav.blog'), href: '#/blog', id: 'blog' },
     { label: t('nav.contact'), href: '#contact', id: 'contact' },
   ];
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, linkId: string, href: string) => {
     e.preventDefault();
     setMobileMenuOpen(false);
+    if (linkId === 'blog' && onOpenBlogPage) {
+      onOpenBlogPage();
+      return;
+    }
+    if (onNavigateHomeSection) {
+      onNavigateHomeSection(linkId);
+      return;
+    }
     const target = document.querySelector(href);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth' });
@@ -69,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
           {/* Zone 1: Brand wordmark (single element in display face) */}
           <a
             href="#home"
-            onClick={(e) => handleNavClick(e, '#home')}
+            onClick={(e) => handleNavClick(e, 'home', '#home')}
             className="flex items-center gap-2.5 group text-2xl font-serif font-bold text-[#724319] tracking-tight whitespace-nowrap shrink-0"
           >
             <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
@@ -85,12 +103,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
           {/* Zone 2: 4-7 single-line concise navigation links */}
           <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-[13px] font-medium text-[#724319]/80">
             {navLinks.map((link) => {
-              const isActive = activeSection === link.id;
+              const isActive =
+                currentPage === 'blog'
+                  ? link.id === 'blog'
+                  : activeSection === link.id;
               return (
                 <a
                   key={link.id}
                   href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
+                  onClick={(e) => handleNavClick(e, link.id, link.href)}
                   className={`transition-colors whitespace-nowrap shrink-0 relative py-1 ${
                     isActive ? 'text-[#724319] font-semibold' : 'hover:text-[#724319]'
                   }`}
@@ -142,8 +163,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onLanguageChange }
               <a
                 key={link.id}
                 href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="block px-3 py-2 text-sm font-medium text-[#724319] hover:bg-[#F2CCC3]/40 rounded-xl transition-colors"
+                onClick={(e) => handleNavClick(e, link.id, link.href)}
+                className={`block px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  currentPage === 'blog' && link.id === 'blog'
+                    ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
+                    : 'text-[#724319] hover:bg-[#F2CCC3]/40'
+                }`}
               >
                 {link.label}
               </a>
