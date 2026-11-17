@@ -117,7 +117,7 @@ export const howItWorksSteps = [
     title: 'Connect with verified vendors',
     description: 'Message shortlisted vendors directly, request customized proposals, schedule coffee tastings or site walk-throughs, and book securely with transparent milestone contracts.',
     badgeText: 'Seamless Onboarding',
-    detail: 'All communication, contracts, deposit receipts, and revisions remain neatly centralized inside your EventSphere portal.',
+    detail: 'All communication, contracts, deposit receipts, and revisions remain neatly centralized inside your Event Sphere portal.',
   },
 ];
 
@@ -169,7 +169,7 @@ export const vendorsData: Vendor[] = [
         eventType: 'Mediterranean Celebration',
         location: 'Mount Lofty House, Adelaide Hills',
         rating: 5,
-        comment: 'Finding someone who could capture the energy of our 220-guest Italian celebration without getting in the way was tough until we found Maria on EventSphere. The candid laughter and emotional dances she caught are treasures we will cherish forever.',
+        comment: 'Finding someone who could capture the energy of our 220-guest Italian celebration without getting in the way was tough until we found Maria on Event Sphere. The candid laughter and emotional dances she caught are treasures we will cherish forever.',
         culturalElements: ['Italian Traditions', 'Acoustic Sunset Vows', 'Film Emulation'],
         helpfulCount: 14,
       },
@@ -1087,7 +1087,7 @@ export const customerPersona: Persona = {
     'Dynamic budget simulator rebalanced catering and floral allocations automatically',
     'Shared digital timeline ensured her Australian and overseas family remained synchronized',
   ],
-  quote: "EventSphere gave me peace of mind. Finding a photographer who understood the significance of our veil and cord ceremony without needing a 2-hour explanation was priceless.",
+  quote: "Event Sphere gave me peace of mind. Finding a photographer who understood the significance of our veil and cord ceremony without needing a 2-hour explanation was priceless.",
 };
 
 export const vendorPersona: Persona = {
@@ -1108,13 +1108,13 @@ export const vendorPersona: Persona = {
     'Direct verified profile with customer reviews and high-resolution visual portfolio tags',
     'Built-in invoice and contract generation reduces non-shooting admin time by 60%',
   ],
-  quote: "EventSphere doubled my high-ticket multicultural bookings in six months. The couples who contact me are already educated on my work and ready to confirm.",
+  quote: "Event Sphere doubled my high-ticket multicultural bookings in six months. The couples who contact me are already educated on my work and ready to confirm.",
 };
 
 export const testimonialsData: Testimonial[] = [
   {
     id: 't1',
-    quote: "Planning a dual Hindu-Australian wedding in the Barossa seemed impossible until we used EventSphere. The AI matched us with a caterer capable of a sacred vegetarian lunch followed by an Adelaide Hills vineyard dinner. It saved us at least 40 hours of research.",
+    quote: "Planning a dual Hindu-Australian wedding in the Barossa seemed impossible until we used Event Sphere. The AI matched us with a caterer capable of a sacred vegetarian lunch followed by an Adelaide Hills vineyard dinner. It saved us at least 40 hours of research.",
     clientNames: 'Priya & Rohan Patel',
     role: 'Couples / Bride & Groom',
     eventDetails: '320 Guests · Barossa Valley Vows',
@@ -1132,7 +1132,7 @@ export const testimonialsData: Testimonial[] = [
   },
   {
     id: 't3',
-    quote: "Finding vendors in Adelaide who understand our traditional Filipino cord, veil, and coins ceremony was our biggest anxiety. EventSphere connected us directly to Maria Santos and our dream coordinator within 24 hours.",
+    quote: "Finding vendors in Adelaide who understand our traditional Filipino cord, veil, and coins ceremony was our biggest anxiety. Event Sphere connected us directly to Maria Santos and our dream coordinator within 24 hours.",
     clientNames: 'Diwata & Liam Miller',
     role: 'Couple / Newlyweds',
     eventDetails: '220 Guests · Adelaide Botanic Gardens',
@@ -1151,12 +1151,12 @@ export const blogPostsData: BlogPost[] = [
     category: 'Cultural Planning',
     readTime: '6 min read',
     publishedDate: 'October 2026',
-    author: 'EventSphere Editorial Team',
+    author: 'Event Sphere Editorial Team',
     summary: 'A comprehensive guide to harmonizing dual traditions, managing bilingual timelines, and briefing Australian venues on sacred ceremonial protocols.',
     content: [
       'Multicultural weddings are among Australia’s most vibrant celebrations, weaving ancestral lineage, culinary legacy, and modern Australian landscapes into a deeply meaningful experience.',
       '1. Prioritize Ceremony Balance: Whether combining a morning tea ceremony with an afternoon civil exchange or an evening Sangeet with vineyard vows, design breathing space between events for your guests.',
-      '2. Brief Venues on Traditional Rituals Early: Certain ceremonies involve fire (Agni in Hindu rituals), open flames, or specific confectionery setups. EventSphere helps verify venue compliance prior to deposit payments.',
+      '2. Brief Venues on Traditional Rituals Early: Certain ceremonies involve fire (Agni in Hindu rituals), open flames, or specific confectionery setups. Event Sphere helps verify venue compliance prior to deposit payments.',
       '3. Curate a Meaningful Program Guide: Guests unfamiliar with your customs appreciate brief pocket programs explaining the cultural symbolism of blessings, dances, and garment colors.',
     ],
   },
@@ -1173,7 +1173,7 @@ export const blogPostsData: BlogPost[] = [
     content: [
       'In South Australia, the average wedding budget ranges between $35,000 and $75,000 AUD depending on guest headcount and estate exclusivity.',
       'Where to Invest: Photography and culinary experience consistently rank as the two factors guests remember for decades. Skimping on lighting and sound frequently compromises emotional atmosphere.',
-      'Where to Save: Leverage seasonal South Australian wildflowers, digital RSVP portals through EventSphere, and off-peak Friday vineyard dates which offer up to 25% lower minimum food and beverage spends.',
+      'Where to Save: Leverage seasonal South Australian wildflowers, digital RSVP portals through Event Sphere, and off-peak Friday vineyard dates which offer up to 25% lower minimum food and beverage spends.',
     ],
   },
   {
@@ -1200,12 +1200,12 @@ export const blogPostsData: BlogPost[] = [
     category: 'Technology & Innovation',
     readTime: '4 min read',
     publishedDate: 'November 2026',
-    author: 'EventSphere Product Labs',
+    author: 'Event Sphere Product Labs',
     summary: 'How predictive modeling, automated dietary routing, and real-time vendor calendar synchronization are transforming the event industry.',
     content: [
       'Gone are the days of keeping 14 fragmented spreadsheets and losing quotes in forgotten email threads.',
       'Artificial intelligence is not replacing human warmth; it is stripping away administrative friction so couples and creators can focus on celebration and human connection.',
-      'EventSphere’s latest algorithmic models forecast supply chain fluctuations for imported florals and benchmark fair Adelaide market vendor rates in real time.',
+      'Event Sphere’s latest algorithmic models forecast supply chain fluctuations for imported florals and benchmark fair Adelaide market vendor rates in real time.',
     ],
   },
 ];

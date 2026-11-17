@@ -253,7 +253,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           description: ritualDesc,
           category: 'Sacred Cultural Rites',
           isCritical: true,
-          adelaideTip: 'EventSphere connects you with verified Adelaide bilingual officiants.',
+          adelaideTip: 'Event Sphere connects you with verified Adelaide bilingual officiants.',
           dayOfTime: '03:15 PM',
           dayOfPhase: 'ceremony',
         },

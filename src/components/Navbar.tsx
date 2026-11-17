@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
-import logoImg from '../assets/images/eventsphere_logo_transparent.png';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
+
+const logoImg = `${import.meta.env.BASE_URL}assets/aistudio/a_clean_minimal_graphic_logo_image_on_a_transpare_861d7c48.png`;
 
 interface NavbarProps {
   onGetStarted: () => void;
@@ -90,14 +91,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={(e) => handleNavClick(e, 'home', '#home')}
             className="flex items-center gap-2.5 group text-2xl font-serif font-bold text-[#724319] tracking-tight whitespace-nowrap shrink-0"
           >
-            <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
+            <div className="h-14 w-[84px] sm:h-16 sm:w-24 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <img
                 src={logoImg}
-                alt="EventSphere Logo"
+                alt="Event Sphere Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <span>EventSphere</span>
+            <span>Event Sphere</span>
           </a>
 
           {/* Zone 2: 4-7 single-line concise navigation links */}

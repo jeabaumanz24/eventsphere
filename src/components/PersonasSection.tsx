@@ -8,7 +8,7 @@ export const PersonasSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-            Who EventSphere Empowers
+            Who Event Sphere Empowers
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
             Designed for Both Sides of the Aisle
@@ -82,7 +82,7 @@ export const PersonasSection: React.FC = () => {
 
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                    How EventSphere Helps Diwata
+                    How Event Sphere Helps Diwata
                   </h4>
                   <ul className="space-y-2 text-xs text-[#724319]/90">
                     {customerPersona.eventSphereSolutions.map((sol, idx) => (
@@ -169,7 +169,7 @@ export const PersonasSection: React.FC = () => {
 
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                    How EventSphere Helps Maria
+                    How Event Sphere Helps Maria
                   </h4>
                   <ul className="space-y-2 text-xs text-[#724319]/90">
                     {vendorPersona.eventSphereSolutions.map((sol, idx) => (

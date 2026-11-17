@@ -26,7 +26,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
         <div className="p-6 bg-[#FFF8F6] border-b border-[#EBC1B6]/50">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-4 h-4 text-[#8A5A44]" />
-            <span className="text-xs font-semibold uppercase text-[#8A5A44]">EventSphere Governance</span>
+            <span className="text-xs font-semibold uppercase text-[#8A5A44]">Event Sphere Governance</span>
           </div>
           <h3 className="text-xl font-serif font-bold text-[#724319]">{title}</h3>
           <p className="text-[11px] text-[#724319]/70 mt-0.5">Last updated: November 2026 · Adelaide, South Australia</p>
@@ -36,7 +36,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
           {isPrivacy ? (
             <>
               <p>
-                At EventSphere Australia Pty Ltd, we respect the cultural traditions and confidential celebration details of our couples and vendors.
+                At Event Sphere Australia Pty Ltd, we respect the cultural traditions and confidential celebration details of our couples and vendors.
               </p>
               <h4 className="font-semibold text-[#724319] text-xs pt-1">1. Information We Collect</h4>
               <p>
@@ -54,11 +54,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
           ) : (
             <>
               <p>
-                Welcome to EventSphere. By accessing or using our Adelaide event discovery platform, you agree to comply with and be bound by the following terms.
+                Welcome to Event Sphere. By accessing or using our Adelaide event discovery platform, you agree to comply with and be bound by the following terms.
               </p>
               <h4 className="font-semibold text-[#724319] text-xs pt-1">1. Marketplace & Recommendations</h4>
               <p>
-                EventSphere acts as an intelligent matchmaker connecting customers with independent South Australian businesses. All contracts and payments are agreed between parties with clear milestone safeguards.
+                Event Sphere acts as an intelligent matchmaker connecting customers with independent South Australian businesses. All contracts and payments are agreed between parties with clear milestone safeguards.
               </p>
               <h4 className="font-semibold text-[#724319] text-xs pt-1">2. Vendor Verification</h4>
               <p>

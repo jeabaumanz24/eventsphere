@@ -78,7 +78,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <span className="w-3 h-3 rounded-full bg-emerald-400/80 inline-block" />
               </div>
               <span className="text-xs font-semibold text-[#724319] pl-2 border-l border-[#EBC1B6]">
-                EventSphere Planning Studio · Adelaide Edition
+                Event Sphere Planning Studio · Adelaide Edition
               </span>
             </div>
 

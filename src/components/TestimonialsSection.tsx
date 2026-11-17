@@ -16,7 +16,7 @@ export const TestimonialsSection: React.FC = () => {
             Client Experiences Across South Australia
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
-            Read how modern multicultural couples and event hosts simplified complex celebrations with EventSphere's intelligent recommendations.
+            Read how modern multicultural couples and event hosts simplified complex celebrations with Event Sphere's intelligent recommendations.
           </p>
         </div>
 

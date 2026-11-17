@@ -36,11 +36,11 @@ export const Footer: React.FC<FooterProps> = ({
               <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs overflow-hidden">
                 <img
                   src={logoImg}
-                  alt="EventSphere Logo"
+                  alt="Event Sphere Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">EventSphere</span>
+              <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">Event Sphere</span>
             </div>
             <p className="text-xs text-[#724319]/80 max-w-sm leading-relaxed">
               Adelaide’s AI-powered multicultural event planning and vendor discovery platform. Celebrating love, heritage, and community across South Australia.
@@ -63,7 +63,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button onClick={() => scrollTo('about')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  About EventSphere
+                  About Event Sphere
                 </button>
               </li>
               <li>
@@ -174,7 +174,7 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Bar: Copyright & Location */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#724319]/70">
           <div>
-            © 2026 EventSphere. All Rights Reserved.
+            © 2026 Event Sphere. All Rights Reserved.
           </div>
           <div className="flex items-center gap-1 text-[11px] text-[#8A5A44]">
             <span>Crafted for South Australia with</span>

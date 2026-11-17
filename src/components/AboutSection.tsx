@@ -26,7 +26,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                 <div className="p-5 bg-white border-t border-[#EBC1B6]/50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-semibold text-[#724319]">Unified EventSphere Ecosystem</h4>
+                      <h4 className="text-sm font-semibold text-[#724319]">Unified Event Sphere Ecosystem</h4>
                       <p className="text-xs text-[#8A5A44]">Vendor Studios · Budgeting Core · Cultural Checklists</p>
                     </div>
                     <span className="text-xs font-medium text-[#724319] bg-[#F2CCC3] px-3 py-1 rounded-full">
@@ -48,12 +48,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                 The Platform Advantage
               </span>
               <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] leading-tight">
-                Why EventSphere
+                Why Event Sphere
               </h2>
             </div>
 
             <p className="text-base sm:text-lg text-[#724319]/85 leading-relaxed">
-              Planning events often requires users to search across multiple websites, social platforms, and vendor directories. EventSphere simplifies the process by bringing vendor discovery, budgeting tools, planning resources, and AI-driven recommendations together in one platform.
+              Planning events often requires users to search across multiple websites, social platforms, and vendor directories. Event Sphere simplifies the process by bringing vendor discovery, budgeting tools, planning resources, and AI-driven recommendations together in one platform.
             </p>
 
             {/* Core differentiators */}

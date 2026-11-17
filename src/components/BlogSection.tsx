@@ -32,7 +32,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
               Wedding Planning Pillar & Topic Cluster
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-              Latest from the EventSphere Journal
+              Latest from the Event Sphere Journal
             </h2>
             <p className="text-sm text-[#724319]/80 max-w-xl leading-relaxed">
               Start with our cornerstone Wedding Planning Guide, then explore deep-dive articles on 2027 budgets, timelines, photographers, accommodation venues, and planning photos.

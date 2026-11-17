@@ -56,7 +56,7 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
 
         {/* Modal Footer */}
         <div className="p-4 sm:p-6 bg-[#FFF8F6] border-t border-[#EBC1B6]/50 flex items-center justify-between text-xs">
-          <span className="text-[#8A5A44]">EventSphere Journal · Adelaide Edition</span>
+          <span className="text-[#8A5A44]">Event Sphere Journal · Adelaide Edition</span>
           <button
             onClick={onClose}
             className="px-5 py-2 bg-[#724319] text-white font-medium rounded-full hover:bg-[#8A5A44] transition-colors cursor-pointer"

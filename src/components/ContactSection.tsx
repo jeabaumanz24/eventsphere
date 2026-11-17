@@ -62,7 +62,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
             Start Your Journey
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-            Connect with EventSphere
+            Connect with Event Sphere
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
             Whether you are planning a dual-heritage celebration in the Barossa or an artisan vendor looking to join our Adelaide directory, we would love to hear from you.

@@ -33,10 +33,10 @@ interface BlogPageProps {
 const CHECKLIST_STORAGE_KEY = 'eventsphere_wedding_checklist_v1';
 
 const DEFAULT_META = {
-  title: 'EventSphere | AI-Powered Multicultural Event Planning & Vendor Discovery',
+  title: 'Event Sphere | AI-Powered Multicultural Event Planning & Vendor Discovery',
   description:
-    "EventSphere is Adelaide's premier AI-powered multicultural event planning and vendor discovery platform. Plan weddings, cultural celebrations, and private events with intelligent budgeting and verified local vendors.",
-  ogTitle: 'EventSphere | AI-Powered Multicultural Event Planning',
+    "Event Sphere is Adelaide's premier AI-powered multicultural event planning and vendor discovery platform. Plan weddings, cultural celebrations, and private events with intelligent budgeting and verified local vendors.",
+  ogTitle: 'Event Sphere | AI-Powered Multicultural Event Planning',
   ogDescription:
     'Discover trusted vendors, plan smarter, and create unforgettable multicultural events in Adelaide with intelligent recommendations and planning tools.',
 };
@@ -105,11 +105,11 @@ export const BlogPage: React.FC<BlogPageProps> = ({
         description: activePost.seo?.metaDescription || activePost.summary,
         author: {
           '@type': 'Organization',
-          name: activePost.author || 'EventSphere Editorial Team',
+          name: activePost.author || 'Event Sphere Editorial Team',
         },
         publisher: {
           '@type': 'Organization',
-          name: 'EventSphere Adelaide',
+          name: 'Event Sphere Adelaide',
         },
         datePublished: '2026-11-01',
         mainEntityOfPage: {
@@ -153,7 +153,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
   // Inject dynamic SEO <title>, meta descriptions, and FAQ/BlogPosting JSON-LD
   useEffect(() => {
-    const seoTitle = activePost.seo?.seoTitle || `${activePost.title} | EventSphere`;
+    const seoTitle = activePost.seo?.seoTitle || `${activePost.title} | Event Sphere`;
     const metaDesc = activePost.seo?.metaDescription || activePost.summary;
 
     document.title = seoTitle;
@@ -262,7 +262,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             </span>
             <span className="text-[#8A5A44] font-medium inline-flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" />
-              EventSphere Journal
+              Event Sphere Journal
             </span>
             {activePost.clusterRole === 'cluster' && pillarPost && (
               <>
@@ -389,7 +389,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 </div>
                 <div className="inline-flex items-center gap-1 text-[#8A5A44]">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>EventSphere Adelaide & Australian Edition</span>
+                  <span>Event Sphere Adelaide & Australian Edition</span>
                 </div>
               </div>
             </header>
@@ -666,7 +666,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       Ready to map your budget, timeline & Adelaide vendors?
                     </h3>
                     <p className="text-xs sm:text-sm text-[#724319]/80">
-                      Try EventSphere’s AI Budget Calculator, Wedding To-Do Timeline, and verified Adelaide marketplace.
+                      Try Event Sphere’s AI Budget Calculator, Wedding To-Do Timeline, and verified Adelaide marketplace.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3 shrink-0">
@@ -973,7 +973,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 <Home className="w-5 h-5 text-[#F2CCC3]" />
               </div>
               <h3 className="text-lg font-serif font-bold">
-                Explore EventSphere Adelaide
+                Explore Event Sphere Adelaide
               </h3>
               <p className="text-xs text-white/80 leading-relaxed">
                 Return to the main platform to browse verified photographers, planners, caterers, and cultural specialists across South Australia.
