@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Calendar, Clock, Share2, BookOpen } from 'lucide-react';
+import { X } from 'lucide-react';
 import { BlogPost } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BlogModalProps {
   post: BlogPost | null;
@@ -8,6 +9,7 @@ interface BlogModalProps {
 }
 
 export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
+  const { t } = useLanguage();
   if (!post) return null;
 
   return (
@@ -17,7 +19,7 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#FFF8F6] border border-[#EBC1B6] flex items-center justify-center text-[#724319] hover:bg-[#724319] hover:text-white transition-all shadow-sm cursor-pointer"
-          aria-label="Close reader"
+          aria-label={t('blog.closeReader')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -33,18 +35,18 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#724319] leading-tight">
-            {post.title}
+            {t(`blog.${post.id}.title`)}
           </h2>
 
           <div className="text-xs text-[#724319]/70 mt-2">
-            By <span className="font-semibold text-[#724319]">{post.author}</span>
+            {t('blog.by')} <span className="font-semibold text-[#724319]">{post.author}</span>
           </div>
         </div>
 
         {/* Modal Content */}
         <div className="p-6 sm:p-8 space-y-4 max-h-[calc(80vh-12rem)] overflow-y-auto text-xs sm:text-sm text-[#724319]/85 leading-relaxed">
           <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/60 italic font-serif text-[#724319]">
-            "{post.summary}"
+            "{t(`blog.${post.id}.summary`)}"
           </div>
 
           {post.content.map((paragraph, idx) => (
@@ -56,12 +58,12 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
 
         {/* Modal Footer */}
         <div className="p-4 sm:p-6 bg-[#FFF8F6] border-t border-[#EBC1B6]/50 flex items-center justify-between text-xs">
-          <span className="text-[#8A5A44]">Event Sphere Journal · Adelaide Edition</span>
+          <span className="text-[#8A5A44]">{t('blog.editionFooter')}</span>
           <button
             onClick={onClose}
             className="px-5 py-2 bg-[#724319] text-white font-medium rounded-full hover:bg-[#8A5A44] transition-colors cursor-pointer"
           >
-            Close Reader
+            {t('blog.closeReader')}
           </button>
         </div>
       </div>

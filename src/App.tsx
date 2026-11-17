@@ -11,6 +11,7 @@ import { PersonasSection } from './components/PersonasSection';
 import { TestimonialsSection } from './components/TestimonialsSection';
 import { BlogSection } from './components/BlogSection';
 import { BlogPage } from './components/BlogPage';
+import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { VendorModal } from './components/VendorModal';
@@ -19,7 +20,7 @@ import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { blogPostsData } from './data/mockData';
 import { Vendor, BlogPost } from './types';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function parseBlogRoute(hash: string, pathname = ''): { isBlog: boolean; postId: string } {
   const defaultId = blogPostsData[0]?.id || 'b0';
@@ -42,6 +43,7 @@ function parseBlogRoute(hash: string, pathname = ''): { isBlog: boolean; postId:
 }
 
 function EventSphereApp() {
+  const { t, tFor, currentLanguage } = useLanguage();
   const initialRoute = parseBlogRoute(
     typeof window !== 'undefined' ? window.location.hash : '',
     typeof window !== 'undefined' ? window.location.pathname : ''
@@ -127,8 +129,8 @@ function EventSphereApp() {
         onOpenBlogPage={() => openBlogPage()}
         onNavigateHomeSection={(sectionId) => scrollTo(sectionId)}
         onGetStarted={() => scrollTo('ai-planner')}
-        onLanguageChange={(langName) => {
-          showToast(`Language switched to ${langName}`);
+        onLanguageChange={(langName, langCode) => {
+          showToast(tFor(langCode || currentLanguage, 'toast.langSwitched', { lang: langName }));
         }}
       />
 
@@ -185,10 +187,16 @@ function EventSphereApp() {
             onOpenBlogPage={() => openBlogPage()}
           />
 
-          {/* 12. Contact Section */}
+          {/* 12. Multicultural Adelaide FAQ */}
+          <FAQSection
+            onOpenContact={() => scrollTo('contact')}
+            onOpenPlanner={() => scrollTo('ai-planner')}
+          />
+
+          {/* 13. Contact Section */}
           <ContactSection
             onFormSubmitted={({ name }) => {
-              showToast(`Inquiry received for ${name}! Our Adelaide team will be in touch shortly.`);
+              showToast(t('toast.inquiryReceived', { name }));
             }}
           />
         </main>
@@ -207,7 +215,7 @@ function EventSphereApp() {
         vendor={selectedVendor}
         onClose={() => setSelectedVendor(null)}
         onRequestSent={(name) => {
-          showToast(`Proposal request sent to ${name}!`);
+          showToast(t('toast.proposalSent', { name }));
         }}
       />
 

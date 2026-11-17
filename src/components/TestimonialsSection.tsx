@@ -1,8 +1,10 @@
 import React from 'react';
-import { Star, Quote, Clock, CheckCircle, HeartHandshake } from 'lucide-react';
+import { Star, Clock, CheckCircle, HeartHandshake } from 'lucide-react';
 import { testimonialsData } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 export const TestimonialsSection: React.FC = () => {
+  const { t } = useLanguage();
   const highlightIcons = [Clock, CheckCircle, HeartHandshake];
 
   return (
@@ -10,13 +12,13 @@ export const TestimonialsSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-            Stories of Connection & Joy
+            {t('testimonials.kicker')}
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-            Client Experiences Across South Australia
+            {t('testimonials.title')}
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
-            Read how modern multicultural couples and event hosts simplified complex celebrations with Event Sphere's intelligent recommendations.
+            {t('testimonials.subtitle')}
           </p>
         </div>
 
@@ -38,19 +40,19 @@ export const TestimonialsSection: React.FC = () => {
                       ))}
                     </div>
                     <span className="text-[11px] font-semibold text-[#8A5A44] bg-[#FFF8F6] px-2.5 py-1 rounded-full border border-[#EBC1B6]">
-                      Verified Host
+                      {t('testimonials.verifiedHost')}
                     </span>
                   </div>
 
                   {/* Concrete metric pill badge (interactive proof) */}
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-[#724319] bg-[#F2CCC3]/40 p-2.5 rounded-xl mb-4">
                     <Icon className="w-4 h-4 text-[#8A5A44] shrink-0" />
-                    <span>{item.highlight}</span>
+                    <span>{t(`testimonial.${item.id}.highlight`)}</span>
                   </div>
 
                   {/* Quote text */}
                   <p className="text-xs sm:text-sm text-[#724319]/85 leading-relaxed italic">
-                    "{item.quote}"
+                    "{t(`testimonial.${item.id}.quote`)}"
                   </p>
                 </div>
 
@@ -61,7 +63,7 @@ export const TestimonialsSection: React.FC = () => {
                       {item.clientNames}
                     </h4>
                     <p className="text-xs text-[#8A5A44] mt-0.5">
-                      {item.eventDetails}
+                      {t(`testimonial.${item.id}.role`)} · {item.eventDetails}
                     </p>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowUpRight, ArrowRight, BookOpen, Layers } from 'lucide-react';
 import { blogPostsData } from '../data/mockData';
 import { BlogPost } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BlogSectionProps {
   onReadPost: (post: BlogPost) => void;
@@ -12,6 +13,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   onReadPost,
   onOpenBlogPage,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'cluster' | 'editorial'>('cluster');
 
   const pillarPost =
@@ -29,13 +31,13 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div className="space-y-3">
             <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-              Wedding Planning Pillar & Topic Cluster
+              {t('blog.kicker')}
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-              Latest from the Event Sphere Journal
+              {t('blog.title')}
             </h2>
             <p className="text-sm text-[#724319]/80 max-w-xl leading-relaxed">
-              Start with our cornerstone Wedding Planning Guide, then explore deep-dive articles on 2027 budgets, timelines, photographers, accommodation venues, and planning photos.
+              {t('blog.subtitle')}
             </p>
           </div>
 
@@ -45,7 +47,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-[#724319] text-[#724319] hover:text-white border border-[#EBC1B6] text-xs font-semibold transition-all shadow-xs cursor-pointer shrink-0 self-start md:self-auto"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Visit Full Blog Page</span>
+              <span>{t('blog.visitFullPage')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -60,7 +62,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
             <div className="lg:col-span-4 aspect-[16/10] lg:aspect-auto overflow-hidden bg-[#FFF8F6]">
               <img
                 src={pillarPost.featuredImage}
-                alt={pillarPost.seo?.featuredImageAlt || pillarPost.title}
+                alt={pillarPost.seo?.featuredImageAlt || t(`blog.${pillarPost.id}.title`)}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 referrerPolicy="no-referrer"
               />
@@ -74,31 +76,31 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A5A44]">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#724319] text-white font-semibold text-[11px]">
-                  Pillar Cornerstone Guide
+                  {t('blog.pillarBadge')}
                 </span>
                 <span>{pillarPost.category}</span>
                 <span aria-hidden="true">·</span>
                 <span>{pillarPost.readTime}</span>
                 <span aria-hidden="true">·</span>
-                <span>5 Deep-Dive Spoke Guides</span>
+                <span>{t('blog.clusterBadge')}</span>
               </div>
 
               <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] transition-colors leading-snug">
-                {pillarPost.title}
+                {t(`blog.${pillarPost.id}.title`)}
               </h3>
 
               <p className="text-sm text-[#724319]/80 leading-relaxed max-w-2xl">
-                {pillarPost.summary}
+                {t(`blog.${pillarPost.id}.summary`)}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#8A5A44]">
                 <Layers className="w-3.5 h-3.5" />
-                <span>Covers Budget, Checklist, Photographers, Venues & Photos</span>
+                <span>{t('blog.pillarSummaryHint')}</span>
               </span>
               <span className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#724319] group-hover:bg-[#8A5A44] text-white text-xs sm:text-sm font-semibold transition-colors shadow-xs whitespace-nowrap">
-                <span>Read Pillar Guide</span>
+                <span>{t('blog.readPillar')}</span>
                 <ArrowUpRight className="w-4 h-4" />
               </span>
             </div>
@@ -116,7 +118,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                 : 'border-transparent text-[#724319]/60 hover:text-[#724319]'
             }`}
           >
-            Wedding Planning Series ({clusterPosts.length})
+            {t('blog.tabCluster')} ({clusterPosts.length})
           </button>
           <button
             type="button"
@@ -127,7 +129,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                 : 'border-transparent text-[#724319]/60 hover:text-[#724319]'
             }`}
           >
-            Adelaide & Multicultural Journal ({editorialPosts.length})
+            {t('blog.tabEditorial')} ({editorialPosts.length})
           </button>
         </div>
 
@@ -148,7 +150,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   <div className="aspect-[16/9] overflow-hidden bg-[#FFF8F6] border-b border-[#EBC1B6]/40">
                     <img
                       src={post.featuredImage}
-                      alt={post.seo?.featuredImageAlt || post.title}
+                      alt={post.seo?.featuredImageAlt || t(`blog.${post.id}.title`)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       referrerPolicy="no-referrer"
                     />
@@ -163,17 +165,17 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   </div>
 
                   <h3 className="text-base sm:text-lg font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] transition-colors leading-snug mb-2.5">
-                    {post.title}
+                    {t(`blog.${post.id}.title`)}
                   </h3>
 
                   <p className="text-xs text-[#724319]/75 line-clamp-3 leading-relaxed">
-                    {post.summary}
+                    {t(`blog.${post.id}.summary`)}
                   </p>
                 </div>
               </div>
 
               <div className="p-6 pt-4 mt-2 border-t border-[#EBC1B6]/40 flex items-center justify-between text-xs font-semibold text-[#724319]">
-                <span>Read Complete Guide</span>
+                <span>{t('blog.readComplete')}</span>
                 <div className="w-7 h-7 rounded-full bg-[#FFF8F6] border border-[#EBC1B6] flex items-center justify-center group-hover:bg-[#724319] group-hover:text-white transition-all">
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </div>

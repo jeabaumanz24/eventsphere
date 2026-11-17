@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { MapPin, Mail, Phone, Send, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { MapPin, Mail, Phone, Send, CheckCircle2 } from 'lucide-react';
 import { adelaideRegions } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ContactSectionProps {
   onFormSubmitted?: (data: { name: string; email: string }) => void;
 }
 
 export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    eventType: 'Multicultural Wedding',
+    eventType: 'eventType.0',
     message: '',
   });
 
@@ -20,12 +22,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const eventTypes = [
-    'Multicultural Wedding',
-    'Cultural Ceremony & Banquet',
-    'Private Vineyard Celebration',
-    'Engagement & Sangeet Gala',
-    'Milestone Birthday / Private Event',
+  const eventTypeKeys = [
+    'eventType.0',
+    'eventType.1',
+    'eventType.2',
+    'eventType.3',
+    'eventType.4',
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,12 +35,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
     setErrorMessage('');
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
-      setErrorMessage('Please fill in your name, email, and celebration details.');
+      setErrorMessage(t('contact.errorMissing'));
       return;
     }
 
     if (!formData.email.includes('@')) {
-      setErrorMessage('Please provide a valid email address.');
+      setErrorMessage(t('contact.errorEmail'));
       return;
     }
 
@@ -59,13 +61,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-            Start Your Journey
+            {t('contact.kicker')}
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-            Connect with Event Sphere
+            {t('contact.title')}
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
-            Whether you are planning a dual-heritage celebration in the Barossa or an artisan vendor looking to join our Adelaide directory, we would love to hear from you.
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -78,10 +80,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   <CheckCircle2 className="w-8 h-8 text-[#724319]" />
                 </div>
                 <h3 className="text-2xl font-serif font-bold text-[#724319]">
-                  Thank you, {formData.name}!
+                  {t('contact.thankYou', { name: formData.name })}
                 </h3>
                 <p className="text-sm text-[#724319]/80 max-w-md mx-auto leading-relaxed">
-                  Your inquiry has been received by our Adelaide planning desk. One of our specialist advisors will be in touch within 24 hours with tailored vendor recommendations.
+                  {t('contact.receivedDesc')}
                 </p>
                 <div className="pt-4">
                   <button
@@ -91,13 +93,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                         name: '',
                         email: '',
                         phone: '',
-                        eventType: 'Multicultural Wedding',
+                        eventType: 'eventType.0',
                         message: '',
                       });
                     }}
                     className="px-6 py-2.5 bg-[#724319] text-white text-xs font-semibold rounded-full hover:bg-[#8A5A44] transition-colors cursor-pointer"
                   >
-                    Send Another Message
+                    {t('contact.sendAnother')}
                   </button>
                 </div>
               </div>
@@ -113,7 +115,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   {/* Name */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#724319]">
-                      Full Name <span className="text-rose-500">*</span>
+                      {t('contact.fullName')} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -128,7 +130,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   {/* Email */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#724319]">
-                      Email Address <span className="text-rose-500">*</span>
+                      {t('contact.emailLabel')} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -145,7 +147,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   {/* Phone Number */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#724319]">
-                      Phone Number
+                      {t('contact.phoneLabel')}
                     </label>
                     <input
                       type="tel"
@@ -159,16 +161,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   {/* Event Type */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#724319]">
-                      Event Type
+                      {t('contact.eventTypeLabel')}
                     </label>
                     <select
                       value={formData.eventType}
                       onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
                       className="w-full px-4 py-3 bg-[#FFF8F6] border border-[#EBC1B6] rounded-xl text-sm text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all cursor-pointer"
                     >
-                      {eventTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
+                      {eventTypeKeys.map((typeKey) => (
+                        <option key={typeKey} value={typeKey}>
+                          {t(typeKey)}
                         </option>
                       ))}
                     </select>
@@ -178,12 +180,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                 {/* Message */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-[#724319]">
-                    Celebration Details & Cultural Traditions <span className="text-rose-500">*</span>
+                    {t('contact.detailsLabel')} <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     required
                     rows={4}
-                    placeholder="Tell us about your celebration date, preferred Adelaide area, traditions (e.g. Tea Ceremony, Barossa wine tasting), and estimated guest count..."
+                    placeholder={t('contact.detailsPlaceholder')}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     className="w-full px-4 py-3 bg-[#FFF8F6] border border-[#EBC1B6] rounded-xl text-sm text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all resize-none"
@@ -197,10 +199,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   className="w-full py-3.5 px-6 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-70"
                 >
                   {isSubmitting ? (
-                    <span>Sending Inquiry...</span>
+                    <span>{t('contact.sending')}</span>
                   ) : (
                     <>
-                      <span>Submit Event Inquiry</span>
+                      <span>{t('contact.submit')}</span>
                       <Send className="w-4 h-4" />
                     </>
                   )}
@@ -220,20 +222,21 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                   </h3>
                 </div>
                 <span className="text-[11px] font-mono text-[#8A5A44] bg-[#FFF8F6] px-2.5 py-0.5 rounded-full border border-[#EBC1B6]">
-                  HQ & Service Hub
+                  {t('contact.adelaideHQ')}
                 </span>
               </div>
 
               {/* Stylized Visual Map Representation of Greater Adelaide */}
               <div className="relative bg-[#FFF8F6] rounded-2xl p-5 border border-[#EBC1B6]/60 overflow-hidden">
                 <div className="text-[11px] font-semibold text-[#8A5A44] mb-3 uppercase tracking-wider">
-                  Select Regional Celebration Zone:
+                  {t('contact.selectZone')}
                 </div>
 
                 {/* Region Selector Buttons */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {adelaideRegions.map((region) => {
                     const isSelected = activeRegionId === region.id;
+                    const regionName = t(`region.${region.id}.name`);
                     return (
                       <button
                         key={region.id}
@@ -245,9 +248,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
                             : 'bg-white text-[#724319] border border-[#EBC1B6]/70 hover:bg-[#F2CCC3]/40'
                         }`}
                       >
-                        <div className="truncate font-semibold">{region.name.split('&')[0]}</div>
+                        <div className="truncate font-semibold">{regionName.split('&')[0]}</div>
                         <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-white/80' : 'text-[#8A5A44]'}`}>
-                          {region.vendorCount} Vendors
+                          {t('contact.vendorsCount', { count: region.vendorCount })}
                         </div>
                       </button>
                     );
@@ -256,12 +259,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
 
                 {/* Region detail highlight */}
                 <div className="p-3.5 bg-white rounded-xl border border-[#EBC1B6]/60 text-xs space-y-1.5">
-                  <div className="font-serif font-bold text-[#724319]">{currentRegion.name}</div>
+                  <div className="font-serif font-bold text-[#724319]">{t(`region.${currentRegion.id}.name`)}</div>
                   <p className="text-[#724319]/80 leading-relaxed text-[11px]">
-                    {currentRegion.description}
+                    {t(`region.${currentRegion.id}.desc`)}
                   </p>
                   <div className="pt-1 text-[10px] text-[#8A5A44]">
-                    <span className="font-semibold">Top Venues:</span> {currentRegion.popularVenues.join(' · ')}
+                    <span className="font-semibold">{t('contact.topVenues')}</span> {currentRegion.popularVenues.join(' · ')}
                   </div>
                 </div>
               </div>

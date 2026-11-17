@@ -7,10 +7,10 @@ export const StatsSection: React.FC = () => {
   const statIcons = [Users, CalendarHeart, Globe2, Sparkles];
 
   const stats = [
-    { value: '50', label: t('stats.stat1'), description: 'Hand-picked across Greater Adelaide & Barossa' },
-    { value: '500+', label: t('stats.stat2'), description: 'From intimate vineyard vows to 500-guest galas' },
-    { value: '50+', label: t('stats.stat3'), description: 'Honoring Greek, Filipino, South Asian, Italian & more' },
-    { value: '95%', label: t('stats.stat4'), description: 'Verified reviews from couples and event hosts' },
+    { value: '50', label: t('stats.stat1'), description: t('stats.stat1Desc') },
+    { value: '500+', label: t('stats.stat2'), description: t('stats.stat2Desc') },
+    { value: '50+', label: t('stats.stat3'), description: t('stats.stat3Desc') },
+    { value: '95%', label: t('stats.stat4'), description: t('stats.stat4Desc') },
   ];
 
   return (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Instagram, Facebook, Linkedin, Pin as Pinterest, Heart } from 'lucide-react';
 import logoImg from '../assets/images/eventsphere_logo_transparent.png';
+import { useLanguage } from '../context/LanguageContext';
 
 interface FooterProps {
   onOpenPrivacy?: () => void;
@@ -15,6 +16,8 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenBlogPage,
   onNavigateHomeSection,
 }) => {
+  const { t } = useLanguage();
+
   const scrollTo = (id: string) => {
     if (onNavigateHomeSection) {
       onNavigateHomeSection(id);
@@ -43,42 +46,42 @@ export const Footer: React.FC<FooterProps> = ({
               <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">Event Sphere</span>
             </div>
             <p className="text-xs text-[#724319]/80 max-w-sm leading-relaxed">
-              Adelaide’s AI-powered multicultural event planning and vendor discovery platform. Celebrating love, heritage, and community across South Australia.
+              {t('footer.tagline')}
             </p>
             <div className="pt-2 text-[11px] text-[#8A5A44]">
-              <span>We acknowledge the Kaurna people as the traditional custodians of the Adelaide Plains where our team lives and works.</span>
+              <span>{t('footer.kaurna')}</span>
             </div>
           </div>
 
           {/* Quick Navigation */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
-              Explore
+              {t('footer.explore')}
             </h4>
             <ul className="space-y-2.5 text-xs text-[#724319]/80">
               <li>
                 <button onClick={() => scrollTo('home')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  Home
+                  {t('nav.home')}
                 </button>
               </li>
               <li>
                 <button onClick={() => scrollTo('about')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  About Event Sphere
+                  {t('footer.aboutLink')}
                 </button>
               </li>
               <li>
                 <button onClick={() => scrollTo('services')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  Services
+                  {t('nav.services')}
                 </button>
               </li>
               <li>
                 <button onClick={() => scrollTo('ai-planner')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  AI Event Planner
+                  {t('nav.aiPlanner')}
                 </button>
               </li>
               <li>
                 <button onClick={() => scrollTo('marketplace')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  Vendor Marketplace
+                  {t('nav.marketplace')}
                 </button>
               </li>
             </ul>
@@ -87,7 +90,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Resources & Editorial */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
-              Resources
+              {t('footer.resources')}
             </h4>
             <ul className="space-y-2.5 text-xs text-[#724319]/80">
               <li>
@@ -95,12 +98,17 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => (onOpenBlogPage ? onOpenBlogPage() : scrollTo('blog'))}
                   className="hover:text-[#724319] transition-colors cursor-pointer"
                 >
-                  Blog & Editorial
+                  {t('footer.blogEditorial')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('faq')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                  {t('footer.faqLink')}
                 </button>
               </li>
               <li>
                 <button onClick={() => scrollTo('contact')} className="hover:text-[#724319] transition-colors cursor-pointer">
-                  Contact Support
+                  {t('footer.contactSupport')}
                 </button>
               </li>
               <li>
@@ -108,7 +116,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onOpenPrivacy}
                   className="hover:text-[#724319] transition-colors cursor-pointer text-left"
                 >
-                  Privacy Policy
+                  {t('footer.privacy')}
                 </button>
               </li>
               <li>
@@ -116,7 +124,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onOpenTerms}
                   className="hover:text-[#724319] transition-colors cursor-pointer text-left"
                 >
-                  Terms & Conditions
+                  {t('footer.terms')}
                 </button>
               </li>
             </ul>
@@ -125,10 +133,10 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Social Channels */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
-              Follow Us
+              {t('footer.followUs')}
             </h4>
             <p className="text-xs text-[#724319]/75 mb-4">
-              Inspiring real multicultural wedding galleries and Adelaide vendor spotlights.
+              {t('footer.followSub')}
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -174,12 +182,12 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Bar: Copyright & Location */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#724319]/70">
           <div>
-            © 2026 Event Sphere. All Rights Reserved.
+            {t('footer.copyright')}
           </div>
           <div className="flex items-center gap-1 text-[11px] text-[#8A5A44]">
-            <span>Crafted for South Australia with</span>
+            <span>{t('footer.crafted')}</span>
             <Heart className="w-3 h-3 fill-rose-400 text-rose-400 inline" />
-            <span>in Adelaide</span>
+            <span>{t('footer.inAdelaide')}</span>
           </div>
         </div>
       </div>

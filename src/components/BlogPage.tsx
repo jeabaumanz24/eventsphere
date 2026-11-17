@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { blogPostsData } from '../data/mockData';
 import { BlogPost } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BlogPageProps {
   activePostId: string;
@@ -63,6 +64,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   onBackHome,
   onShowToast,
 }) => {
+  const { t, currentLanguage } = useLanguage();
   const activePost =
     blogPostsData.find((p) => p.id === activePostId) || blogPostsData[0];
 
@@ -255,14 +257,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               className="inline-flex items-center gap-1.5 font-semibold text-[#724319] hover:text-[#8A5A44] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
+              <span>{t('blog.backHome')}</span>
             </button>
             <span aria-hidden="true" className="text-[#EBC1B6]">
               /
             </span>
             <span className="text-[#8A5A44] font-medium inline-flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" />
-              Event Sphere Journal
+              {t('blog.journalName')}
             </span>
             {activePost.clusterRole === 'cluster' && pillarPost && (
               <>
@@ -273,7 +275,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                   onClick={() => navigateToSlug(pillarPost.slug || pillarPost.id)}
                   className="text-[#724319]/80 hover:text-[#724319] underline decoration-[#EBC1B6] underline-offset-4 cursor-pointer"
                 >
-                  Wedding Planning Pillar Guide
+                  {t('blog.pillarBadge')}
                 </button>
               </>
             )}
@@ -285,14 +287,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/40 border border-[#EBC1B6] transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
-              <span>Share Guide</span>
+              <span>{t('blog.shareGuide')}</span>
             </button>
             <button
               onClick={() => onBackHome('ai-planner')}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Open AI Planner</span>
+              <span>{t('blog.openPlanner')}</span>
             </button>
           </div>
         </div>
@@ -304,12 +306,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             {blogPostsData.map((post) => {
               const isSelected = post.id === activePost.id;
-              const prefix =
-                post.clusterRole === 'pillar'
-                  ? 'Pillar: '
-                  : post.clusterRole === 'cluster'
-                    ? 'Guide: '
-                    : '';
+              const postTitle = t(`blog.${post.id}.title`);
               return (
                 <button
                   key={post.id}
@@ -323,10 +320,9 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       : 'bg-white/90 text-[#724319]/80 hover:bg-white border border-[#EBC1B6]/60'
                   }`}
                 >
-                  {prefix}
-                  {post.title.length > 42
-                    ? `${post.title.slice(0, 42)}...`
-                    : post.title}
+                  {postTitle.length > 42
+                    ? `${postTitle.slice(0, 42)}...`
+                    : postTitle}
                 </button>
               );
             })}
@@ -344,9 +340,9 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               <div className="flex flex-wrap items-center gap-2.5 text-xs font-medium text-[#8A5A44] mb-4">
                 <span className="px-3 py-1 rounded-full bg-[#F2CCC3]/50 text-[#724319] font-semibold">
                   {activePost.clusterRole === 'pillar'
-                    ? 'Pillar Cornerstone Guide'
+                    ? t('blog.pillarBadge')
                     : activePost.clusterRole === 'cluster'
-                      ? `Topic Cluster · ${activePost.category}`
+                      ? `${t('blog.tabCluster')} · ${activePost.category}`
                       : activePost.category}
                 </span>
                 <span aria-hidden="true">·</span>
@@ -362,14 +358,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-[2.55rem] font-serif font-bold text-[#724319] leading-[1.15] tracking-tight mb-5">
-                {activePost.title}
+                {t(`blog.${activePost.id}.title`)}
               </h1>
 
               {activePost.featuredImage && (
                 <div className="mb-6 rounded-2xl overflow-hidden border border-[#EBC1B6]/70 aspect-[16/9] bg-[#FFF8F6]">
                   <img
                     src={activePost.featuredImage}
-                    alt={activePost.seo?.featuredImageAlt || activePost.title}
+                    alt={activePost.seo?.featuredImageAlt || t(`blog.${activePost.id}.title`)}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
@@ -377,25 +373,30 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               )}
 
               <p className="text-sm sm:text-base text-[#724319]/85 leading-relaxed font-serif italic bg-white/80 p-5 rounded-2xl border border-[#EBC1B6]/60">
-                {activePost.summary}
+                {t(`blog.${activePost.id}.summary`)}
               </p>
 
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-[#724319]/75">
                 <div>
-                  By{' '}
+                  {t('blog.by')}{' '}
                   <span className="font-semibold text-[#724319]">
                     {activePost.author}
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-1 text-[#8A5A44]">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>Event Sphere Adelaide & Australian Edition</span>
+                  <span>{t('blog.editionFooter')}</span>
                 </div>
               </div>
             </header>
 
             {/* Article Body */}
             <div className="p-7 sm:p-10 md:p-12 space-y-11 text-[#724319]/90">
+              {currentLanguage !== 'en' && (
+                <div className="p-4 rounded-2xl bg-[#FFF8F6] border border-[#EBC1B6] text-xs text-[#8A5A44] leading-relaxed">
+                  {t('blog.langNote')}
+                </div>
+              )}
               {activePost.sections && activePost.sections.length > 0 ? (
                 activePost.sections.map((section, idx) => (
                   <section
@@ -618,7 +619,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                   <div className="flex items-center gap-2.5">
                     <HelpCircle className="w-5 h-5 text-[#8A5A44]" />
                     <h2 className="text-2xl sm:text-[1.75rem] font-serif font-bold text-[#724319]">
-                      Frequently Asked Questions
+                      {t('blog.faqsTitle')}
                     </h2>
                   </div>
                   <div className="space-y-3">
@@ -660,13 +661,13 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 <div className="rounded-3xl bg-gradient-to-br from-[#F2CCC3]/45 via-[#FFF8F6] to-[#EBC1B6]/35 border border-[#EBC1B6] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44]">
-                      Put This Guide Into Action
+                      {t('blog.actionKicker')}
                     </span>
                     <h3 className="text-xl font-serif font-bold text-[#724319]">
-                      Ready to map your budget, timeline & Adelaide vendors?
+                      {t('blog.actionTitle')}
                     </h3>
                     <p className="text-xs sm:text-sm text-[#724319]/80">
-                      Try Event Sphere’s AI Budget Calculator, Wedding To-Do Timeline, and verified Adelaide marketplace.
+                      {t('blog.actionSub')}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3 shrink-0">
@@ -675,14 +676,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors shadow-xs cursor-pointer"
                     >
                       <Calculator className="w-4 h-4" />
-                      <span>Start AI Planning</span>
+                      <span>{t('blog.startAiBtn')}</span>
                     </button>
                     <button
                       onClick={() => onBackHome('marketplace')}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-[#724319] bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] transition-colors cursor-pointer"
                     >
                       <Camera className="w-4 h-4" />
-                      <span>Browse Vendors</span>
+                      <span>{t('blog.browseVendorsBtn')}</span>
                     </button>
                   </div>
                 </div>
@@ -839,7 +840,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             {activePost.sections && activePost.sections.length > 0 && (
               <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
-                  In This Guide
+                  {t('blog.inThisGuide')}
                 </h3>
                 <nav className="space-y-1.5">
                   {activePost.sections.map((sec, i) => (
@@ -863,7 +864,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                         FAQ
                       </span>
                       <span className="leading-snug">
-                        Frequently Asked Questions
+                        {t('blog.faqsTitle')}
                       </span>
                     </button>
                   )}
@@ -875,13 +876,13 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8A5A44]">
                 <Link2 className="w-3.5 h-3.5" />
-                <span>Wedding Planning Topic Cluster</span>
+                <span>{t('blog.clusterSidebarTitle')}</span>
               </div>
 
               {pillarPost && (
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-1.5">
-                    Pillar Cornerstone Guide
+                    {t('blog.pillarBadge')}
                   </div>
                   <button
                     onClick={() => {
@@ -895,7 +896,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     }`}
                   >
                     <div className="text-sm font-serif font-bold leading-snug">
-                      {pillarPost.title}
+                      {t(`blog.${pillarPost.id}.title`)}
                     </div>
                   </button>
                 </div>
@@ -903,7 +904,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                  Supporting Deep-Dive Guides ({clusterPosts.length})
+                  {t('blog.supportingHeading')} ({clusterPosts.length})
                 </div>
                 <div className="space-y-2">
                   {clusterPosts.map((post) => {
@@ -927,7 +928,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                           <span>{post.readTime}</span>
                         </div>
                         <div className="text-xs sm:text-sm font-serif font-bold text-[#724319] leading-snug">
-                          {post.title}
+                          {t(`blog.${post.id}.title`)}
                         </div>
                       </button>
                     );
@@ -938,7 +939,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               {editorialPosts.length > 0 && (
                 <div className="pt-2 border-t border-[#EBC1B6]/50">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                    Adelaide Editorial Spotlights
+                    {t('blog.adelaideSpotlight')}
                   </div>
                   <div className="space-y-2">
                     {editorialPosts.map((post) => {
@@ -957,7 +958,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                           }`}
                         >
                           <div className="text-xs font-serif font-bold text-[#724319] leading-snug">
-                            {post.title}
+                            {t(`blog.${post.id}.title`)}
                           </div>
                         </button>
                       );
@@ -973,16 +974,16 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 <Home className="w-5 h-5 text-[#F2CCC3]" />
               </div>
               <h3 className="text-lg font-serif font-bold">
-                Explore Event Sphere Adelaide
+                {t('blog.exploreAdelaideTitle')}
               </h3>
               <p className="text-xs text-white/80 leading-relaxed">
-                Return to the main platform to browse verified photographers, planners, caterers, and cultural specialists across South Australia.
+                {t('blog.exploreAdelaideSub')}
               </p>
               <button
                 onClick={() => onBackHome('marketplace')}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#724319] hover:bg-[#FFF8F6] text-xs font-semibold transition-colors cursor-pointer"
               >
-                <span>Explore Vendor Marketplace</span>
+                <span>{t('blog.exploreMarketplaceBtn')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

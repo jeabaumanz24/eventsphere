@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, LanguageCode } from '../context/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 const logoImg = `${import.meta.env.BASE_URL}assets/aistudio/a_clean_minimal_graphic_logo_image_on_a_transpare_861d7c48.png`;
 
 interface NavbarProps {
   onGetStarted: () => void;
-  onLanguageChange?: (langName: string) => void;
+  onLanguageChange?: (langName: string, langCode?: LanguageCode) => void;
   currentPage?: 'home' | 'blog';
   onOpenBlogPage?: () => void;
   onNavigateHomeSection?: (sectionId: string) => void;
@@ -178,9 +178,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile Community Language Selector */}
             <LanguageSwitcher
               isMobile={true}
-              onLanguageChange={(langName) => {
+              onLanguageChange={(langName, langCode) => {
                 setMobileMenuOpen(false);
-                if (onLanguageChange) onLanguageChange(langName);
+                if (onLanguageChange) onLanguageChange(langName, langCode);
               }}
             />
 

@@ -7,20 +7,17 @@ import {
   Filter,
   Sparkles,
   Download,
-  Share2,
   Camera,
   Utensils,
   Flower2,
   Music,
   Heart,
-  Plus,
   AlertCircle,
   CalendarCheck,
-  ChevronRight,
   ShieldCheck,
   Building2,
-  Sparkle,
 } from 'lucide-react';
+import { useLanguage, LanguageCode } from '../context/LanguageContext';
 
 export interface ServiceRequirement {
   id: string;
@@ -38,6 +35,16 @@ export const AVAILABLE_SERVICES: ServiceRequirement[] = [
   { id: 'music', name: 'Music & Bilingual MC', icon: Music, description: 'Ceremony acoustic & cultural reception' },
   { id: 'beauty', name: 'Bridal Hair & Makeup', icon: Sparkles, description: 'All-day 16hr luminous beauty' },
 ];
+
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-AU',
+  it: 'it-IT',
+  el: 'el-GR',
+  zh: 'zh-CN',
+  vi: 'vi-VN',
+  tl: 'fil-PH',
+  hi: 'hi-IN',
+};
 
 interface TimelineEvent {
   id: string;
@@ -63,6 +70,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   onExploreVendors,
   onExportSchedule,
 }) => {
+  const { t, currentLanguage } = useLanguage();
+
   // Default to a realistic event date ~8 months out
   const [eventDate, setEventDate] = useState<string>(() => {
     const d = new Date();
@@ -120,11 +129,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'venue-12',
           serviceId: 'venue',
           monthsOffset: 12,
-          title: 'Lock Adelaide Venue Estate & Date Hold',
-          description: 'Secure Barossa, Adelaide Hills or Botanic Garden glasshouse contract and pay initial deposit.',
-          category: 'Venue & Estate',
+          title: t('timeline.m.venue-12.title'),
+          description: t('timeline.m.venue-12.desc'),
+          category: t('timeline.srv.venue'),
           isCritical: true,
-          adelaideTip: 'Spring dates in Barossa (Oct–Nov) book 14 months in advance.',
+          adelaideTip: t('timeline.m.venue-12.tip'),
           dayOfTime: '08:00 AM',
           dayOfPhase: 'morning',
         },
@@ -132,9 +141,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'venue-3',
           serviceId: 'venue',
           monthsOffset: 3,
-          title: 'Final Venue Walkthrough & Curfew Briefing',
-          description: 'Confirm acoustic curfew limits, wet-weather backup pavilion, and load-in permits with estate manager.',
-          category: 'Venue & Estate',
+          title: t('timeline.m.venue-3.title'),
+          description: t('timeline.m.venue-3.desc'),
+          category: t('timeline.srv.venue'),
           dayOfTime: '01:30 PM',
           dayOfPhase: 'ceremony',
         }
@@ -148,11 +157,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'photo-9',
           serviceId: 'photo',
           monthsOffset: 9,
-          title: 'Book Photographer & Videographer',
-          description: 'Select culturally-experienced visual team (e.g. Maria Santos) and schedule Adelaide engagement session.',
-          category: 'Photography & Film',
+          title: t('timeline.m.photo-9.title'),
+          description: t('timeline.m.photo-9.desc'),
+          category: t('timeline.srv.photo'),
           isCritical: true,
-          adelaideTip: 'Share your ceremony ritual shot-list for sacred traditions.',
+          adelaideTip: t('timeline.m.photo-9.tip'),
           dayOfTime: '10:00 AM',
           dayOfPhase: 'morning',
         },
@@ -160,9 +169,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'photo-1',
           serviceId: 'photo',
           monthsOffset: 1,
-          title: 'Golden Hour Timeline & Shot List Sign-off',
-          description: 'Calculate sunset hour at your South Australian location for scenic vineyard & ocean portraits.',
-          category: 'Photography & Film',
+          title: t('timeline.m.photo-1.title'),
+          description: t('timeline.m.photo-1.desc'),
+          category: t('timeline.srv.photo'),
           dayOfTime: '05:15 PM',
           dayOfPhase: 'reception',
         }
@@ -176,11 +185,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'catering-6',
           serviceId: 'catering',
           monthsOffset: 6,
-          title: 'Menu Tasting & Local Wine Pairings',
-          description: 'Coordinate dual-heritage banquet menu with caterer, including halal, vegetarian or lechon options.',
-          category: 'Multicultural Banquet',
+          title: t('timeline.m.catering-6.title'),
+          description: t('timeline.m.catering-6.desc'),
+          category: t('timeline.srv.catering'),
           isCritical: true,
-          adelaideTip: 'Barossa Shiraz and Adelaide Hills Chardonnay pairings elevate local guest experience.',
+          adelaideTip: t('timeline.m.catering-6.tip'),
           dayOfTime: '06:45 PM',
           dayOfPhase: 'reception',
         },
@@ -188,9 +197,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'catering-1',
           serviceId: 'catering',
           monthsOffset: 1,
-          title: 'Final Dietary & Headcount Roster',
-          description: 'Submit verified table breakdown, children meals, and vendor meals to Adelaide banquet team.',
-          category: 'Multicultural Banquet',
+          title: t('timeline.m.catering-1.title'),
+          description: t('timeline.m.catering-1.desc'),
+          category: t('timeline.srv.catering'),
           dayOfTime: '07:30 PM',
           dayOfPhase: 'reception',
         }
@@ -204,10 +213,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'florals-6',
           serviceId: 'florals',
           monthsOffset: 6,
-          title: 'Floral Concept & Native Botanical Palette',
-          description: 'Finalize South Australian proteas, eucalyptus, and ceramic vase styling with Aria Botanical Arts.',
-          category: 'Botanical Styling',
-          adelaideTip: 'Using seasonal Adelaide natives cuts import shipping fees by up to 35%.',
+          title: t('timeline.m.florals-6.title'),
+          description: t('timeline.m.florals-6.desc'),
+          category: t('timeline.srv.florals'),
+          adelaideTip: t('timeline.m.florals-6.tip'),
           dayOfTime: '11:00 AM',
           dayOfPhase: 'morning',
         },
@@ -215,9 +224,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'florals-2',
           serviceId: 'florals',
           monthsOffset: 2,
-          title: 'Ceremony Arch & Tablescape Mockup Approval',
-          description: 'Review physical sample centerpiece and floral garland draping.',
-          category: 'Botanical Styling',
+          title: t('timeline.m.florals-2.title'),
+          description: t('timeline.m.florals-2.desc'),
+          category: t('timeline.srv.florals'),
           dayOfTime: '01:00 PM',
           dayOfPhase: 'ceremony',
         }
@@ -226,34 +235,23 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
 
     // CULTURAL RITUALS (Customized to culture)
     if (activeServices.includes('rituals')) {
-      let ritualTitle = 'Confirm Cultural Sponsors & Ritual Heirlooms';
-      let ritualDesc = 'Review ceremonial protocols, blessing artifacts, and dual-tradition order of service.';
-      let dayOfRitual = 'Sacred Cultural Ceremonies & Blessings';
-
-      if (selectedCulture === 'filipino') {
-        ritualTitle = 'Sponsor Invitations & Filipino Veil, Cord & Arras Coins';
-        ritualDesc = 'Commission heirloom cord artisans, prepare 13 coins (arras), and brief principal sponsors (Ninongs & Ninangs).';
-        dayOfRitual = 'Traditional Filipino Cord, Veil & Arras Exchange';
-      } else if (selectedCulture === 'southasian') {
-        ritualTitle = 'Sangeet Choreography & Mandap Sacred Fire Clearances';
-        ritualDesc = 'Secure fire permit for Agni ceremony with SA Metropolitan Fire Service and schedule Henna night.';
-        dayOfRitual = 'Seven Pheras & Sangeet Performance Show';
-      } else if (selectedCulture === 'mediterranean') {
-        ritualTitle = 'Stefana Crowns & Artisan Koufeta Favors';
-        ritualDesc = 'Source silver crowning ribbons and traditional sugar-coated almond bomboniere for wedding guests.';
-        dayOfRitual = 'Orthodox Stefana Crowning Ceremony';
-      }
+      const ritualKey =
+        selectedCulture === 'filipino' ||
+        selectedCulture === 'southasian' ||
+        selectedCulture === 'mediterranean'
+          ? selectedCulture
+          : 'default';
 
       items.push(
         {
           id: 'rituals-5',
           serviceId: 'rituals',
           monthsOffset: 5,
-          title: ritualTitle,
-          description: ritualDesc,
-          category: 'Sacred Cultural Rites',
+          title: t(`timeline.m.rituals-5.${ritualKey}.title`),
+          description: t(`timeline.m.rituals-5.${ritualKey}.desc`),
+          category: t('timeline.srv.rituals'),
           isCritical: true,
-          adelaideTip: 'Event Sphere connects you with verified Adelaide bilingual officiants.',
+          adelaideTip: t('timeline.m.rituals-5.tip'),
           dayOfTime: '03:15 PM',
           dayOfPhase: 'ceremony',
         },
@@ -261,9 +259,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'rituals-day',
           serviceId: 'rituals',
           monthsOffset: 0,
-          title: dayOfRitual,
-          description: 'Honor dual-heritage lineage with parents and elders before celebration banquet.',
-          category: 'Sacred Cultural Rites',
+          title: t(`timeline.m.rituals-day.${ritualKey}.title`),
+          description: t('timeline.m.rituals-day.desc'),
+          category: t('timeline.srv.rituals'),
           dayOfTime: '03:45 PM',
           dayOfPhase: 'ceremony',
         }
@@ -277,10 +275,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'music-4',
           serviceId: 'music',
           monthsOffset: 4,
-          title: 'Book Bilingual Master of Ceremonies & DJ',
-          description: 'Ensure MC can guide both English-speaking and traditional non-English elders smoothly.',
-          category: 'Music & Bilingual MC',
-          adelaideTip: 'Bilingual Adelaide MCs bridge generational traditions seamlessly.',
+          title: t('timeline.m.music-4.title'),
+          description: t('timeline.m.music-4.desc'),
+          category: t('timeline.srv.music'),
+          adelaideTip: t('timeline.m.music-4.tip'),
           dayOfTime: '06:00 PM',
           dayOfPhase: 'reception',
         },
@@ -288,9 +286,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'music-1',
           serviceId: 'music',
           monthsOffset: 1,
-          title: 'Ceremony Entrance & First Dance Audio Brief',
-          description: 'Submit acoustic entrance track and cultural celebration playlist.',
-          category: 'Music & Bilingual MC',
+          title: t('timeline.m.music-1.title'),
+          description: t('timeline.m.music-1.desc'),
+          category: t('timeline.srv.music'),
           dayOfTime: '08:30 PM',
           dayOfPhase: 'evening',
         }
@@ -304,10 +302,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           id: 'beauty-3',
           serviceId: 'beauty',
           monthsOffset: 3,
-          title: 'Bridal Hair & Makeup Trial Session',
-          description: 'Test heat-resistant, tear-proof 16hr makeup and traditional veil/dupatta setting.',
-          category: 'Bridal Hair & Makeup',
-          adelaideTip: 'Schedule trial during Adelaide warm afternoon light for accurate tone matching.',
+          title: t('timeline.m.beauty-3.title'),
+          description: t('timeline.m.beauty-3.desc'),
+          category: t('timeline.srv.beauty'),
+          adelaideTip: t('timeline.m.beauty-3.tip'),
           dayOfTime: '07:30 AM',
           dayOfPhase: 'morning',
         }
@@ -315,7 +313,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     }
 
     return items;
-  }, [activeServices, selectedCulture]);
+  }, [activeServices, selectedCulture, t]);
 
   // Sort and filter milestones
   const filteredMilestones = useMemo(() => {
@@ -326,10 +324,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     }
 
     if (viewMode === 'roadmap') {
-      // Sort by monthsOffset descending (12 months out down to 0)
       list.sort((a, b) => b.monthsOffset - a.monthsOffset);
     } else {
-      // Day-of: sort by time
       list.sort((a, b) => (a.dayOfTime || '').localeCompare(b.dayOfTime || ''));
     }
 
@@ -340,7 +336,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   const getCalculatedDate = (monthsOffset: number): string => {
     const d = new Date(eventDate);
     d.setMonth(d.getMonth() - monthsOffset);
-    return d.toLocaleDateString('en-AU', {
+    return d.toLocaleDateString(LOCALE_MAP[currentLanguage] || 'en-AU', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -353,12 +349,16 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   const progressPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
 
   const handleExport = () => {
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-AU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    const msg = `Event schedule for ${formattedDate} (${viewMode === 'roadmap' ? 'Milestone Roadmap' : 'Day-Of Run Sheet'}) exported to your device!`;
+    const formattedDate = new Date(eventDate).toLocaleDateString(
+      LOCALE_MAP[currentLanguage] || 'en-AU',
+      {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }
+    );
+    const modeLabel = viewMode === 'roadmap' ? t('timeline.roadmap') : t('timeline.dayOf');
+    const msg = t('timeline.exportToast', { date: formattedDate, mode: modeLabel });
     if (onExportSchedule) {
       onExportSchedule(msg);
     }
@@ -373,11 +373,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             <div className="flex items-center gap-2">
               <CalendarCheck className="w-5 h-5 text-[#8A5A44]" />
               <h3 className="text-base sm:text-lg font-serif font-bold text-[#724319]">
-                Interactive Event Timeline
+                {t('timeline.title')}
               </h3>
             </div>
             <p className="text-xs text-[#724319]/75 mt-0.5">
-              Dynamically generated from your celebration date and selected service requirements.
+              {t('timeline.subtitle')}
             </p>
           </div>
 
@@ -386,7 +386,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-[#EBC1B6] shadow-2xs">
               <Calendar className="w-4 h-4 text-[#8A5A44] shrink-0" />
               <label htmlFor="timeline-event-date" className="text-xs font-semibold text-[#724319] shrink-0">
-                Event Date:
+                {t('timeline.eventDate')}
               </label>
               <input
                 id="timeline-event-date"
@@ -398,7 +398,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             </div>
 
             <div className="bg-[#F2CCC3]/60 px-3 py-2 rounded-xl text-xs font-medium text-[#724319] border border-[#EBC1B6]">
-              <span className="font-bold tabular-nums">{daysUntilEvent}</span> Days to Celebration
+              <span className="font-bold tabular-nums">{daysUntilEvent}</span> {t('timeline.daysToGo')}
             </div>
           </div>
         </div>
@@ -407,10 +407,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44]">
-              Active Service Requirements ({activeServices.length}/{AVAILABLE_SERVICES.length}):
+              {t('timeline.activeReq')} ({activeServices.length}/{AVAILABLE_SERVICES.length}):
             </span>
             <span className="text-[11px] text-[#724319]/60">
-              Click to toggle services on or off
+              {t('timeline.clickToggle')}
             </span>
           </div>
 
@@ -430,7 +430,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   title={srv.description}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  <span>{srv.name}</span>
+                  <span>{t(`timeline.srv.${srv.id}`)}</span>
                   {isSelected && <span className="text-[10px] ml-0.5 opacity-80">✓</span>}
                 </button>
               );
@@ -451,7 +451,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               }`}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span>Milestone Roadmap</span>
+              <span>{t('timeline.roadmap')}</span>
             </button>
             <button
               onClick={() => setViewMode('dayOf')}
@@ -462,7 +462,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Day-Of Run Sheet</span>
+              <span>{t('timeline.dayOf')}</span>
             </button>
           </div>
 
@@ -470,7 +470,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <div className="text-[11px] font-semibold text-[#724319]">
-                {completedCount} of {totalItemsCount} Completed ({progressPercent}%)
+                {t('timeline.progressText', {
+                  done: completedCount,
+                  total: totalItemsCount,
+                  pct: progressPercent,
+                })}
               </div>
               <div className="w-32 h-1.5 bg-[#EBC1B6]/60 rounded-full overflow-hidden mt-1">
                 <div
@@ -485,7 +489,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] text-[#724319] rounded-xl text-xs font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-[#8A5A44]" />
-              <span>Export Schedule</span>
+              <span>{t('timeline.exportBtn')}</span>
             </button>
           </div>
         </div>
@@ -494,7 +498,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       {/* Category Filter Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
         <span className="text-[#8A5A44] font-semibold shrink-0 mr-1 flex items-center gap-1">
-          <Filter className="w-3 h-3" /> Filter:
+          <Filter className="w-3 h-3" /> {t('timeline.filterLabel')}
         </span>
         <button
           onClick={() => setCategoryFilter('all')}
@@ -504,7 +508,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]'
           }`}
         >
-          All Requirements ({allMilestones.length})
+          {t('timeline.allReq')} ({allMilestones.length})
         </button>
         {AVAILABLE_SERVICES.filter((s) => activeServices.includes(s.id)).map((srv) => (
           <button
@@ -516,7 +520,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                 : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]'
             }`}
           >
-            {srv.name}
+            {t(`timeline.srv.${srv.id}`)}
           </button>
         ))}
       </div>
@@ -525,14 +529,14 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       {filteredMilestones.length === 0 ? (
         <div className="p-8 text-center bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6] space-y-2">
           <AlertCircle className="w-8 h-8 text-[#8A5A44] mx-auto" />
-          <h4 className="text-sm font-semibold text-[#724319]">No Milestones Selected</h4>
+          <h4 className="text-sm font-semibold text-[#724319]">{t('timeline.noMilestones')}</h4>
           <p className="text-xs text-[#724319]/70">
-            Please activate at least one service requirement above to generate your customized schedule.
+            {t('timeline.noMilestonesDesc')}
           </p>
         </div>
       ) : (
         <div className="relative pl-6 sm:pl-8 border-l-2 border-[#EBC1B6] space-y-4">
-          {filteredMilestones.map((item, idx) => {
+          {filteredMilestones.map((item) => {
             const isDone = !!completedItems[item.id];
             const targetDateStr = getCalculatedDate(item.monthsOffset);
 
@@ -562,7 +566,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                     {/* View Mode Tag: Months Out (Roadmap) or Clock Time (Day-of) */}
                     {viewMode === 'roadmap' ? (
                       <span className="text-[11px] font-mono font-bold text-[#8A5A44] bg-[#FFF8F6] border border-[#EBC1B6] px-2.5 py-0.5 rounded-md">
-                        {item.monthsOffset === 0 ? 'Day-Of Celebration' : `${item.monthsOffset} Months Prior`}
+                        {item.monthsOffset === 0
+                          ? t('timeline.dayOfCelebration')
+                          : t('timeline.monthsPrior', { m: item.monthsOffset })}
                       </span>
                     ) : (
                       <span className="text-[11px] font-mono font-bold text-[#724319] bg-[#F2CCC3]/50 border border-[#EBC1B6] px-2.5 py-0.5 rounded-md flex items-center gap-1">
@@ -574,7 +580,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                     {/* Calculated Target Date */}
                     {viewMode === 'roadmap' && (
                       <span className="text-[11px] text-[#724319]/70 font-mono">
-                        Target Date: <strong>{targetDateStr}</strong>
+                        {t('timeline.targetDate')} <strong>{targetDateStr}</strong>
                       </span>
                     )}
 
@@ -584,7 +590,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
 
                     {item.isCritical && (
                       <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
-                        Critical Milestone
+                        {t('timeline.critical')}
                       </span>
                     )}
                   </div>
@@ -592,7 +598,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   {/* Completion status button */}
                   <div className="flex items-center gap-1.5 text-xs text-[#8A5A44] shrink-0">
                     <span className="text-[11px] font-medium hidden sm:inline">
-                      {isDone ? 'Completed' : 'Pending'}
+                      {isDone ? t('timeline.completed') : t('timeline.pending')}
                     </span>
                     {isDone ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
@@ -619,7 +625,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   <div className="mt-3 pt-2.5 border-t border-[#EBC1B6]/40 flex items-start gap-2 text-[11px] text-[#8A5A44] bg-[#FFF8F6]/80 p-2.5 rounded-xl">
                     <Sparkles className="w-3.5 h-3.5 text-[#8A5A44] shrink-0 mt-0.5" />
                     <span>
-                      <strong className="font-semibold text-[#724319]">Adelaide Insider Tip:</strong>{' '}
+                      <strong className="font-semibold text-[#724319]">{t('timeline.tipLabel')}</strong>{' '}
                       {item.adelaideTip}
                     </span>
                   </div>
@@ -635,14 +641,14 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         <div className="flex items-center gap-2 text-[#724319]">
           <ShieldCheck className="w-4 h-4 text-[#8A5A44] shrink-0" />
           <span>
-            Timeline is automatically synchronized across all shortlisted Adelaide vendor portals.
+            {t('timeline.syncBanner')}
           </span>
         </div>
         <button
           onClick={onExploreVendors}
           className="text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] px-4 py-2 rounded-full transition-colors whitespace-nowrap cursor-pointer"
         >
-          Match Vendors for this Schedule
+          {t('timeline.matchBtn')}
         </button>
       </div>
     </div>

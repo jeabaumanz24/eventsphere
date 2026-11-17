@@ -96,8 +96,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 
                 <div className="absolute bottom-4 left-4 right-4 text-white p-3 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20">
-                  <p className="text-xs font-serif italic text-white/95">Adelaide Botanic Gardens & Barossa Celebrations</p>
-                  <p className="text-[11px] text-white/80 font-sans">Dual-heritage couple matching with local artisans</p>
+                  <p className="text-xs font-serif italic text-white/95">{t('hero.cardTitle')}</p>
+                  <p className="text-[11px] text-white/80 font-sans">{t('hero.cardSub')}</p>
                 </div>
               </div>
 
@@ -108,8 +108,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <Sparkles className="w-4 h-4 text-[#724319]" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-semibold text-[#724319] leading-tight">AI Match Found</div>
-                    <div className="text-[10px] text-[#8A5A44]">Barossa Fusion & Photography</div>
+                    <div className="text-[11px] font-semibold text-[#724319] leading-tight">{t('hero.floatMatchTitle')}</div>
+                    <div className="text-[10px] text-[#8A5A44]">{t('hero.floatMatchSub')}</div>
                   </div>
                 </div>
               </div>
@@ -121,10 +121,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <ShieldCheck className="w-4 h-4 text-[#724319]" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-semibold text-[#724319]">500+ Verified Vendors</div>
+                    <div className="text-[11px] font-semibold text-[#724319]">{t('hero.floatVendorTitle')}</div>
                     <div className="text-[10px] text-[#8A5A44] flex items-center gap-1">
                       <MapPin className="w-3 h-3 inline" />
-                      <span>Greater Adelaide, SA</span>
+                      <span>{t('hero.floatVendorLoc')}</span>
                     </div>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { useLanguage, COMMUNITY_LANGUAGES, LanguageCode } from '../context/Langu
 
 interface LanguageSwitcherProps {
   isMobile?: boolean;
-  onLanguageChange?: (langName: string) => void;
+  onLanguageChange?: (langName: string, langCode?: LanguageCode) => void;
 }
 
 export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
@@ -44,7 +44,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     setLanguage(code);
     setIsOpen(false);
     if (onLanguageChange) {
-      onLanguageChange(nativeName);
+      onLanguageChange(nativeName, code);
     }
   };
 
@@ -104,12 +104,12 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
           <div className="px-3 py-2 border-b border-[#EBC1B6]/50 mb-1">
             <div className="flex items-center justify-between">
               <span className="text-xs font-serif font-bold text-[#724319]">
-                Adelaide Community Languages
+                {t('lang.dropdownTitle')}
               </span>
               <span className="text-[10px] text-[#8A5A44] font-mono">SA Census</span>
             </div>
             <p className="text-[11px] text-[#724319]/70 leading-tight mt-0.5">
-              Select your language for tailored multicultural planning.
+              {t('lang.dropdownSub')}
             </p>
           </div>
 

@@ -1,12 +1,15 @@
 import React from 'react';
 import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { aiEcosystemImg } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AboutSectionProps {
   onLearnMore?: () => void;
 }
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="about" className="py-20 md:py-28 bg-[#FFF8F6] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,11 +29,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                 <div className="p-5 bg-white border-t border-[#EBC1B6]/50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-semibold text-[#724319]">Unified Event Sphere Ecosystem</h4>
-                      <p className="text-xs text-[#8A5A44]">Vendor Studios · Budgeting Core · Cultural Checklists</p>
+                      <h4 className="text-sm font-semibold text-[#724319]">{t('about.ecoTitle')}</h4>
+                      <p className="text-xs text-[#8A5A44]">{t('about.ecoSub')}</p>
                     </div>
                     <span className="text-xs font-medium text-[#724319] bg-[#F2CCC3] px-3 py-1 rounded-full">
-                      Zero Friction
+                      {t('about.ecoBadge')}
                     </span>
                   </div>
                 </div>
@@ -45,15 +48,15 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
             <div className="space-y-2">
               <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-                The Platform Advantage
+                {t('about.kicker')}
               </span>
               <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] leading-tight">
-                Why Event Sphere
+                {t('about.title')}
               </h2>
             </div>
 
             <p className="text-base sm:text-lg text-[#724319]/85 leading-relaxed">
-              Planning events often requires users to search across multiple websites, social platforms, and vendor directories. Event Sphere simplifies the process by bringing vendor discovery, budgeting tools, planning resources, and AI-driven recommendations together in one platform.
+              {t('about.description')}
             </p>
 
             {/* Core differentiators */}
@@ -63,9 +66,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-[#724319]">Multicultural Heritage by Design</h4>
+                  <h4 className="text-sm font-semibold text-[#724319]">{t('about.diff1Title')}</h4>
                   <p className="text-xs text-[#724319]/75 mt-0.5">
-                    Purpose-built protocols for dual-tradition ceremonies, multi-day celebrations, and bespoke cultural dietary guidelines.
+                    {t('about.diff1Desc')}
                   </p>
                 </div>
               </div>
@@ -75,9 +78,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-[#724319]">South Australian Local Intelligence</h4>
+                  <h4 className="text-sm font-semibold text-[#724319]">{t('about.diff2Title')}</h4>
                   <p className="text-xs text-[#724319]/75 mt-0.5">
-                    Deep regional calibration spanning Adelaide CBD, Adelaide Hills, Barossa Valley, McLaren Vale, and coastal Fleurieu.
+                    {t('about.diff2Desc')}
                   </p>
                 </div>
               </div>
@@ -87,9 +90,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-[#724319]">Transparent Quotes, Zero Hidden Markups</h4>
+                  <h4 className="text-sm font-semibold text-[#724319]">{t('about.diff3Title')}</h4>
                   <p className="text-xs text-[#724319]/75 mt-0.5">
-                    Clear baseline package pricing with real-time budget forecasting and verified direct vendor communications.
+                    {t('about.diff3Desc')}
                   </p>
                 </div>
               </div>
@@ -98,9 +101,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore }) => {
             <div className="pt-2">
               <a
                 href="#services"
+                onClick={() => onLearnMore && onLearnMore()}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-[#724319] hover:text-[#8A5A44] transition-colors group cursor-pointer"
               >
-                <span>Explore all 4 core services</span>
+                <span>{t('about.cta')}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>

@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Star, MapPin, Heart, ArrowUpRight, Sparkles, Filter } from 'lucide-react';
+import { Search, Star, MapPin, Heart, ArrowUpRight, Sparkles } from 'lucide-react';
 import { vendorsData } from '../data/mockData';
 import { Vendor } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VendorMarketplaceSectionProps {
   onSelectVendor: (vendor: Vendor) => void;
@@ -10,6 +11,7 @@ interface VendorMarketplaceSectionProps {
 export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> = ({
   onSelectVendor,
 }) => {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
@@ -30,18 +32,20 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
         selectedCategory === 'All' || vendor.category === selectedCategory;
 
       const q = searchQuery.toLowerCase().trim();
+      const translatedDesc = t(`vendor.${vendor.id}.desc`).toLowerCase();
       const matchesSearch =
         q === '' ||
         vendor.name.toLowerCase().includes(q) ||
         vendor.businessName.toLowerCase().includes(q) ||
         vendor.location.toLowerCase().includes(q) ||
         vendor.description.toLowerCase().includes(q) ||
+        translatedDesc.includes(q) ||
         vendor.features.some((feat) => feat.toLowerCase().includes(q)) ||
         vendor.culturalSpecialties.some((spec) => spec.toLowerCase().includes(q));
 
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, t]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { All: vendorsData.length };
@@ -61,13 +65,13 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
-            Curated Artisans & Vendors
+            {t('marketplace.kicker')}
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
-            Adelaide Vendor Marketplace
+            {t('marketplace.title')}
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
-            Explore verified South Australian wedding professionals and cultural specialists celebrated for artistic excellence and cross-cultural warmth.
+            {t('marketplace.subtitle')}
           </p>
         </div>
 
@@ -79,7 +83,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
               <Search className="w-4 h-4 text-[#8A5A44] absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search by vendor name, Barossa, tea ceremony, floral, catering..."
+                placeholder={t('marketplace.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-white border border-[#EBC1B6] rounded-2xl text-sm text-[#724319] placeholder:text-[#8A5A44]/50 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all shadow-xs"
@@ -87,9 +91,9 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8A5A44] hover:text-[#724319] px-2 py-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8A5A44] hover:text-[#724319] px-2 py-1 cursor-pointer"
                 >
-                  Clear
+                  {t('marketplace.clear')}
                 </button>
               )}
             </div>
@@ -110,7 +114,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                       : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319] border border-[#EBC1B6]/60'
                   }`}
                 >
-                  {cat} <span className={`ml-1 tabular-nums ${isActive ? 'text-white/75' : 'text-[#8A5A44]'}`}>({count})</span>
+                  {t(`cat.${cat}`)} <span className={`ml-1 tabular-nums ${isActive ? 'text-white/75' : 'text-[#8A5A44]'}`}>({count})</span>
                 </button>
               );
             })}
@@ -121,18 +125,18 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
         {filteredVendors.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-[#EBC1B6] p-8 max-w-lg mx-auto">
             <Sparkles className="w-8 h-8 text-[#8A5A44] mx-auto mb-3" />
-            <h3 className="text-lg font-serif font-bold text-[#724319]">No Vendors Found</h3>
+            <h3 className="text-lg font-serif font-bold text-[#724319]">{t('marketplace.noVendors')}</h3>
             <p className="text-xs text-[#724319]/70 mt-1 mb-4">
-              We couldn't find matches for "{searchQuery}". Try searching for "Adelaide", "Florist", or clear your filter.
+              {t('marketplace.noVendorsDesc', { query: searchQuery })}
             </p>
             <button
               onClick={() => {
                 setSelectedCategory('All');
                 setSearchQuery('');
               }}
-              className="px-4 py-2 bg-[#724319] text-white rounded-full text-xs font-medium"
+              className="px-4 py-2 bg-[#724319] text-white rounded-full text-xs font-medium cursor-pointer"
             >
-              Reset Filters
+              {t('marketplace.resetFilters')}
             </button>
           </div>
         ) : (
@@ -159,7 +163,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 
                       {/* Category Label */}
                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-semibold text-[#724319] shadow-xs">
-                        {vendor.category}
+                        {t(`cat.${vendor.category}`)}
                       </div>
 
                       {/* Heart Favorite button */}
@@ -173,7 +177,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 
                       {/* Starting Price tag */}
                       <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-mono text-white">
-                        From {vendor.startingPrice}
+                        {t('marketplace.from')} {vendor.startingPrice}
                       </div>
                     </div>
 
@@ -192,7 +196,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 
                       {/* Lead Artisan Name */}
                       <div className="text-xs font-medium text-[#8A5A44] mb-2.5">
-                        Lead: {vendor.name}
+                        {t('marketplace.lead')} {vendor.name}
                       </div>
 
                       {/* Location text */}
@@ -202,7 +206,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                       </div>
 
                       <p className="text-xs text-[#724319]/80 line-clamp-2 leading-relaxed mb-4">
-                        {vendor.description}
+                        {t(`vendor.${vendor.id}.desc`)}
                       </p>
 
                       {/* Cultural Specialties unboxed text with dot separator */}
@@ -221,7 +225,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 
                   {/* Card Action footer */}
                   <div className="px-6 py-4 bg-[#FFF8F6] border-t border-[#EBC1B6]/40 flex items-center justify-between text-xs font-semibold text-[#724319]">
-                    <span>View Profile & Quote</span>
+                    <span>{t('marketplace.viewProfile')}</span>
                     <div className="w-7 h-7 rounded-full bg-white border border-[#EBC1B6] flex items-center justify-center group-hover:bg-[#724319] group-hover:text-white transition-all">
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </div>
