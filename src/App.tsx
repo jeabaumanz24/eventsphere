@@ -3,6 +3,8 @@ import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { StatsSection } from './components/StatsSection';
 import { AboutSection } from './components/AboutSection';
+import { HomeOverviewStrip } from './components/HomeOverviewStrip';
+import { MissionSection } from './components/MissionSection';
 import { FeaturedVendorsSection } from './components/FeaturedVendorsSection';
 import { HowItWorksTeaserSection } from './components/HowItWorksTeaserSection';
 import { ServicesSection } from './components/ServicesSection';
@@ -293,10 +295,7 @@ function EventSphereApp() {
           <>
             <HeroSection />
             <StatsSection />
-            <AboutSection
-              ctaHref={getPageHref('about')}
-              ctaLabel={t('home.aboutOverviewCta')}
-            />
+            <HomeOverviewStrip />
             <FeaturedVendorsSection
               onSelectVendor={handleOpenStandardVendor}
               wishlistIds={wishlistIds}
@@ -308,6 +307,7 @@ function EventSphereApp() {
 
         {currentPage === 'about' && (
           <>
+            <MissionSection />
             <AboutSection isPagePrimary={true} />
             <PersonasSection />
             <TestimonialsSection />

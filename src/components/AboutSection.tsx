@@ -17,6 +17,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
 }) => {
   const { t } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
+  const SubHeadingTag = isPagePrimary ? 'h2' : 'h3';
   const resolvedHref = ctaHref || getPageHref('services');
   const resolvedLabel = ctaLabel || t('about.cta');
 
@@ -24,7 +25,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
     <section
       id="about"
       className={`${
-        isPagePrimary ? 'pt-32 pb-20 md:pt-36 md:pb-28' : 'py-20 md:py-24'
+        isPagePrimary ? 'py-16 md:py-24' : 'py-20 md:py-24'
       } bg-[#FFF8F6] relative`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,12 +43,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
                   loading="lazy"
                 />
                 <div className="p-5 bg-white border-t border-[#EBC1B6]/50">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-[#724319]">{t('about.ecoTitle')}</h3>
-                      <p className="text-xs text-[#8A5A44]">{t('about.ecoSub')}</p>
+                      <SubHeadingTag className="text-sm font-semibold text-[#724319]">{t('about.ecoTitle')}</SubHeadingTag>
+                      <p className="text-xs text-[#724319] mt-0.5">{t('about.ecoSub')}</p>
                     </div>
-                    <span className="text-xs font-medium text-[#724319] bg-[#F2CCC3] px-3 py-1 rounded-full">
+                    <span className="text-xs font-medium text-[#724319] bg-[#F2CCC3] px-3 py-1 rounded-full shrink-0">
                       {t('about.ecoBadge')}
                     </span>
                   </div>
@@ -62,7 +63,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           {/* Right Column: Narrative content */}
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
             <div className="space-y-2">
-              <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
+              <span className="text-xs font-semibold tracking-wider uppercase text-[#724319]">
                 {t('about.kicker')}
               </span>
               <HeadingTag className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] leading-tight">
@@ -70,7 +71,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               </HeadingTag>
             </div>
 
-            <p className="text-base sm:text-lg text-[#724319]/85 leading-relaxed">
+            <p className="text-base sm:text-lg text-[#4A2B10] leading-relaxed">
               {t('about.description')}
             </p>
 
@@ -78,11 +79,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             <div className="space-y-3.5 pt-2">
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-[#EBC1B6]/60 flex items-center justify-center shrink-0 mt-0.5 text-[#724319]">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#724319]">{t('about.diff1Title')}</h3>
-                  <p className="text-xs text-[#724319]/75 mt-0.5">
+                  <SubHeadingTag className="text-sm font-semibold text-[#724319]">{t('about.diff1Title')}</SubHeadingTag>
+                  <p className="text-xs sm:text-sm text-[#4A2B10] mt-0.5">
                     {t('about.diff1Desc')}
                   </p>
                 </div>
@@ -90,11 +91,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
 
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-[#EBC1B6]/60 flex items-center justify-center shrink-0 mt-0.5 text-[#724319]">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#724319]">{t('about.diff2Title')}</h3>
-                  <p className="text-xs text-[#724319]/75 mt-0.5">
+                  <SubHeadingTag className="text-sm font-semibold text-[#724319]">{t('about.diff2Title')}</SubHeadingTag>
+                  <p className="text-xs sm:text-sm text-[#4A2B10] mt-0.5">
                     {t('about.diff2Desc')}
                   </p>
                 </div>
@@ -102,11 +103,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
 
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-[#EBC1B6]/60 flex items-center justify-center shrink-0 mt-0.5 text-[#724319]">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#724319]">{t('about.diff3Title')}</h3>
-                  <p className="text-xs text-[#724319]/75 mt-0.5">
+                  <SubHeadingTag className="text-sm font-semibold text-[#724319]">{t('about.diff3Title')}</SubHeadingTag>
+                  <p className="text-xs sm:text-sm text-[#4A2B10] mt-0.5">
                     {t('about.diff3Desc')}
                   </p>
                 </div>
@@ -116,10 +117,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             <div className="pt-2">
               <a
                 href={resolvedHref}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#724319] hover:text-[#8A5A44] transition-colors group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] rounded-lg"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[#724319] hover:text-[#4A2B10] transition-colors group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F6] rounded-lg px-2 py-1 -mx-2"
               >
                 <span>{resolvedLabel}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </a>
             </div>
           </div>

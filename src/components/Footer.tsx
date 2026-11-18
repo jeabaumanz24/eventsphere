@@ -196,8 +196,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
           </div>
         </div>
 
+        {/* Prototype Sample Data Notice */}
+        <div className="mt-8 rounded-xl bg-[#F2CCC3]/35 border border-[#EBC1B6] px-4 py-2.5 text-center text-xs font-medium text-[#724319]">
+          {t('footer.prototypeNote')}
+        </div>
+
         {/* Bottom Bar: Copyright & Location */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#724319]/70">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#724319]/70">
           <div>{t('footer.copyright')}</div>
           <div className="flex items-center gap-1 text-[11px] text-[#8A5A44]">
             <span>{t('footer.crafted')}</span>

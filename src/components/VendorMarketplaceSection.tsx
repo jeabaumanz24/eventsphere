@@ -43,6 +43,20 @@ const VENDOR_CATEGORIES = [
   'Cultural Specialists',
 ];
 
+function getInitialEventTypeFromUrl(): 'All Events' | EventTypeTag {
+  if (typeof window === 'undefined') return 'All Events';
+  try {
+    const param = new URLSearchParams(window.location.search).get('eventType');
+    if (!param) return 'All Events';
+    const matched = EVENT_TYPE_FILTERS.find(
+      (opt) => opt.toLowerCase() === param.trim().toLowerCase()
+    );
+    return matched ?? 'All Events';
+  } catch {
+    return 'All Events';
+  }
+}
+
 export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> = ({
   isPagePrimary = false,
   onSelectVendor,
@@ -52,7 +66,9 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 }) => {
   const { t } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
-  const [selectedEventType, setSelectedEventType] = useState<'All Events' | EventTypeTag>('All Events');
+  const [selectedEventType, setSelectedEventType] = useState<'All Events' | EventTypeTag>(
+    () => getInitialEventTypeFromUrl()
+  );
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [localWishlistIds, setLocalWishlistIds] = useState<string[]>([]);

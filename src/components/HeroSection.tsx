@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, MapPin, Sparkles, Heart, ShieldCheck, Award } from 'lucide-react';
-import { heroCelebrationImg } from '../data/mockData';
+import { heroCelebrationImg, vendorsData } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 import { getPageHref } from '../utils/navigation';
 
@@ -114,7 +114,7 @@ export const HeroSection: React.FC = () => {
                     <ShieldCheck className="w-4 h-4 text-[#724319]" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-semibold text-[#724319]">{t('hero.floatVendorTitle')}</div>
+                    <div className="text-[11px] font-semibold text-[#724319]">{t('hero.floatVendorTitle', { count: vendorsData.length })}</div>
                     <div className="text-[10px] text-[#8A5A44] flex items-center gap-1">
                       <MapPin className="w-3 h-3 inline" />
                       <span>{t('hero.floatVendorLoc')}</span>

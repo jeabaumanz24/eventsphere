@@ -51,7 +51,7 @@ export const TestimonialsSection: React.FC = () => {
                   </div>
 
                   {/* Quote text */}
-                  <p className="text-xs sm:text-sm text-[#724319]/85 leading-relaxed italic">
+                  <p className="text-xs sm:text-sm text-[#4A2B10] leading-relaxed italic">
                     "{t(`testimonial.${item.id}.quote`)}"
                   </p>
                 </div>
@@ -59,10 +59,10 @@ export const TestimonialsSection: React.FC = () => {
                 {/* Author Info */}
                 <div className="pt-6 mt-6 border-t border-[#EBC1B6]/40 flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-serif font-bold text-[#724319]">
+                    <h3 className="text-sm font-serif font-bold text-[#724319]">
                       {item.clientNames}
-                    </h4>
-                    <p className="text-xs text-[#8A5A44] mt-0.5">
+                    </h3>
+                    <p className="text-xs text-[#724319] mt-0.5">
                       {t(`testimonial.${item.id}.role`)} · {item.eventDetails}
                     </p>
                   </div>

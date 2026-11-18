@@ -77,10 +77,10 @@ export {
 };
 
 export const statsData = [
-  { value: '500+', label: 'Verified Vendors', description: 'Hand-picked across Greater Adelaide & Barossa' },
-  { value: '2,000+', label: 'Events Planned', description: 'From intimate vineyard vows to 500-guest galas' },
-  { value: '50+', label: 'Cultural Categories', description: 'Honoring Greek, Filipino, South Asian, Italian & more' },
-  { value: '95%', label: 'Customer Satisfaction', description: 'Verified reviews from couples and event hosts' },
+  { value: '41', label: 'Sample Vendors', description: 'Fictional Adelaide & Barossa roster, designed for verified onboarding' },
+  { value: '11', label: 'Event Types Supported', description: 'From weddings, Diwali, Eid and Lunar New Year to milestones and corporate events' },
+  { value: '9', label: 'Cultural Traditions', description: 'Designed for Greek, Filipino, Indian, Chinese, Italian, Middle Eastern & more' },
+  { value: '7', label: 'Community Languages', description: 'Multilingual planning interface built for Adelaide families & elders' },
 ];
 
 export const servicesData = [
