@@ -311,7 +311,7 @@ export const VendorInsightsSection: React.FC<VendorInsightsSectionProps> = ({
       ? `grew from ${firstPeriod.enquiries} in ${firstPeriod.period} to ${lastPeriod.enquiries} in ${lastPeriod.period}`
       : `moved from ${firstPeriod?.enquiries ?? 0} in ${firstPeriod?.period ?? ''} to ${lastPeriod?.enquiries ?? 0} in ${lastPeriod?.period ?? ''}`;
 
-  const contactHref = getPageHref('contact');
+  const joinVendorHref = getPageHref('join-as-a-vendor');
 
   return (
     <section
@@ -352,7 +352,7 @@ export const VendorInsightsSection: React.FC<VendorInsightsSectionProps> = ({
 
             <div className="flex flex-wrap items-center gap-3 shrink-0 print:hidden">
               <a
-                href={contactHref}
+                href={joinVendorHref}
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#724319] hover:bg-[#8A5A44] text-white text-sm font-semibold shadow-sm hover:shadow-md transition-all"
               >
                 <span>{t('vendorInsights.joinCta')}</span>
@@ -919,7 +919,7 @@ export const VendorInsightsSection: React.FC<VendorInsightsSectionProps> = ({
               Interested in listing your Adelaide hospitality, styling, entertainment or planning business?
             </span>
             <a
-              href={contactHref}
+              href={joinVendorHref}
               className="inline-flex items-center gap-1.5 font-semibold text-[#724319] hover:underline"
             >
               <span>{t('vendorInsights.joinCta')}</span>

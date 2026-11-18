@@ -15,7 +15,7 @@ export function buildPlainTextPlanSummary(
 
   if (conciseForMailto) {
     const lines = [
-      'Sample plan from Event Sphere (fictional vendors and sample data)',
+      'Sample plan from EventSphere (fictional vendors and sample data)',
       '',
       `Event type: ${plan.eventType}`,
       `Cultural tradition: ${plan.traditionLabel}`,
@@ -36,7 +36,7 @@ export function buildPlainTextPlanSummary(
   }
 
   return [
-    'Sample plan from Event Sphere (fictional vendors and sample data)',
+    'Sample plan from EventSphere (fictional vendors and sample data)',
     '====================================================================',
     `Event Type: ${plan.eventType}`,
     `Cultural Tradition: ${plan.traditionLabel}`,
@@ -60,7 +60,7 @@ export function buildPlainTextPlanSummary(
     '',
     `Sample Reply Note: ${plan.sampleQuoteText.replace(/^"|"$/g, '')}`,
     '',
-    'Sample plan from Event Sphere (fictional vendors and sample data)',
+    'Sample plan from EventSphere (fictional vendors and sample data)',
   ].join('\n');
 }
 
@@ -69,7 +69,7 @@ export function buildMailtoHref(
   optionalEmail = ''
 ): string {
   const recipient = optionalEmail.trim();
-  const subject = encodeURIComponent('My Event Sphere plan');
+  const subject = encodeURIComponent('My EventSphere plan');
   const body = encodeURIComponent(buildPlainTextPlanSummary(plan, true));
   return `mailto:${recipient ? encodeURIComponent(recipient) : ''}?subject=${subject}&body=${body}`;
 }

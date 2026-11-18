@@ -37,7 +37,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#EBC1B6] bg-white group">
                 <img
                   src={aiEcosystemImg}
-                  alt="Isometric illustration showing Event Sphere connecting event hosts and Adelaide vendor studios"
+                  alt="Isometric illustration showing EventSphere connecting event hosts and Adelaide vendor studios"
                   className="w-full h-auto object-cover group-hover:scale-102 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                   loading="lazy"

@@ -73,6 +73,14 @@ export const PAGE_CONFIGS: Record<PageId, PageMetaConfig> = {
     description:
       'See how Adelaide event vendors could track enquiries, views and conversion on EventSphere. Sample dashboard using fictional data.',
   },
+  'join-as-a-vendor': {
+    id: 'join-as-a-vendor',
+    slug: 'join-as-a-vendor',
+    navKey: 'nav.joinVendor',
+    title: 'Join as a Vendor | EventSphere Adelaide',
+    description:
+      'Apply to list your event business on EventSphere. Adelaide caterers, photographers, planners, venues and cultural specialists welcome.',
+  },
 };
 
 export function getBaseUrl(): string {
@@ -110,6 +118,7 @@ export function detectCurrentPage(): PageId {
       'blog',
       'contact',
       'vendor-insights',
+      'join-as-a-vendor',
     ];
     for (const id of candidates) {
       if (

@@ -189,7 +189,8 @@ export type PageId =
   | 'vendors'
   | 'blog'
   | 'contact'
-  | 'vendor-insights';
+  | 'vendor-insights'
+  | 'join-as-a-vendor';
 
 export interface PlanPreviewVendorSummary {
   id: string;

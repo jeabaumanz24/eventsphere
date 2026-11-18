@@ -148,7 +148,7 @@ export const howItWorksSteps = [
       'Preview tailored vendor messages built from your brief, review indicative itemised quotes, and prepare inquiries with transparent milestone plans.',
     badgeText: 'Guided Inquiry Preview',
     detail:
-      'All communication, custom quotes, and planned milestone contract checklists are designed to sit cleanly inside your Event Sphere workspace.',
+      'All communication, custom quotes, and planned milestone contract checklists are designed to sit cleanly inside your EventSphere workspace.',
   },
 ];
 
@@ -202,7 +202,7 @@ export const vendorsData: Vendor[] = [
         eventType: 'Mediterranean Celebration',
         location: 'Mount Lofty House, Adelaide Hills',
         rating: 5,
-        comment: 'Finding someone who could capture the energy of our 220-guest Italian celebration without getting in the way was tough until we found Maria on Event Sphere. The candid laughter and emotional dances she caught are treasures we will cherish forever.',
+        comment: 'Finding someone who could capture the energy of our 220-guest Italian celebration without getting in the way was tough until we found Maria on EventSphere. The candid laughter and emotional dances she caught are treasures we will cherish forever.',
         culturalElements: ['Italian Traditions', 'Acoustic Sunset Vows', 'Film Emulation'],
         helpfulCount: 14,
       },
@@ -1857,7 +1857,7 @@ export const customerPersona: Persona = {
     'Dynamic budget simulator balanced marquee hire, catering, and decor allocations automatically',
     'Shared digital checklist ensured local helpers and overseas relatives remained synchronised',
   ],
-  quote: "Event Sphere took the guesswork out of planning Mum's 60th cultural banquet and our Diwali community night. Finding halls that welcome external family caterers without endless phone calls was priceless.",
+  quote: "EventSphere took the guesswork out of planning Mum's 60th cultural banquet and our Diwali community night. Finding halls that welcome external family caterers without endless phone calls was priceless.",
 };
 
 export const vendorPersona: Persona = {
@@ -1884,7 +1884,7 @@ export const vendorPersona: Persona = {
 export const testimonialsData: Testimonial[] = [
   {
     id: 't1',
-    quote: "Planning a dual Hindu-Australian wedding in the Barossa seemed impossible until we used Event Sphere. The AI matched us with a caterer capable of a sacred vegetarian lunch followed by an Adelaide Hills vineyard dinner. It saved us at least 40 hours of research.",
+    quote: "Planning a dual Hindu-Australian wedding in the Barossa seemed impossible until we used EventSphere. The AI matched us with a caterer capable of a sacred vegetarian lunch followed by an Adelaide Hills vineyard dinner. It saved us at least 40 hours of research.",
     clientNames: 'Priya & Rohan Patel',
     role: 'Celebration Hosts',
     eventDetails: '320 Guests · Barossa Valley Celebration',
@@ -1902,7 +1902,7 @@ export const testimonialsData: Testimonial[] = [
   },
   {
     id: 't3',
-    quote: "Finding vendors in Adelaide who understand our traditional Filipino cord, veil, and coins ceremony was our biggest anxiety. Event Sphere connected us directly to Maria Santos and our dream coordinator within 24 hours.",
+    quote: "Finding vendors in Adelaide who understand our traditional Filipino cord, veil, and coins ceremony was our biggest anxiety. EventSphere connected us directly to Maria Santos and our dream coordinator within 24 hours.",
     clientNames: 'Diwata & Liam Miller',
     role: 'Event Hosts',
     eventDetails: '220 Guests · Adelaide Botanic Gardens',
@@ -1911,7 +1911,7 @@ export const testimonialsData: Testimonial[] = [
   },
   {
     id: 't4',
-    quote: "Our 140-guest Diwali community night at Thebarton Pavilion ran like clockwork thanks to Event Sphere. We booked Dhol drummers, flame-safe floral rangoli, and a 100% Jain-friendly chaat caterer in one afternoon.",
+    quote: "Our 140-guest Diwali community night at Thebarton Pavilion ran like clockwork thanks to EventSphere. We booked Dhol drummers, flame-safe floral rangoli, and a 100% Jain-friendly chaat caterer in one afternoon.",
     clientNames: 'Ananya & Vikram S.',
     role: 'Diwali Gala Organisers',
     eventDetails: '140 Guests · Diwali & Festival of Lights',
@@ -1947,7 +1947,7 @@ export const testimonialsData: Testimonial[] = [
   },
   {
     id: 't8',
-    quote: "For our baby’s Greek Orthodox Baptism luncheon in Stirling, Event Sphere paired us with a dry-hire hall, lamb spit caterer, and custom bomboniere stylist. Both grandparents couldn’t stop smiling.",
+    quote: "For our baby’s Greek Orthodox Baptism luncheon in Stirling, EventSphere paired us with a dry-hire hall, lamb spit caterer, and custom bomboniere stylist. Both grandparents couldn’t stop smiling.",
     clientNames: 'Spiro & Eleni M.',
     role: 'Christening Hosts',
     eventDetails: '65 Guests · Stirling Christening Luncheon',
@@ -1970,12 +1970,12 @@ export const blogPostsData: BlogPost[] = [
     category: 'Cultural Planning',
     readTime: '6 min read',
     publishedDate: 'October 2026',
-    author: 'Event Sphere Editorial Team',
+    author: 'EventSphere Editorial Team',
     summary: 'A comprehensive guide to harmonizing dual traditions, managing bilingual timelines, and briefing Australian venues on sacred ceremonial protocols.',
     content: [
       'Multicultural weddings are among Australia’s most vibrant celebrations, weaving ancestral lineage, culinary legacy, and modern Australian landscapes into a deeply meaningful experience.',
       '1. Prioritize Ceremony Balance: Whether combining a morning tea ceremony with an afternoon civil exchange or an evening Sangeet with vineyard vows, design breathing space between events for your guests.',
-      '2. Brief Venues on Traditional Rituals Early: Certain ceremonies involve fire (Agni in Hindu rituals), open flames, or specific confectionery setups. Event Sphere helps verify venue compliance prior to deposit payments.',
+      '2. Brief Venues on Traditional Rituals Early: Certain ceremonies involve fire (Agni in Hindu rituals), open flames, or specific confectionery setups. EventSphere helps verify venue compliance prior to deposit payments.',
       '3. Curate a Meaningful Program Guide: Guests unfamiliar with your customs appreciate brief pocket programs explaining the cultural symbolism of blessings, dances, and garment colors.',
     ],
   },
@@ -1995,7 +1995,7 @@ export const blogPostsData: BlogPost[] = [
     content: [
       'In South Australia, celebration budgets span widely—from $6,000–$12,000 AUD for milestone birthday banquets and festival gatherings up to $35,000–$75,000 AUD for large estate weddings.',
       'Where to Invest: Photography and authentic cultural culinary experience consistently rank as the two elements guests remember for decades. Skimping on lighting and sound frequently compromises atmosphere.',
-      'Where to Save: Leverage seasonal South Australian wildflowers, dry-hire heritage community halls with external caterers, digital RSVP portals through Event Sphere, and off-peak Friday dates which offer up to 25% lower venue minimums.',
+      'Where to Save: Leverage seasonal South Australian wildflowers, dry-hire heritage community halls with external caterers, digital RSVP portals through EventSphere, and off-peak Friday dates which offer up to 25% lower venue minimums.',
     ],
   },
   {
@@ -2014,7 +2014,7 @@ export const blogPostsData: BlogPost[] = [
     content: [
       'Adelaide’s intimate geography gives celebration hosts an enviable advantage: world-class wine regions, civic halls, and pristine coastal cliffs all within a 45-minute radius.',
       'Our 2026–2027 editorial review spotlights vetted vendors excelling across cultural catering, live cultural performers, marquee styling, and intimate elopements.',
-      'Explore verified reviews and transparent baseline AUD pricing across all 10 marketplace categories directly inside Event Sphere.',
+      'Explore verified reviews and transparent baseline AUD pricing across all 10 marketplace categories directly inside EventSphere.',
     ],
   },
   {
@@ -2028,12 +2028,12 @@ export const blogPostsData: BlogPost[] = [
     category: 'Technology & Innovation',
     readTime: '4 min read',
     publishedDate: 'November 2026',
-    author: 'Event Sphere Product Labs',
+    author: 'EventSphere Product Labs',
     summary: 'How predictive modeling, automated dietary routing, and real-time vendor calendar synchronization are transforming festivals, milestones, and weddings.',
     content: [
       'Gone are the days of keeping 14 fragmented spreadsheets and losing caterer quotes in forgotten email threads.',
       'Artificial intelligence is not replacing human warmth; it is stripping away administrative friction so hosts and creators can focus on ritual, food, and community connection.',
-      'Event Sphere’s predictive models forecast seasonal market rates across South Australia and benchmark fair vendor pricing in real time.',
+      'EventSphere’s predictive models forecast seasonal market rates across South Australia and benchmark fair vendor pricing in real time.',
     ],
   },
 ];

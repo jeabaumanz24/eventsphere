@@ -76,11 +76,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="h-14 w-[84px] sm:h-16 sm:w-24 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <img
                 src={logoImg}
-                alt="Event Sphere Logo"
+                alt="EventSphere Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <span>Event Sphere</span>
+            <span>EventSphere</span>
           </a>
 
           {/* Zone 2: Real multi-page navigation links */}
@@ -89,7 +89,54 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="hidden lg:flex items-center gap-2.5 xl:gap-5 text-[12.5px] xl:text-[13px] font-medium text-[#724319]/80"
           >
             {NAV_ITEMS.map((item) => {
-              const isActive = currentPage === item.id;
+              const isForVendors = item.id === 'vendor-insights';
+              const isActive =
+                currentPage === item.id ||
+                (isForVendors && currentPage === 'join-as-a-vendor');
+              if (isForVendors) {
+                return (
+                  <div key={item.id} className="relative group/vendors shrink-0">
+                    <a
+                      href={getPageHref(item.id)}
+                      aria-current={currentPage === 'vendor-insights' ? 'page' : undefined}
+                      className={`transition-colors whitespace-nowrap shrink-0 relative py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] rounded-md px-1 inline-block ${
+                        isActive ? 'text-[#724319] font-semibold' : 'hover:text-[#724319]'
+                      }`}
+                    >
+                      {t(item.labelKey)}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#8A5A44] rounded-full animate-fadeIn" />
+                      )}
+                    </a>
+                    <div className="invisible opacity-0 group-hover/vendors:visible group-hover/vendors:opacity-100 group-focus-within/vendors:visible group-focus-within/vendors:opacity-100 transition-all duration-150 absolute left-0 top-full pt-2 z-50">
+                      <div className="w-48 rounded-2xl bg-white border border-[#EBC1B6] shadow-lg p-1.5 space-y-0.5">
+                        <a
+                          href={getPageHref('vendor-insights')}
+                          aria-current={currentPage === 'vendor-insights' ? 'page' : undefined}
+                          className={`block px-3 py-2 rounded-xl text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
+                            currentPage === 'vendor-insights'
+                              ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
+                              : 'text-[#724319] hover:bg-[#FFF8F6]'
+                          }`}
+                        >
+                          Vendor Insights
+                        </a>
+                        <a
+                          href={getPageHref('join-as-a-vendor')}
+                          aria-current={currentPage === 'join-as-a-vendor' ? 'page' : undefined}
+                          className={`block px-3 py-2 rounded-xl text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
+                            currentPage === 'join-as-a-vendor'
+                              ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
+                              : 'text-[#724319] hover:bg-[#FFF8F6]'
+                          }`}
+                        >
+                          {t('nav.joinVendor')}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <a
                   key={item.id}
@@ -192,19 +239,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             {NAV_ITEMS.map((item) => {
               const isActive = currentPage === item.id;
               return (
-                <a
-                  key={item.id}
-                  href={getPageHref(item.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
-                    isActive
-                      ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
-                      : 'text-[#724319] hover:bg-[#F2CCC3]/40'
-                  }`}
-                >
-                  {t(item.labelKey)}
-                </a>
+                <React.Fragment key={item.id}>
+                  <a
+                    href={getPageHref(item.id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+                      isActive
+                        ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
+                        : 'text-[#724319] hover:bg-[#F2CCC3]/40'
+                    }`}
+                  >
+                    {t(item.labelKey)}
+                  </a>
+                  {item.id === 'vendor-insights' && (
+                    <a
+                      href={getPageHref('join-as-a-vendor')}
+                      aria-current={currentPage === 'join-as-a-vendor' ? 'page' : undefined}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block pl-6 pr-3 py-2 text-xs font-medium rounded-xl transition-colors ${
+                        currentPage === 'join-as-a-vendor'
+                          ? 'bg-[#F2CCC3]/50 text-[#724319] font-semibold'
+                          : 'text-[#724319]/90 hover:bg-[#F2CCC3]/40'
+                      }`}
+                    >
+                      {t('nav.joinVendor')}
+                    </a>
+                  )}
+                </React.Fragment>
               );
             })}
 

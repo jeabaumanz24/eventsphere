@@ -18,6 +18,7 @@ import { BlogPage } from './components/BlogPage';
 import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
 import { VendorInsightsSection } from './components/VendorInsightsSection';
+import { JoinVendorSection } from './components/JoinVendorSection';
 import { Footer } from './components/Footer';
 import { VendorModal } from './components/VendorModal';
 import { WishlistModal } from './components/WishlistModal';
@@ -308,7 +309,7 @@ function EventSphereApp() {
         {currentPage === 'about' && (
           <>
             <MissionSection />
-            <AboutSection isPagePrimary={true} />
+            <AboutSection isPagePrimary={false} />
             <PersonasSection />
             <TestimonialsSection />
           </>
@@ -372,6 +373,10 @@ function EventSphereApp() {
 
         {currentPage === 'vendor-insights' && (
           <VendorInsightsSection onCopied={showToast} />
+        )}
+
+        {currentPage === 'join-as-a-vendor' && (
+          <JoinVendorSection onOpenPrivacy={() => setLegalModalType('privacy')} />
         )}
       </main>
 

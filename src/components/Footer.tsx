@@ -25,12 +25,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
               <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs overflow-hidden">
                 <img
                   src={logoImg}
-                  alt="Event Sphere Logo"
+                  alt="EventSphere Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
               <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">
-                Event Sphere
+                EventSphere
               </span>
             </a>
             <p className="text-xs text-[#724319]/80 max-w-sm leading-relaxed">
@@ -118,6 +118,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
                   className="hover:text-[#724319] transition-colors"
                 >
                   {t('nav.forVendors')}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={getPageHref('join-as-a-vendor')}
+                  className="hover:text-[#724319] transition-colors"
+                >
+                  {t('nav.joinVendor')}
                 </a>
               </li>
               <li>

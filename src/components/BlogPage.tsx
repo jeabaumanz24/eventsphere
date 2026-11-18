@@ -116,11 +116,11 @@ export const BlogPage: React.FC<BlogPageProps> = ({
         description: activePost.seo?.metaDescription || activePost.summary,
         author: {
           '@type': 'Organization',
-          name: activePost.author || 'Event Sphere Editorial Team',
+          name: activePost.author || 'EventSphere Editorial Team',
         },
         publisher: {
           '@type': 'Organization',
-          name: 'Event Sphere Adelaide',
+          name: 'EventSphere Adelaide',
         },
         datePublished: '2026-11-01',
         mainEntityOfPage: {
@@ -164,7 +164,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
   // Inject dynamic SEO <title>, meta descriptions, and FAQ/BlogPosting JSON-LD
   useEffect(() => {
-    const seoTitle = activePost.seo?.seoTitle || `${activePost.title} | Event Sphere`;
+    const seoTitle = activePost.seo?.seoTitle || `${activePost.title} | EventSphere`;
     const metaDesc = activePost.seo?.metaDescription || activePost.summary;
 
     document.title = seoTitle;
@@ -726,7 +726,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 </section>
               )}
 
-              {/* Recommended Event Sphere Vendors Linking Back to Marketplace */}
+              {/* Recommended EventSphere Vendors Linking Back to Marketplace */}
               {recommendedVendors.length > 0 && (
                 <section
                   id="blog-sec-vendors"

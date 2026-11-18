@@ -23,6 +23,7 @@ export default defineConfig(({ command }) => {
           blog: path.resolve('blog/index.html'),
           contact: path.resolve('contact/index.html'),
           vendorInsights: path.resolve('vendor-insights/index.html'),
+          joinAsAVendor: path.resolve('join-as-a-vendor/index.html'),
         },
       },
     },

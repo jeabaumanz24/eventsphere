@@ -19,13 +19,13 @@ export const pillarAndClusterPosts: BlogPost[] = [
     category: 'Pillar Planning Guide',
     readTime: '6 min read',
     publishedDate: 'November 2026',
-    author: 'Event Sphere Editorial Team',
+    author: 'EventSphere Editorial Team',
     featured: true,
     featuredImage: heroWeddingImg,
     summary:
       "Planning a wedding is one of the most exciting experiences you'll ever have, but it can also feel overwhelming. From setting a realistic wedding budget to finding the right wedding photographer and venue with accommodation, this pillar guide gives you an essential overview before you dive deeper.",
     seo: {
-      seoTitle: 'Ultimate Wedding Planning Guide 2027 | Event Sphere',
+      seoTitle: 'Ultimate Wedding Planning Guide 2027 | EventSphere',
       metaDescription:
         'Plan your dream celebration with our wedding planning guide covering realistic budgets, checklists, photographers, and venues with accommodation.',
       urlSlug: '/blog/ultimate-wedding-planning-guide',
@@ -151,7 +151,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
         id: 'ai-wedding-planning',
         heading: 'Why Couples Are Turning to AI for Wedding Planning',
         paragraphs: [
-          'Modern weddings blend dozens of moving pieces: multicultural ceremony protocols, supplier contracts, guest dietary tracking, budgets, and timelines. An AI-powered wedding planning platform like Event Sphere brings personalised checklists, real-time budget calculators, vendor comparison, and visual timelines into one calm workspace—saving couples dozens of research hours.',
+          'Modern weddings blend dozens of moving pieces: multicultural ceremony protocols, supplier contracts, guest dietary tracking, budgets, and timelines. An AI-powered wedding planning platform like EventSphere brings personalised checklists, real-time budget calculators, vendor comparison, and visual timelines into one calm workspace—saving couples dozens of research hours.',
         ],
       },
       {
@@ -198,7 +198,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
     category: 'Budgeting & Finance',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Marcus Vance, Event Sphere Financial Strategist',
+    author: 'Marcus Vance, EventSphere Financial Strategist',
     featuredImage: culturalFeastImg,
     summary:
       'Learn how to build a realistic wedding budget in 2027 using Australian cost benchmarks, smart spending tiers, and AI-powered wedding budget planner tools.',
@@ -353,7 +353,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
         id: 'ai-budget-help',
         heading: 'How AI Can Help Manage Your Wedding Budget',
         paragraphs: [
-          'Instead of guessing fair local pricing, Event Sphere’s AI-powered wedding budget planner models real South Australian market benchmarks based on your guest count, chosen region, and cultural ceremony needs.',
+          'Instead of guessing fair local pricing, EventSphere’s AI-powered wedding budget planner models real South Australian market benchmarks based on your guest count, chosen region, and cultural ceremony needs.',
           'Whenever you adjust guest numbers or add an extra catering station, our planner recalculates category allocations in real time, flags potential overruns early, and pairs you with verified Adelaide vendors whose packages genuinely fit your realistic wedding budget.',
         ],
       },
@@ -362,7 +362,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
         heading: 'Ready to Build Your 2027 Budget?',
         paragraphs: [
           'A thoughtful, realistic wedding budget turns big dreams into calm, confident bookings. Start by naming your non-negotiables, ring-fencing a 10% buffer, and tracking every dollar in one smart system.',
-          'Explore our AI Budget Calculator on Event Sphere to generate a personalised spending breakdown in seconds—or return to The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues for the complete big-picture roadmap.',
+          'Explore our AI Budget Calculator on EventSphere to generate a personalised spending breakdown in seconds—or return to The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues for the complete big-picture roadmap.',
         ],
         calloutLink: {
           promptPrefix: 'Continue exploring the complete planning cluster:',
@@ -406,12 +406,12 @@ export const pillarAndClusterPosts: BlogPost[] = [
     category: 'Checklists & Timelines',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Event Sphere Editorial Team',
+    author: 'EventSphere Editorial Team',
     featuredImage: heritageMarqueeImg,
     summary:
       'Follow our month-by-month wedding to do list and wedding planning timeline from 12+ months out right through to wedding week without the overwhelm.',
     seo: {
-      seoTitle: 'Ultimate Wedding To Do List & Timeline | Event Sphere',
+      seoTitle: 'Ultimate Wedding To Do List & Timeline | EventSphere',
       metaDescription:
         'Stay organised with our month-by-month wedding to do list and checklist from 12+ months out to wedding week, powered by smart AI planning tools.',
       urlSlug: '/blog/ultimate-wedding-to-do-list',
@@ -590,7 +590,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
         heading: 'Digital Wedding Planning Tools That Keep You Sane',
         paragraphs: [
           'Paper notebooks get left on kitchen counters and shared spreadsheets break whenever two people edit on their phones. Modern digital wedding planning tools sync every checklist task, vendor deadline, and timeline reminder automatically.',
-          'Inside Event Sphere’s AI Event Planner, simply enter your wedding date and required services—such as photography, catering, florals, or bilingual MCs—and our Event Timeline builds a customised countdown schedule tailored specifically to your celebration. Try it alongside The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues to turn planning stress into calm excitement.',
+          'Inside EventSphere’s AI Event Planner, simply enter your wedding date and required services—such as photography, catering, florals, or bilingual MCs—and our Event Timeline builds a customised countdown schedule tailored specifically to your celebration. Try it alongside The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues to turn planning stress into calm excitement.',
         ],
         calloutLink: {
           promptPrefix: 'Return to our cornerstone planning resource:',
@@ -634,12 +634,12 @@ export const pillarAndClusterPosts: BlogPost[] = [
     category: 'Photography & Visuals',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Maria Santos & Event Sphere Visual Team',
+    author: 'Maria Santos & EventSphere Visual Team',
     featuredImage: santosPortfolioImg,
     summary:
       'Compare photography styles, decode wedding photography packages, spot common red flags, and build a crisp wedding photography checklist before booking.',
     seo: {
-      seoTitle: 'How to Choose Wedding Photographers | Event Sphere',
+      seoTitle: 'How to Choose Wedding Photographers | EventSphere',
       metaDescription:
         'Compare wedding photographers, understand photography packages, spot red flags, and build your shot list with our practical Australian couples guide.',
       urlSlug: '/blog/how-to-choose-the-perfect-wedding-photographer',
@@ -784,8 +784,8 @@ export const pillarAndClusterPosts: BlogPost[] = [
         id: 'ai-photo-organisation',
         heading: 'How AI Planning Tools Keep Everything Organised',
         paragraphs: [
-          'Searching endless social feeds rarely confirms whether a photographer understands your venue, budget, and cultural rituals. Event Sphere’s AI Vendor Matching filters verified Adelaide wedding photographers by shooting style, cultural experience, language fluency, and real verified couple reviews.',
-          'Once booked, your Event Sphere Event Timeline locks golden-hour portrait windows directly beside catering and MC cues—so everyone moves in calm harmony. Head back to The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues anytime to coordinate your photography timeline with the rest of your celebration.',
+          'Searching endless social feeds rarely confirms whether a photographer understands your venue, budget, and cultural rituals. EventSphere’s AI Vendor Matching filters verified Adelaide wedding photographers by shooting style, cultural experience, language fluency, and real verified couple reviews.',
+          'Once booked, your EventSphere Event Timeline locks golden-hour portrait windows directly beside catering and MC cues—so everyone moves in calm harmony. Head back to The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues anytime to coordinate your photography timeline with the rest of your celebration.',
         ],
         calloutLink: {
           promptPrefix: 'Back to the complete cornerstone resource:',
@@ -834,7 +834,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
     summary:
       'Explore the logistics, guest benefits, key contract questions, and budget smarts behind booking wedding venues with accommodation across South Australia.',
     seo: {
-      seoTitle: 'Wedding Venues With Accommodation Guide | Event Sphere',
+      seoTitle: 'Wedding Venues With Accommodation Guide | EventSphere',
       metaDescription:
         'Discover wedding venues with accommodation across Australia. Explore key questions to ask, guest perks, budget tips, and AI venue comparisons.',
       urlSlug: '/blog/wedding-venues-with-accommodation',
@@ -945,8 +945,8 @@ export const pillarAndClusterPosts: BlogPost[] = [
         id: 'ai-compare-venues',
         heading: 'Using AI to Compare Venue Options With Clarity',
         paragraphs: [
-          'Comparing five venue PDFs filled with different room minimums, corkage rules, and cottage rates is exhausting. Event Sphere’s AI planning workspace breaks down total cost-per-guest across ceremony, catering, and overnight stays side by side—making apples-to-apples decisions effortless.',
-          'Bring all of your venue notes, budget scenarios, and vendor shortlists together inside Event Sphere, and revisit The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues whenever you want to align your venue pick with your photography and planning timeline.',
+          'Comparing five venue PDFs filled with different room minimums, corkage rules, and cottage rates is exhausting. EventSphere’s AI planning workspace breaks down total cost-per-guest across ceremony, catering, and overnight stays side by side—making apples-to-apples decisions effortless.',
+          'Bring all of your venue notes, budget scenarios, and vendor shortlists together inside EventSphere, and revisit The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues whenever you want to align your venue pick with your photography and planning timeline.',
         ],
         calloutLink: {
           promptPrefix: 'See how your venue connects with your budget, checklist, and photographer:',
@@ -990,12 +990,12 @@ export const pillarAndClusterPosts: BlogPost[] = [
     category: 'Memories & Styling',
     readTime: '6 min read',
     publishedDate: 'November 2026',
-    author: 'Diwata dela Cruz & Event Sphere Community',
+    author: 'Diwata dela Cruz & EventSphere Community',
     featuredImage: wattleWillowFloralsImg,
     summary:
       'Capture the joyful journey from engagement to aisle with our guide to meaningful wedding planning photos—from venue tours to dress fittings and tastings.',
     seo: {
-      seoTitle: 'Must-Have Wedding Planning Photos | Event Sphere',
+      seoTitle: 'Must-Have Wedding Planning Photos | EventSphere',
       metaDescription:
         'Capture meaningful wedding planning photos from engagement shoots and venue tours to fittings and tastings, organised in a visual wedding timeline.',
       urlSlug: '/blog/must-have-wedding-planning-photos',
@@ -1099,7 +1099,7 @@ export const pillarAndClusterPosts: BlogPost[] = [
         id: 'visual-timeline',
         heading: 'Creating a Visual Wedding Planning Timeline',
         paragraphs: [
-          'Keeping wedding planning photos buried inside 8,000 random camera-roll screenshots makes them impossible to find when building your wedding album or slideshow. Group each milestone inside Event Sphere’s visual planning timeline—organising engagement shoots, venue site notes, fitting references, and décor inspiration alongside your actual checklist and supplier run sheet.',
+          'Keeping wedding planning photos buried inside 8,000 random camera-roll screenshots makes them impossible to find when building your wedding album or slideshow. Group each milestone inside EventSphere’s visual planning timeline—organising engagement shoots, venue site notes, fitting references, and décor inspiration alongside your actual checklist and supplier run sheet.',
           'When everything lives neatly in one place, you save hours preparing creative briefs and treasure a complete visual story of your engagement. Head back to The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues anytime to connect your visual memories with your budget and countdown checklist.',
         ],
         calloutLink: {

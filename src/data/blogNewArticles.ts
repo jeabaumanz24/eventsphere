@@ -20,7 +20,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Festivals & Cultural Nights',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Priya Nair & Event Sphere Adelaide Desk',
+    author: 'Priya Nair & EventSphere Adelaide Desk',
     featuredImage: diwaliDecorImg,
     featured: true,
     summary:
@@ -38,7 +38,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Planning a Diwali Celebration in Adelaide | Event Sphere',
+      seoTitle: 'Planning a Diwali Celebration in Adelaide | EventSphere',
       metaDescription:
         'Host an unforgettable Diwali celebration in Adelaide with practical advice on flame-safe venues, marigold rangoli styling, Dhol drummers, and vegetarian feasts.',
       urlSlug: '/blog/planning-a-diwali-celebration-in-adelaide',
@@ -154,7 +154,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Milestones & Culinary Feasts',
     readTime: '6 min read',
     publishedDate: 'November 2026',
-    author: 'Luca Conti & Event Sphere Editorial Team',
+    author: 'Luca Conti & EventSphere Editorial Team',
     featuredImage: milestoneBirthdayImg,
     featured: true,
     summary:
@@ -172,7 +172,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Milestone Birthday Catering Ideas Adelaide | Event Sphere',
+      seoTitle: 'Milestone Birthday Catering Ideas Adelaide | EventSphere',
       metaDescription:
         'Plan a 30th, 50th, 60th, or 18th Debut birthday in Adelaide with cultural banquet catering, shared-table pacing, and realistic AUD budgets.',
       urlSlug: '/blog/hosting-a-milestone-birthday-with-cultural-catering',
@@ -282,7 +282,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Proposals & Milestones',
     readTime: '6 min read',
     publishedDate: 'November 2026',
-    author: 'Claire Beaumont & Event Sphere Visual Team',
+    author: 'Claire Beaumont & EventSphere Visual Team',
     featuredImage: proposalFleurieuImg,
     featured: true,
     summary:
@@ -299,7 +299,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Creative Engagement Proposal Ideas Adelaide | Event Sphere',
+      seoTitle: 'Creative Engagement Proposal Ideas Adelaide | EventSphere',
       metaDescription:
         'Explore different ways to plan an engagement proposal in Adelaide and Fleurieu Peninsula—coastal picnics, vineyard sunsets, family blessings, and photographers.',
       urlSlug: '/blog/different-ways-to-do-an-engagement-proposal',
@@ -350,7 +350,7 @@ export const newJournalArticles: BlogPost[] = [
         heading: '4. Intimate Home, Gallery or Botanic Garden Proposals',
         paragraphs: [
           'Not every meaningful proposal needs dramatic coastal travel. Early-morning proposals beneath the Adelaide Botanic Gardens’ palm house, at a serene Himeji Gardens bamboo bridge, or in a candlelit backyard filled with printed photos from every year together often feel deepest because they happen inside your real routine.',
-          'Note that commercial styling setups in council parks or Botanic Gardens frequently require an affordable casual permit—an experienced Event Sphere proposal planner handles that paperwork quietly behind the scenes.',
+          'Note that commercial styling setups in council parks or Botanic Gardens frequently require an affordable casual permit—an experienced EventSphere proposal planner handles that paperwork quietly behind the scenes.',
         ],
       },
       {
@@ -401,7 +401,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Elopements & Intimate Vows',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Hannah Reid & Event Sphere Celebrant Desk',
+    author: 'Hannah Reid & EventSphere Celebrant Desk',
     featuredImage: elopementHillsImg,
     featured: true,
     summary:
@@ -418,7 +418,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Elopement Weddings in South Australia Guide | Event Sphere',
+      seoTitle: 'Elopement Weddings in South Australia Guide | EventSphere',
       metaDescription:
         'Plan an intimate elopement in South Australia. Explore Australian legal requirements (NOIM), stunning Adelaide Hills & Fleurieu locations, and package pricing.',
       urlSlug: '/blog/elopement-weddings-in-south-australia-complete-guide',
@@ -525,7 +525,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Multicultural Calendar',
     readTime: '8 min read',
     publishedDate: 'November 2026',
-    author: 'Event Sphere Adelaide Editorial Desk',
+    author: 'EventSphere Adelaide Editorial Desk',
     featuredImage: lunarNewYearImg,
     featured: true,
     summary:
@@ -542,7 +542,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Cultural Celebrations Calendar Adelaide | Event Sphere',
+      seoTitle: 'Cultural Celebrations Calendar Adelaide | EventSphere',
       metaDescription:
         'Plan ahead for Lunar New Year, Eid, Holi, Greek Easter, Moon Festival, Diwali, and multicultural Christmas gatherings in Adelaide with vendor booking tips.',
       urlSlug: '/blog/year-round-cultural-celebrations-adelaide',
@@ -650,7 +650,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Family Milestones',
     readTime: '6 min read',
     publishedDate: 'November 2026',
-    author: 'Sophie Marchetti & Event Sphere Family Desk',
+    author: 'Sophie Marchetti & EventSphere Family Desk',
     featuredImage: christeningTableImg,
     featured: true,
     summary:
@@ -668,7 +668,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Cultural Christening & Baby Shower Guide Adelaide | Event Sphere',
+      seoTitle: 'Cultural Christening & Baby Shower Guide Adelaide | EventSphere',
       metaDescription:
         'Plan a heartfelt christening, naming ceremony, or cultural baby shower in Adelaide—blending Greek, Filipino, Italian, Indian, and Chinese family traditions.',
       urlSlug: '/blog/planning-a-christening-or-baby-shower-with-cultural-traditions',
@@ -763,7 +763,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Community & Public Events',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Tui Faleolo & Event Sphere Community Desk',
+    author: 'Tui Faleolo & EventSphere Community Desk',
     featuredImage: communityFestivalImg,
     featured: true,
     summary:
@@ -781,7 +781,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Hosting a Community Festival in Adelaide | Event Sphere',
+      seoTitle: 'Hosting a Community Festival in Adelaide | EventSphere',
       metaDescription:
         'Plan a safe, vibrant community festival or multicultural gathering in Adelaide. Guide covering SA council permits, marquee weights, food safety, and stage sound.',
       urlSlug: '/blog/hosting-a-community-festival-multicultural-gathering',
@@ -816,7 +816,7 @@ export const newJournalArticles: BlogPost[] = [
         id: 'comm-food-safety',
         heading: '2. Coordinating Cultural Food Vendors & SA Food Notifications',
         paragraphs: [
-          'Every food stall serving the public at an outdoor festival in South Australia must hold a council Food Business Notification number and adhere to safe temperature control for cooked meats, rice, and dairy sweets. Working with Event Sphere-verified cultural caterers or established community kitchens guarantees compliant hand-wash stations and allergen signage from the start.',
+          'Every food stall serving the public at an outdoor festival in South Australia must hold a council Food Business Notification number and adhere to safe temperature control for cooked meats, rice, and dairy sweets. Working with EventSphere-verified cultural caterers or established community kitchens guarantees compliant hand-wash stations and allergen signage from the start.',
           'Arrange food stalls in a wide U-shape facing shaded picnic zones so queues never bottleneck main stage pathways.',
         ],
       },
@@ -890,7 +890,7 @@ export const newJournalArticles: BlogPost[] = [
     category: 'Corporate & Workplace Events',
     readTime: '7 min read',
     publishedDate: 'November 2026',
-    author: 'Elena Rossi & Event Sphere Workplace Desk',
+    author: 'Elena Rossi & EventSphere Workplace Desk',
     featuredImage: corporateEventImg,
     featured: true,
     summary:
@@ -908,7 +908,7 @@ export const newJournalArticles: BlogPost[] = [
       ],
     },
     seo: {
-      seoTitle: 'Planning a Multicultural Corporate Event in Adelaide | Event Sphere',
+      seoTitle: 'Planning a Multicultural Corporate Event in Adelaide | EventSphere',
       metaDescription:
         'Organise inclusive multicultural corporate events in Adelaide. Practical advice on Halal and vegan catering, Diwali, Lunar New Year & Eid at work, venues, and AUD budgets.',
       urlSlug: '/blog/planning-a-multicultural-corporate-event-in-adelaide',
