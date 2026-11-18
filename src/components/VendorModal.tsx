@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   X,
   Star,
@@ -10,9 +10,46 @@ import {
   Filter,
   Plus,
   Heart,
+  Sparkles,
 } from 'lucide-react';
-import { Vendor, VendorReview } from '../types';
+import { PlanPreviewContextData, Vendor, VendorReview } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { PlanSummaryActions } from './PlanSummaryActions';
+import { trackEvent } from '../utils/analytics';
+
+function headcountToNumericEstimate(headcount: string): string {
+  switch (headcount) {
+    case 'Under 30':
+      return '25';
+    case '30-60':
+      return '45';
+    case '60-100':
+      return '80';
+    case '100-200':
+      return '150';
+    case '200+':
+      return '240';
+    default:
+      return '80';
+  }
+}
+
+function buildPrefilledInquiryMessage(preview: PlanPreviewContextData): string {
+  const elements =
+    preview.culturalElements.length > 0
+      ? preview.culturalElements.join(', ')
+      : 'General celebration styling';
+  return [
+    `Event Type: ${preview.eventType}`,
+    `Cultural Tradition: ${preview.traditionLabel}`,
+    `Cultural Elements: ${elements}`,
+    `Headcount: ${preview.headcount} (${preview.preferredTime})`,
+    `Location: ${preview.location}`,
+    `Budget: ${preview.budgetLabel}`,
+    `Selected Vendor: ${preview.selectedVendorName} (${preview.selectedVendorCategory})`,
+    `Sample Quote Guide: ${preview.selectedVendorPriceSummary}`,
+  ].join('\n');
+}
 
 interface VendorModalProps {
   vendor: Vendor | null;
@@ -20,6 +57,8 @@ interface VendorModalProps {
   onRequestSent: (vendorName: string) => void;
   isWishlisted?: boolean;
   onToggleWishlist?: (vendor: Vendor) => void;
+  initialTab?: 'overview' | 'reviews' | 'proposal';
+  previewContext?: PlanPreviewContextData | null;
 }
 
 export const VendorModal: React.FC<VendorModalProps> = ({
@@ -28,16 +67,21 @@ export const VendorModal: React.FC<VendorModalProps> = ({
   onRequestSent,
   isWishlisted = false,
   onToggleWishlist,
+  initialTab = 'overview',
+  previewContext = null,
 }) => {
   if (!vendor) return null;
+  const modalKey = `${vendor.id}-${initialTab}-${previewContext ? 'sample' : 'std'}`;
   return (
     <VendorModalContent
-      key={vendor.id}
+      key={modalKey}
       vendor={vendor}
       onClose={onClose}
       onRequestSent={onRequestSent}
       isWishlisted={isWishlisted}
       onToggleWishlist={onToggleWishlist}
+      initialTab={previewContext ? 'proposal' : initialTab}
+      previewContext={previewContext}
     />
   );
 };
@@ -48,6 +92,8 @@ interface VendorModalContentProps {
   onRequestSent: (vendorName: string) => void;
   isWishlisted: boolean;
   onToggleWishlist?: (vendor: Vendor) => void;
+  initialTab: 'overview' | 'reviews' | 'proposal';
+  previewContext: PlanPreviewContextData | null;
 }
 
 const VendorModalContent: React.FC<VendorModalContentProps> = ({
@@ -56,20 +102,88 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   onRequestSent,
   isWishlisted,
   onToggleWishlist,
+  initialTab,
+  previewContext,
 }) => {
   const { t } = useLanguage();
+  const isSamplePreview = Boolean(previewContext);
+
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
   // Tabs: overview, reviews, proposal
-  const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'proposal'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'proposal'>(initialTab);
 
-  // Proposal form state
+  // Proposal form state (pre-filled when opened from Step 3 Preview Inquiry)
   const [date, setDate] = useState('');
-  const [guestCount, setGuestCount] = useState('150');
-  const [message, setMessage] = useState('');
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [guestCount, setGuestCount] = useState(() =>
+    previewContext ? headcountToNumericEstimate(previewContext.headcount) : '150'
+  );
+  const [message, setMessage] = useState(() =>
+    previewContext ? buildPrefilledInquiryMessage(previewContext) : ''
+  );
+  const [userName, setUserName] = useState(() => (previewContext ? 'Sample Host (Preview)' : ''));
+  const [userEmail, setUserEmail] = useState(() => (previewContext ? 'sample@example.com.au' : ''));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Modal lifecycle: fire GA4 inquiry_modal_open, manage focus trap & Escape, restore focus on close
+  useEffect(() => {
+    previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+
+    trackEvent('inquiry_modal_open', {
+      vendor_name: vendor.businessName,
+      vendor_category: vendor.category,
+    });
+
+    const focusTimer = window.setTimeout(() => {
+      closeButtonRef.current?.focus();
+    }, 30);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((el) => el.offsetParent !== null);
+
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first || !dialogRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (document.activeElement === last || !dialogRef.current.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      const returnTarget = previousActiveElementRef.current;
+      if (returnTarget && typeof returnTarget.focus === 'function') {
+        window.requestAnimationFrame(() => {
+          returnTarget.focus();
+        });
+      }
+    };
+  }, [vendor.businessName, vendor.category, onClose]);
 
   // Reviews state with local storage / custom additions
   const initialReviews: VendorReview[] = useMemo(() => {
@@ -126,11 +240,19 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
     setTimeout(() => {
       setIsSubmitting(false);
       setSent(true);
+      trackEvent('inquiry_submit', {
+        vendor_name: vendor.businessName,
+        vendor_category: vendor.category,
+        event_type: previewContext?.eventType || 'Marketplace Inquiry',
+        sample_preview: isSamplePreview,
+      });
       onRequestSent(vendor.businessName);
-      setTimeout(() => {
-        onClose();
-      }, 1800);
-    }, 600);
+      if (!isSamplePreview) {
+        setTimeout(() => {
+          onClose();
+        }, 1800);
+      }
+    }, 350);
   };
 
   const handleVoteHelpful = (reviewId: string) => {
@@ -198,15 +320,25 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   }, [vendor.rating, vendor.reviewCount, addedReviews, totalReviewsCount]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto print:static print:bg-white print:p-0"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="vendor-modal-title"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:border-0"
+      >
         {/* Wishlist Save + Close Buttons */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 print:hidden">
           {onToggleWishlist && (
             <button
               type="button"
               onClick={() => onToggleWishlist(vendor)}
-              className={`h-9 px-3 rounded-full backdrop-blur-md flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md cursor-pointer ${
+              className={`h-9 px-3 rounded-full backdrop-blur-md flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 isWishlisted
                   ? 'bg-rose-500 text-white hover:bg-rose-600'
                   : 'bg-white/90 text-[#724319] hover:bg-white hover:text-rose-600'
@@ -221,8 +353,10 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
             </button>
           )}
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#724319] hover:bg-white hover:text-black transition-all shadow-md cursor-pointer"
+            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#724319] hover:bg-white hover:text-black transition-all shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
             aria-label={t('vendorModal.close')}
           >
             <X className="w-5 h-5" />
@@ -230,7 +364,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
         </div>
 
         {/* Header Hero Image & Trust Stats */}
-        <div className="relative h-48 sm:h-56 bg-[#F2CCC3] shrink-0 overflow-hidden">
+        <div className="relative h-48 sm:h-56 bg-[#F2CCC3] shrink-0 overflow-hidden print:hidden">
           <img
             src={vendor.image}
             alt={vendor.businessName}
@@ -242,9 +376,9 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
             <span className="text-[11px] font-semibold bg-white/90 text-[#724319] px-2.5 py-0.5 rounded-full inline-block mb-1.5 shadow-xs">
               {t(`cat.${vendor.category}`)}
             </span>
-            <h3 className="text-2xl sm:text-3xl font-serif font-bold leading-tight">
+            <h2 id="vendor-modal-title" className="text-2xl sm:text-3xl font-serif font-bold leading-tight">
               {vendor.businessName}
-            </h3>
+            </h2>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90 mt-1">
               <span>{t('marketplace.lead')} {vendor.name}</span>
               <span aria-hidden="true">·</span>
@@ -271,8 +405,9 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
         <div className="bg-[#FFF8F6] px-5 sm:px-8 py-2.5 border-b border-[#EBC1B6]/60 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
+              type="button"
               onClick={() => setActiveTab('overview')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
                 activeTab === 'overview'
                   ? 'bg-[#724319] text-white shadow-2xs'
                   : 'text-[#724319]/75 hover:bg-[#F2CCC3]/40'
@@ -281,8 +416,9 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
               {t('vendorModal.overviewTab')}
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('reviews')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
                 activeTab === 'reviews'
                   ? 'bg-[#724319] text-white shadow-2xs'
                   : 'text-[#724319]/75 hover:bg-[#F2CCC3]/40'
@@ -300,8 +436,9 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
               </span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('proposal')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
                 activeTab === 'proposal'
                   ? 'bg-[#724319] text-white shadow-2xs'
                   : 'text-[#724319]/75 hover:bg-[#F2CCC3]/40'
@@ -317,18 +454,31 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-5 sm:p-8 space-y-6 overflow-y-auto flex-grow">
+        <div className="p-5 sm:p-8 space-y-6 overflow-y-auto flex-grow print:overflow-visible">
           {sent ? (
-            <div className="py-12 text-center space-y-3">
+            <div className="py-8 text-center space-y-4" aria-live="polite">
               <div className="w-16 h-16 rounded-full bg-[#F2CCC3] flex items-center justify-center text-[#724319] mx-auto shadow-sm">
                 <CheckCircle2 className="w-8 h-8 text-[#724319]" />
               </div>
-              <h4 className="text-xl sm:text-2xl font-serif font-bold text-[#724319]">
+              {isSamplePreview && (
+                <div className="space-y-1">
+                  <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44]">
+                    {t('vendorModal.samplePreviewHeading')}
+                  </span>
+                  <p className="text-xs text-[#8A5A44]">{t('how.simulationCaption')}</p>
+                </div>
+              )}
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#724319]">
                 {t('vendorModal.inquirySentTo', { name: vendor.name })}
-              </h4>
+              </h3>
               <p className="text-xs sm:text-sm text-[#724319]/80 max-w-sm mx-auto leading-relaxed">
                 {t('vendorModal.inquirySentDesc', { name: vendor.name })}
               </p>
+              {previewContext && (
+                <div className="text-left max-w-xl mx-auto pt-2">
+                  <PlanSummaryActions plan={previewContext} variant="modal" />
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -684,91 +834,184 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
 
               {/* TAB 3: REQUEST PROPOSAL */}
               {activeTab === 'proposal' && (
-                <div className="p-5 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/70">
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#EBC1B6]/40">
-                    <div>
-                      <h4 className="text-sm font-semibold text-[#724319]">
-                        {t('vendorModal.requestHeading')}
-                      </h4>
-                      <p className="text-xs text-[#8A5A44]">
-                        {t('vendorModal.directEncrypted', { name: vendor.name })}
-                      </p>
+                <div className="space-y-4">
+                  {previewContext && (
+                    <div className="p-4 sm:p-5 bg-[#F2CCC3]/30 rounded-2xl border border-[#8A5A44]/40 space-y-3 text-left">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#724319]">
+                            <Sparkles className="w-3.5 h-3.5 text-[#8A5A44]" />
+                            <span>{t('vendorModal.samplePreviewHeading')}</span>
+                          </div>
+                          <p className="text-[11px] font-medium text-[#8A5A44] mt-0.5">
+                            {t('how.simulationCaption')}
+                          </p>
+                        </div>
+                        <span className="text-[11px] font-mono font-semibold bg-white border border-[#EBC1B6] text-[#724319] px-2.5 py-0.5 rounded-full">
+                          {t('how.mock2VendorFit', { score: previewContext.selectedVendorFitScore })}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] bg-white/85 p-3 rounded-xl border border-[#EBC1B6]/70">
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock1TypeLabel')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {t(`eventType.${previewContext.eventType}`)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock1TraditionLabel')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {previewContext.traditionLabel}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock1Guests')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {previewContext.headcount}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock1Location')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {previewContext.location}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock1BudgetLabel')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {previewContext.budgetLabel}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-semibold text-[#8A5A44] block">
+                            {t('how.mock3ChooseVendor')}
+                          </span>
+                          <span className="font-semibold text-[#724319]">
+                            {previewContext.selectedVendorName} ({t(`cat.${previewContext.selectedVendorCategory}`)})
+                          </span>
+                        </div>
+                      </div>
+
+                      <PlanSummaryActions plan={previewContext} variant="modal" />
                     </div>
-                    <span className="text-xs font-mono font-bold text-[#8A5A44]">
-                      {t('vendorModal.starting', { price: vendor.startingPrice })}
-                    </span>
+                  )}
+
+                  <div className="p-5 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/70 print:hidden">
+                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#EBC1B6]/40">
+                      <div>
+                        <h4 className="text-sm font-semibold text-[#724319]">
+                          {isSamplePreview
+                            ? `${t('vendorModal.samplePreviewHeading')} — ${vendor.businessName}`
+                            : t('vendorModal.requestHeading')}
+                        </h4>
+                        <p className="text-xs text-[#8A5A44]">
+                          {isSamplePreview
+                            ? t('vendorModal.samplePreviewMeta')
+                            : t('vendorModal.directEncrypted', { name: vendor.name })}
+                        </p>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-[#8A5A44]">
+                        {previewContext
+                          ? previewContext.selectedVendorPriceSummary
+                          : t('vendorModal.starting', { price: vendor.startingPrice })}
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleSubmitProposal} className="space-y-3.5 text-xs text-left">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label htmlFor="proposal-user-name" className="text-[11px] font-semibold text-[#724319]">
+                            {t('vendorModal.yourName')}
+                          </label>
+                          <input
+                            id="proposal-user-name"
+                            type="text"
+                            required={!isSamplePreview}
+                            placeholder="e.g. Diwata dela Cruz"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label htmlFor="proposal-user-email" className="text-[11px] font-semibold text-[#724319]">
+                            {t('contact.emailLabel')}
+                          </label>
+                          <input
+                            id="proposal-user-email"
+                            type="email"
+                            required={!isSamplePreview}
+                            placeholder="diwata@example.com.au"
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label htmlFor="proposal-target-date" className="text-[11px] font-semibold text-[#724319]">
+                            {t('vendorModal.targetDate')}
+                          </label>
+                          <input
+                            id="proposal-target-date"
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label htmlFor="proposal-guest-count" className="text-[11px] font-semibold text-[#724319]">
+                            {t('vendorModal.guestCount')}
+                          </label>
+                          <input
+                            id="proposal-guest-count"
+                            type="number"
+                            placeholder="Estimated Guests (e.g. 80)"
+                            value={guestCount}
+                            onChange={(e) => setGuestCount(e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor="proposal-message" className="text-[11px] font-semibold text-[#724319]">
+                          {t('vendorModal.specificRequests')}
+                        </label>
+                        <textarea
+                          id="proposal-message"
+                          rows={isSamplePreview ? 5 : 3}
+                          placeholder="Tell the artisan about your venue, ceremony elements, or desired aesthetic..."
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 resize-none"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-3 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{isSubmitting ? t('vendorModal.sendingRequest') : t('vendorModal.sendBtn')}</span>
+                      </button>
+                    </form>
                   </div>
-
-                  <form onSubmit={handleSubmitProposal} className="space-y-3.5 text-xs text-left">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#724319]">{t('vendorModal.yourName')}</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Diwata dela Cruz"
-                          value={userName}
-                          onChange={(e) => setUserName(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44]"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#724319]">{t('contact.emailLabel')}</label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="diwata@example.com.au"
-                          value={userEmail}
-                          onChange={(e) => setUserEmail(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#724319]">{t('vendorModal.targetDate')}</label>
-                        <input
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44] cursor-pointer"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#724319]">{t('vendorModal.guestCount')}</label>
-                        <input
-                          type="number"
-                          placeholder="Estimated Guests (e.g. 180)"
-                          value={guestCount}
-                          onChange={(e) => setGuestCount(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#724319]">
-                        {t('vendorModal.specificRequests')}
-                      </label>
-                      <textarea
-                        rows={3}
-                        placeholder="Tell the artisan about your venue, ceremony elements, or desired aesthetic..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44] resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-3 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-70"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{isSubmitting ? t('vendorModal.sendingRequest') : t('vendorModal.sendBtn')}</span>
-                    </button>
-                  </form>
                 </div>
               )}
             </>
@@ -785,15 +1028,17 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
           <div className="flex items-center gap-2">
             {activeTab !== 'proposal' && !sent && (
               <button
+                type="button"
                 onClick={() => setActiveTab('proposal')}
-                className="px-4 py-1.5 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full transition-colors cursor-pointer"
+                className="px-4 py-1.5 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
               >
                 {t('vendorModal.inquireNow')}
               </button>
             )}
             <button
+              type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-white border border-[#EBC1B6] text-[#724319] font-medium rounded-full hover:bg-[#F2CCC3]/40 transition-colors cursor-pointer"
+              className="px-4 py-1.5 bg-white border border-[#EBC1B6] text-[#724319] font-medium rounded-full hover:bg-[#F2CCC3]/40 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
             >
               {t('vendorModal.close')}
             </button>

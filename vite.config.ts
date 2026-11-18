@@ -1,15 +1,29 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({command}) => {
+export default defineConfig(({ command }) => {
   return {
     base: process.env.VITE_BASE_PATH ?? (command === 'build' ? '/eventsphere/' : '/'),
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve('.'),
+      },
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve('index.html'),
+          about: path.resolve('about/index.html'),
+          services: path.resolve('services/index.html'),
+          aiPlanner: path.resolve('ai-planner/index.html'),
+          vendors: path.resolve('vendors/index.html'),
+          blog: path.resolve('blog/index.html'),
+          contact: path.resolve('contact/index.html'),
+          vendorInsights: path.resolve('vendor-insights/index.html'),
+        },
       },
     },
     server: {

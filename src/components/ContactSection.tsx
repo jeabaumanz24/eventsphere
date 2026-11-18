@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { MapPin, Mail, Phone, Send, CheckCircle2 } from 'lucide-react';
 import { adelaideRegions } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
+import { trackEvent } from '../utils/analytics';
 
 interface ContactSectionProps {
+  isPagePrimary?: boolean;
   onFormSubmitted?: (data: { name: string; email: string }) => void;
 }
 
-export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted }) => {
+export const ContactSection: React.FC<ContactSectionProps> = ({
+  isPagePrimary = false,
+  onFormSubmitted,
+}) => {
   const { t } = useLanguage();
+  const HeadingTag = isPagePrimary ? 'h1' : 'h2';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -53,24 +59,33 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
+      trackEvent('contact_form_submit', {
+        event_type: t(formData.eventType),
+        region: activeRegionId,
+      });
       if (onFormSubmitted) {
         onFormSubmitted({ name: formData.name, email: formData.email });
       }
-    }, 600);
+    }, 500);
   };
 
   const currentRegion = adelaideRegions.find((r) => r.id === activeRegionId) || adelaideRegions[0];
 
   return (
-    <section id="contact" className="py-20 md:py-28 bg-[#F2CCC3]/25 relative">
+    <section
+      id="contact"
+      className={`${
+        isPagePrimary ? 'pt-32 pb-20 md:pt-36 md:pb-24' : 'py-20 md:py-28'
+      } bg-[#F2CCC3]/25 relative`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
             {t('contact.kicker')}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
+          <HeadingTag className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
             {t('contact.title')}
-          </h2>
+          </HeadingTag>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
             {t('contact.subtitle')}
           </p>
@@ -80,7 +95,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
           {/* Left Column: Contact Form */}
           <div className="lg:col-span-7 bg-white rounded-3xl p-8 sm:p-10 border border-[#EBC1B6] shadow-md">
             {submitted ? (
-              <div className="py-12 text-center space-y-4">
+              <div className="py-12 text-center space-y-4" aria-live="polite">
                 <div className="w-16 h-16 rounded-full bg-[#F2CCC3] border border-[#8A5A44]/30 flex items-center justify-center text-[#724319] mx-auto shadow-sm">
                   <CheckCircle2 className="w-8 h-8 text-[#724319]" />
                 </div>

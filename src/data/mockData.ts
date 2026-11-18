@@ -127,7 +127,7 @@ export const howItWorksSteps = [
     step: '01',
     title: 'Tell us about your event',
     description:
-      'Share your celebration vision: event type, guest count, preferred South Australian setting, cultural traditions and initial budget.',
+      'Share your celebration vision: event type, guest count, preferred South Australian setting, cultural tradition and initial budget.',
     badgeText: '5-Minute Guided Intake',
     detail:
       'Our intake captures specific cultural traditions and requests—from Diwali rangoli and Lion Dances to halal banquets, tea ceremonies, and corporate AV—so nothing is overlooked.',
@@ -1819,7 +1819,7 @@ export const vendorsData: Vendor[] = [
     traditions: ['Pacific Islander'],
     culturalSpecialties: ['Samoan Siva, Tongan Taualuga & Hula Dancers', 'Live Tahitian Log Drumming & Fire-Knife Finale', '21st Key & Cultural Blessing Hosting'],
     eventTypes: ['Weddings', 'Milestone Birthdays', 'Christenings & Baby Showers', 'Graduations', 'Community Festivals', 'Corporate Events'],
-    description: 'South Australia’s premier Polynesian dance troupe, percussionists, and warm MC hosts bringing joyful Siva entrances and celebratory song to milestones and festivals.',
+    description: 'Adelaide Polynesian dance troupe, percussionists, and warm MC hosts bringing joyful Siva entrances and celebratory song to milestones and festivals.',
     features: ['3–8 Cultural dancers & live pātē drums', 'Taualuga blessing choreography', 'Outdoor safety-approved fire-knife show', 'Full PA & Island playlist DJ support'],
     reviews: [
       {

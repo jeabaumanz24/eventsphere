@@ -2,40 +2,26 @@ import React from 'react';
 import { Instagram, Facebook, Linkedin, Pin as Pinterest, Heart } from 'lucide-react';
 import logoImg from '../assets/images/eventsphere_logo_transparent.png';
 import { useLanguage } from '../context/LanguageContext';
+import { getPageHref } from '../utils/navigation';
 
 interface FooterProps {
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
-  onOpenBlogPage?: () => void;
-  onNavigateHomeSection?: (sectionId: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({
-  onOpenPrivacy,
-  onOpenTerms,
-  onOpenBlogPage,
-  onNavigateHomeSection,
-}) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) => {
   const { t } = useLanguage();
 
-  const scrollTo = (id: string) => {
-    if (onNavigateHomeSection) {
-      onNavigateHomeSection(id);
-      return;
-    }
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
-    <footer className="bg-[#FFF8F6] border-t border-[#EBC1B6] pt-16 pb-12 text-[#724319]">
+    <footer className="bg-[#FFF8F6] border-t border-[#EBC1B6] pt-16 pb-12 text-[#724319] print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#EBC1B6]/60">
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5 group cursor-pointer" onClick={() => scrollTo('home')}>
+            <a
+              href={getPageHref('home')}
+              className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] rounded-xl"
+            >
               <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs overflow-hidden">
                 <img
                   src={logoImg}
@@ -43,8 +29,10 @@ export const Footer: React.FC<FooterProps> = ({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">Event Sphere</span>
-            </div>
+              <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">
+                Event Sphere
+              </span>
+            </a>
             <p className="text-xs text-[#724319]/80 max-w-sm leading-relaxed">
               {t('footer.tagline')}
             </p>
@@ -55,64 +43,94 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Quick Navigation */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
               {t('footer.explore')}
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-xs text-[#724319]/80">
               <li>
-                <button onClick={() => scrollTo('home')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('home')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('nav.home')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('about')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('about')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('footer.aboutLink')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('services')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('services')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('nav.services')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('ai-planner')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('ai-planner')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('nav.aiPlanner')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('marketplace')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('vendors')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('nav.marketplace')}
-                </button>
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Resources & Editorial */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
               {t('footer.resources')}
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-xs text-[#724319]/80">
               <li>
-                <button
-                  onClick={() => (onOpenBlogPage ? onOpenBlogPage() : scrollTo('blog'))}
-                  className="hover:text-[#724319] transition-colors cursor-pointer"
+                <a
+                  href={getPageHref('blog')}
+                  className="hover:text-[#724319] transition-colors"
                 >
                   {t('footer.blogEditorial')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('faq')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('ai-planner', '#faq')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('footer.faqLink')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => scrollTo('contact')} className="hover:text-[#724319] transition-colors cursor-pointer">
+                <a
+                  href={getPageHref('vendor-insights')}
+                  className="hover:text-[#724319] transition-colors"
+                >
+                  {t('nav.forVendors')}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={getPageHref('contact')}
+                  className="hover:text-[#724319] transition-colors"
+                >
                   {t('footer.contactSupport')}
-                </button>
+                </a>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={onOpenPrivacy}
                   className="hover:text-[#724319] transition-colors cursor-pointer text-left"
                 >
@@ -121,6 +139,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={onOpenTerms}
                   className="hover:text-[#724319] transition-colors cursor-pointer text-left"
                 >
@@ -132,12 +151,10 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Social Channels */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
               {t('footer.followUs')}
-            </h4>
-            <p className="text-xs text-[#724319]/75 mb-4">
-              {t('footer.followSub')}
-            </p>
+            </h3>
+            <p className="text-xs text-[#724319]/75 mb-4">{t('footer.followSub')}</p>
             <div className="flex items-center gap-3">
               <a
                 href="https://instagram.com"
@@ -181,9 +198,7 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Bottom Bar: Copyright & Location */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#724319]/70">
-          <div>
-            {t('footer.copyright')}
-          </div>
+          <div>{t('footer.copyright')}</div>
           <div className="flex items-center gap-1 text-[11px] text-[#8A5A44]">
             <span>{t('footer.crafted')}</span>
             <Heart className="w-3 h-3 fill-rose-400 text-rose-400 inline" />

@@ -24,6 +24,31 @@
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
   }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #724319;
+    outline-offset: 2px;
+  }
+}
+
+/* Skip to main content accessibility link */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  background-color: #724319;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(74, 43, 16, 0.25);
+}
+
+.skip-to-content:focus {
+  left: 1rem;
+  top: 1rem;
 }
 
 /* Custom subtle glass and shadow utilities */
@@ -58,4 +83,47 @@
 .bg-mesh-pattern {
   background-image: radial-gradient(rgba(138, 90, 68, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Clean legible printing & Save-as-PDF */
+@media print {
+  header,
+  footer,
+  .skip-to-content {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1f140a !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+
+  section {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
 }

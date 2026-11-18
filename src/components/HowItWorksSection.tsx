@@ -12,9 +12,10 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { howItWorksSteps, vendorsData } from '../data/mockData';
-import { CulturalTradition, EventTypeTag, Vendor } from '../types';
+import { CulturalTradition, EventTypeTag, PlanPreviewContextData, Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
+import { PlanSummaryActions } from './PlanSummaryActions';
 
 type HeadcountOption = 'Under 30' | '30-60' | '60-100' | '100-200' | '200+';
 
@@ -1374,7 +1375,13 @@ function getScopedVendorDetails(
   };
 }
 
-export const HowItWorksSection: React.FC = () => {
+interface HowItWorksSectionProps {
+  onOpenPreviewInquiry?: (vendor: Vendor, previewData: PlanPreviewContextData) => void;
+}
+
+export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
+  onOpenPreviewInquiry,
+}) => {
   const { t } = useLanguage();
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [selectedEventType, setSelectedEventType] = useState<EventTypeTag>(
@@ -1823,8 +1830,56 @@ export const HowItWorksSection: React.FC = () => {
     return `"Hi there! Thanks for your ${traditionPhrase}${t(`eventType.${selectedEventType}`)} inquiry for ${headcount} guests in ${location} (${preferredTime}). Within our ${t(`cat.${item.vendor.category}`)} scope, we can quote for ${servicePhrase}—estimated sample guide: ${item.scaledPriceSummary}."`;
   };
 
+  const budgetDisplayLabel = useMemo(() => {
+    if (!budget) return t('how.mock1BudgetFlexible');
+    return BUDGET_OPTIONS.find((b) => b.value === budget)?.label || t('how.mock1BudgetFlexible');
+  }, [budget, t]);
+
+  const currentPlanPreviewData: PlanPreviewContextData | null = useMemo(() => {
+    if (!activeStep3Item) return null;
+    return {
+      eventType: selectedEventType,
+      traditionLabel: traditionDisplayLabel,
+      culturalElements: selectedChipObjects.map((c) => c.label),
+      headcount,
+      location,
+      budgetLabel: budgetDisplayLabel,
+      preferredTime,
+      overallFitScore,
+      packageEstimatedTotal,
+      selectedVendorId: activeStep3Item.vendor.id,
+      selectedVendorName: activeStep3Item.vendor.businessName,
+      selectedVendorCategory: activeStep3Item.vendor.category,
+      selectedVendorFitScore: activeStep3Item.fitScore,
+      selectedVendorPriceSummary: activeStep3Item.scaledPriceSummary,
+      quoteLineItems: activeStep3Item.quoteLineItems,
+      sampleQuoteText: buildVendorChatMessage(activeStep3Item),
+      recommendedVendors: recommendedPackage.map((item) => ({
+        id: item.vendor.id,
+        businessName: item.vendor.businessName,
+        category: item.vendor.category,
+        location: item.vendor.location,
+        fitScore: item.fitScore,
+        unitPriceLabel: item.unitPriceLabel,
+        scaledPriceSummary: item.scaledPriceSummary,
+      })),
+    };
+  }, [
+    activeStep3Item,
+    selectedEventType,
+    traditionDisplayLabel,
+    selectedChipObjects,
+    headcount,
+    location,
+    budgetDisplayLabel,
+    preferredTime,
+    overallFitScore,
+    packageEstimatedTotal,
+    recommendedPackage,
+  ]);
+
   return (
-    <section className="py-20 md:py-28 bg-[#FFF8F6] relative overflow-hidden">
+    <section id="how-it-works" className="py-20 md:py-28 bg-[#FFF8F6] relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
@@ -2163,9 +2218,22 @@ export const HowItWorksSection: React.FC = () => {
                     </div>
 
                     {isClosestFallback && (
-                      <div className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2">
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
+                      >
                         <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" />
-                        <span>{t('how.mock2NoExactMatch')}</span>
+                        <span>
+                          {t('how.mock2NoExactMatch')} —{' '}
+                          {t('how.mock2CoversLabel', {
+                            traditions: Array.from(
+                              new Set(recommendedPackage.flatMap((item) => item.vendor.traditions))
+                            )
+                              .slice(0, 5)
+                              .join(', '),
+                          })}
+                        </span>
                       </div>
                     )}
 
@@ -2427,7 +2495,6 @@ export const HowItWorksSection: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setInquiryPreviewVendorId(activeStep3Item.vendor.id);
                             fireTimelineEvent(
                               selectedEventType,
                               selectedTradition,
@@ -2438,12 +2505,21 @@ export const HowItWorksSection: React.FC = () => {
                               selectedElementIds,
                               2
                             );
+                            if (onOpenPreviewInquiry && currentPlanPreviewData) {
+                              onOpenPreviewInquiry(activeStep3Item.vendor, currentPlanPreviewData);
+                            } else {
+                              setInquiryPreviewVendorId(activeStep3Item.vendor.id);
+                            }
                           }}
-                          className="px-3.5 py-1.5 bg-white hover:bg-[#FFF8F6] text-[#724319] text-xs font-bold rounded-full transition-colors cursor-pointer shrink-0"
+                          className="px-4 py-1.5 bg-white hover:bg-[#FFF8F6] text-[#724319] text-xs font-bold rounded-full transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                         >
                           {t('how.mock3Approve')}
                         </button>
                       </div>
+
+                      {currentPlanPreviewData && (
+                        <PlanSummaryActions plan={currentPlanPreviewData} variant="step3" />
+                      )}
 
                       {inquiryPreviewVendorId === activeStep3Item.vendor.id && (
                         <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-[11px] flex items-center gap-2">

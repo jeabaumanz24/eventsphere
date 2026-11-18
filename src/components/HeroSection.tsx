@@ -1,17 +1,10 @@
 import React from 'react';
-import { ArrowRight, Search, MapPin, Sparkles, Heart, ShieldCheck, Award } from 'lucide-react';
+import { ArrowRight, MapPin, Sparkles, Heart, ShieldCheck, Award } from 'lucide-react';
 import { heroCelebrationImg } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
+import { getPageHref } from '../utils/navigation';
 
-interface HeroSectionProps {
-  onStartPlanning: () => void;
-  onExploreVendors: () => void;
-}
-
-export const HeroSection: React.FC<HeroSectionProps> = ({
-  onStartPlanning,
-  onExploreVendors,
-}) => {
+export const HeroSection: React.FC = () => {
   const { t } = useLanguage();
 
   return (
@@ -45,20 +38,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Dual CTAs */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <button
-                onClick={onStartPlanning}
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 text-base font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
+              <a
+                href={getPageHref('ai-planner')}
+                className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 text-base font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.98] whitespace-nowrap"
               >
                 <span>{t('hero.startPlanning')}</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
 
-              <button
-                onClick={onExploreVendors}
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-medium text-[#724319] bg-white/90 hover:bg-white border border-[#EBC1B6] hover:border-[#8A5A44] rounded-full shadow-xs hover:shadow-sm transition-all cursor-pointer whitespace-nowrap"
+              <a
+                href={getPageHref('vendors')}
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-medium text-[#724319] bg-white/90 hover:bg-white border border-[#EBC1B6] hover:border-[#8A5A44] rounded-full shadow-xs hover:shadow-sm transition-all whitespace-nowrap"
               >
                 <span>{t('hero.exploreVendors')}</span>
-              </button>
+              </a>
             </div>
 
             {/* Quick trust statement / metadata */}

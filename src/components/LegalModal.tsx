@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -9,15 +9,35 @@ interface LegalModalProps {
 
 export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (!type) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [type, onClose]);
+
   if (!type) return null;
 
   const isPrivacy = type === 'privacy';
   const title = isPrivacy ? t('footer.privacy') : t('footer.terms');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="legal-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-[#FFF8F6] border border-[#EBC1B6] flex items-center justify-center text-[#724319] hover:bg-[#724319] hover:text-white transition-all shadow-sm cursor-pointer"
           aria-label={t('vendorModal.close')}
@@ -30,7 +50,9 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
             <ShieldCheck className="w-4 h-4 text-[#8A5A44]" />
             <span className="text-xs font-semibold uppercase text-[#8A5A44]">{t('legal.governance')}</span>
           </div>
-          <h3 className="text-xl font-serif font-bold text-[#724319]">{title}</h3>
+          <h3 id="legal-modal-title" className="text-xl font-serif font-bold text-[#724319]">
+            {title}
+          </h3>
           <p className="text-[11px] text-[#724319]/70 mt-0.5">{t('legal.updated')}</p>
         </div>
 

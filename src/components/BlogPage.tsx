@@ -25,34 +25,25 @@ import {
 import { blogPostsData, vendorsData } from '../data/mockData';
 import { BlogPost, JournalCategory, Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { PAGE_CONFIGS, getPageHref } from '../utils/navigation';
+import { trackEvent } from '../utils/analytics';
+import { JournalArticleBrowser } from './JournalArticleBrowser';
 
 interface BlogPageProps {
   activePostId: string;
   onSelectPost: (post: BlogPost) => void;
-  onBackHome: (sectionId?: string) => void;
+  onBackToJournal: () => void;
   onSelectVendor?: (vendor: Vendor) => void;
   onShowToast?: (message: string) => void;
 }
 
-const JOURNAL_CATEGORIES: Array<'All' | JournalCategory> = [
-  'All',
-  'Festivals',
-  'Birthdays',
-  'Proposals & Elopements',
-  'Corporate',
-  'Weddings',
-  'Planning Tips',
-];
-
 const CHECKLIST_STORAGE_KEY = 'eventsphere_wedding_checklist_v1';
 
 const DEFAULT_META = {
-  title: 'Event Sphere | AI-Powered Multicultural Event Planning & Vendor Discovery',
-  description:
-    "Event Sphere is Adelaide's premier AI-powered multicultural event planning and vendor discovery platform. Plan weddings, cultural celebrations, and private events with intelligent budgeting and verified local vendors.",
-  ogTitle: 'Event Sphere | AI-Powered Multicultural Event Planning',
-  ogDescription:
-    'Discover trusted vendors, plan smarter, and create unforgettable multicultural events in Adelaide with intelligent recommendations and planning tools.',
+  title: PAGE_CONFIGS.blog.title,
+  description: PAGE_CONFIGS.blog.description,
+  ogTitle: PAGE_CONFIGS.blog.title,
+  ogDescription: PAGE_CONFIGS.blog.description,
 };
 
 function upsertMetaTag(
@@ -74,7 +65,7 @@ function upsertMetaTag(
 export const BlogPage: React.FC<BlogPageProps> = ({
   activePostId,
   onSelectPost,
-  onBackHome,
+  onBackToJournal,
   onSelectVendor,
   onShowToast,
 }) => {
@@ -82,7 +73,10 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   const activePost =
     blogPostsData.find((p) => p.id === activePostId) || blogPostsData[0];
 
-  const [selectedJournalCategory, setSelectedJournalCategory] = useState<'All' | JournalCategory>('All');
+  const activeCategory: JournalCategory = activePost.journalCategory || 'Planning Tips';
+  const [selectedJournalCategory, setSelectedJournalCategory] = useState<'All' | JournalCategory>(
+    activeCategory
+  );
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem(CHECKLIST_STORAGE_KEY);
@@ -97,7 +91,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
   useEffect(() => {
     setOpenFaqIdx(0);
-  }, [activePost.id]);
+    setSelectedJournalCategory(activePost.journalCategory || 'Planning Tips');
+  }, [activePost.id, activePost.journalCategory]);
 
   useEffect(() => {
     try {
@@ -108,12 +103,11 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   }, [checkedItems]);
 
   const schemaJsonLd = useMemo(() => {
-    const urlSlug =
-      activePost.seo?.urlSlug || `/blog/${activePost.slug || activePost.id}`;
+    const slug = activePost.slug || activePost.id;
     const canonicalUrl =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/#${urlSlug}`
-        : `https://eventsphere.com.au/#${urlSlug}`;
+        ? `${window.location.origin}${getPageHref('blog', `?post=${slug}`)}`
+        : `https://eventsphere.com.au/eventsphere/blog/?post=${slug}`;
 
     const graph: Record<string, unknown>[] = [
       {
@@ -205,14 +199,23 @@ export const BlogPage: React.FC<BlogPageProps> = ({
     };
   }, [activePost, schemaJsonLd]);
 
+  const handleSelectArticle = (target: BlogPost) => {
+    trackEvent('blog_preview_open', {
+      article_title: target.title,
+      post_id: target.id,
+      category: target.journalCategory || target.category,
+    });
+    onSelectPost(target);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const navigateToSlug = (slug: string) => {
     const cleanSlug = slug.replace(/^\/?blog\//, '').trim();
     const target = blogPostsData.find(
       (p) => p.slug === cleanSlug || p.id === cleanSlug
     );
     if (target) {
-      onSelectPost(target);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      handleSelectArticle(target);
     }
   };
 
@@ -262,12 +265,23 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   const culturalPlaybooks = blogPostsData.filter((p) => p.id.startsWith('j'));
   const editorialPosts = blogPostsData.filter((p) => p.clusterRole === 'editorial' && !p.id.startsWith('j'));
 
-  const stripPosts = useMemo(() => {
-    if (selectedJournalCategory === 'All') return blogPostsData;
-    return blogPostsData.filter(
-      (p) => (p.journalCategory || 'Planning Tips') === selectedJournalCategory
-    );
-  }, [selectedJournalCategory]);
+  const sameCategoryPosts = useMemo(
+    () =>
+      blogPostsData.filter(
+        (p) => (p.journalCategory || 'Planning Tips') === activeCategory
+      ),
+    [activeCategory]
+  );
+
+  const currentCategoryIndex = sameCategoryPosts.findIndex(
+    (p) => p.id === activePost.id
+  );
+  const prevCategoryPost =
+    currentCategoryIndex > 0 ? sameCategoryPosts[currentCategoryIndex - 1] : null;
+  const nextCategoryPost =
+    currentCategoryIndex >= 0 && currentCategoryIndex < sameCategoryPosts.length - 1
+      ? sameCategoryPosts[currentCategoryIndex + 1]
+      : null;
 
   const recommendedVendors = useMemo(() => {
     if (!activePost.recommendedVendorIds || activePost.recommendedVendorIds.length === 0) {
@@ -277,13 +291,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   }, [activePost.recommendedVendorIds]);
 
   return (
-    <div className="pt-24 pb-20 bg-[#FFF8F6] min-h-screen">
+    <div className="pt-24 pb-20 bg-[#FFF8F6] min-h-screen overflow-x-hidden">
       {/* Top Editorial Breadcrumb Bar */}
       <div className="border-b border-[#EBC1B6]/60 bg-white/85 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5 text-xs">
             <button
-              onClick={() => onBackHome('blog')}
+              type="button"
+              onClick={onBackToJournal}
               className="inline-flex items-center gap-1.5 font-semibold text-[#724319] hover:text-[#8A5A44] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -292,12 +307,12 @@ export const BlogPage: React.FC<BlogPageProps> = ({
             <span aria-hidden="true" className="text-[#EBC1B6]">
               /
             </span>
-            <button
-              onClick={() => onBackHome()}
-              className="text-[#8A5A44] hover:text-[#724319] transition-colors cursor-pointer"
+            <a
+              href={getPageHref('home')}
+              className="text-[#8A5A44] hover:text-[#724319] transition-colors"
             >
               {t('blog.backHome')}
-            </button>
+            </a>
             <span aria-hidden="true" className="text-[#EBC1B6]">
               /
             </span>
@@ -311,6 +326,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                   /
                 </span>
                 <button
+                  type="button"
                   onClick={() => navigateToSlug(pillarPost.slug || pillarPost.id)}
                   className="text-[#724319]/80 hover:text-[#724319] underline decoration-[#EBC1B6] underline-offset-4 cursor-pointer"
                 >
@@ -322,68 +338,20 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleShare}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/40 border border-[#EBC1B6] transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>{t('blog.shareGuide')}</span>
             </button>
-            <button
-              onClick={() => onBackHome('ai-planner')}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors cursor-pointer"
+            <a
+              href={getPageHref('ai-planner')}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{t('blog.openPlanner')}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Filter + Article Switcher Strip */}
-      <div className="bg-[#F2CCC3]/25 border-b border-[#EBC1B6]/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2.5">
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-            {JOURNAL_CATEGORIES.map((cat) => {
-              const isSelected = selectedJournalCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedJournalCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap shrink-0 transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#724319] text-white font-semibold'
-                      : 'bg-white/90 text-[#724319]/80 hover:bg-white border border-[#EBC1B6]/70'
-                  }`}
-                >
-                  {t(`blog.cat.${cat}`)}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {stripPosts.map((post) => {
-              const isSelected = post.id === activePost.id;
-              const postTitle = t(`blog.${post.id}.title`);
-              return (
-                <button
-                  key={post.id}
-                  onClick={() => {
-                    onSelectPost(post);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                    isSelected
-                      ? 'bg-[#724319] text-white font-semibold shadow-xs'
-                      : 'bg-white/90 text-[#724319]/80 hover:bg-white border border-[#EBC1B6]/60'
-                  }`}
-                >
-                  {postTitle.length > 42
-                    ? `${postTitle.slice(0, 42)}...`
-                    : postTitle}
-                </button>
-              );
-            })}
+            </a>
           </div>
         </div>
       </div>
@@ -640,7 +608,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                             {section.calloutLink.promptPrefix}
                           </p>
                           <a
-                            href={`#/blog/${section.calloutLink.targetSlug}`}
+                            href={getPageHref('blog', `?post=${section.calloutLink.targetSlug}`)}
                             onClick={(e) => {
                               e.preventDefault();
                               navigateToSlug(section.calloutLink!.targetSlug);
@@ -687,23 +655,23 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       </p>
                     )}
                   </div>
-                  <div className="overflow-x-auto rounded-2xl border border-[#EBC1B6]/80 bg-[#FFF8F6]">
+                  <div className="rounded-2xl border border-[#EBC1B6]/80 bg-[#FFF8F6] overflow-hidden">
                     <table className="w-full text-left text-xs sm:text-sm border-collapse">
                       <thead>
                         <tr className="border-b border-[#EBC1B6] bg-[#F2CCC3]/35 text-[#724319]">
-                          <th className="py-3 px-4 font-serif font-bold">{t('blog.budgetGuideItem')}</th>
-                          <th className="py-3 px-4 font-serif font-bold whitespace-nowrap">{t('blog.budgetGuideEst')}</th>
-                          <th className="py-3 px-4 font-serif font-bold">{t('blog.budgetGuideNotes')}</th>
+                          <th className="py-3 px-3 sm:px-4 font-serif font-bold">{t('blog.budgetGuideItem')}</th>
+                          <th className="py-3 px-3 sm:px-4 font-serif font-bold sm:whitespace-nowrap">{t('blog.budgetGuideEst')}</th>
+                          <th className="py-3 px-3 sm:px-4 font-serif font-bold">{t('blog.budgetGuideNotes')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#EBC1B6]/50">
                         {activePost.budgetGuide.items.map((row) => (
                           <tr key={row.category} className="bg-white/75 hover:bg-white transition-colors">
-                            <td className="py-3 px-4 font-semibold text-[#724319]">{row.category}</td>
-                            <td className="py-3 px-4 font-mono font-bold text-[#8A5A44] whitespace-nowrap tabular-nums">
+                            <td className="py-3 px-3 sm:px-4 font-semibold text-[#724319]">{row.category}</td>
+                            <td className="py-3 px-3 sm:px-4 font-mono font-bold text-[#8A5A44] sm:whitespace-nowrap tabular-nums">
                               {row.estimateAud}
                             </td>
-                            <td className="py-3 px-4 text-[#724319]/80">{row.notes}</td>
+                            <td className="py-3 px-3 sm:px-4 text-[#724319]/80">{row.notes}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -777,9 +745,13 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     {recommendedVendors.map((vendor) => (
                       <div
                         key={vendor.id}
-                        onClick={() =>
-                          onSelectVendor ? onSelectVendor(vendor) : onBackHome('marketplace')
-                        }
+                        onClick={() => {
+                          if (onSelectVendor) {
+                            onSelectVendor(vendor);
+                          } else {
+                            window.location.assign(getPageHref('vendors'));
+                          }
+                        }}
                         className="group p-4 rounded-2xl bg-[#FFF8F6] border border-[#EBC1B6]/80 hover:border-[#8A5A44] hover:shadow-md transition-all cursor-pointer flex gap-3.5 items-center"
                       >
                         <img
@@ -831,39 +803,104 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3 shrink-0">
-                    <button
-                      onClick={() => onBackHome('ai-planner')}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors shadow-xs cursor-pointer"
+                    <a
+                      href={getPageHref('ai-planner')}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] transition-colors shadow-xs"
                     >
                       <Calculator className="w-4 h-4" />
                       <span>{t('blog.startAiBtn')}</span>
-                    </button>
-                    <button
-                      onClick={() => onBackHome('marketplace')}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-[#724319] bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] transition-colors cursor-pointer"
+                    </a>
+                    <a
+                      href={getPageHref('vendors')}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-[#724319] bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] transition-colors"
                     >
                       <Camera className="w-4 h-4" />
                       <span>{t('blog.browseVendorsBtn')}</span>
-                    </button>
+                    </a>
                   </div>
                 </div>
+
+                {(prevCategoryPost || nextCategoryPost) && (
+                  <nav
+                    aria-label={t('blog.moreInCategory', {
+                      category: t(`blog.cat.${activeCategory}`),
+                    })}
+                    className="pt-2 space-y-3"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44]">
+                      {t('blog.moreInCategory', {
+                        category: t(`blog.cat.${activeCategory}`),
+                      })}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {prevCategoryPost ? (
+                        <a
+                          href={getPageHref(
+                            'blog',
+                            `?post=${encodeURIComponent(
+                              prevCategoryPost.slug || prevCategoryPost.id
+                            )}`
+                          )}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSelectArticle(prevCategoryPost);
+                          }}
+                          className="group p-4 rounded-2xl bg-[#FFF8F6] hover:bg-[#F2CCC3]/30 border border-[#EBC1B6] transition-colors flex flex-col gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
+                        >
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8A5A44]">
+                            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{t('blog.prevArticle')}</span>
+                          </span>
+                          <span className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] leading-snug">
+                            {t(`blog.${prevCategoryPost.id}.title`)}
+                          </span>
+                        </a>
+                      ) : (
+                        <div className="hidden sm:block" />
+                      )}
+
+                      {nextCategoryPost && (
+                        <a
+                          href={getPageHref(
+                            'blog',
+                            `?post=${encodeURIComponent(
+                              nextCategoryPost.slug || nextCategoryPost.id
+                            )}`
+                          )}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSelectArticle(nextCategoryPost);
+                          }}
+                          className="group p-4 rounded-2xl bg-[#FFF8F6] hover:bg-[#F2CCC3]/30 border border-[#EBC1B6] transition-colors flex flex-col items-start sm:items-end sm:text-right gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
+                        >
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8A5A44]">
+                            <span>{t('blog.nextArticle')}</span>
+                            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                          </span>
+                          <span className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] leading-snug">
+                            {t(`blog.${nextCategoryPost.id}.title`)}
+                          </span>
+                        </a>
+                      )}
+                    </div>
+                  </nav>
+                )}
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <button
                     type="button"
-                    onClick={() => onBackHome('blog')}
+                    onClick={onBackToJournal}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/40 border border-[#EBC1B6] transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>{t('blog.backToJournal')}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onBackHome()}
-                    className="text-xs font-medium text-[#8A5A44] hover:text-[#724319] underline decoration-[#EBC1B6] underline-offset-4 cursor-pointer"
+                  <a
+                    href={getPageHref('home')}
+                    className="text-xs font-medium text-[#8A5A44] hover:text-[#724319] underline decoration-[#EBC1B6] underline-offset-4"
                   >
                     {t('blog.backHome')}
-                  </button>
+                  </a>
                 </div>
               </div>
 
@@ -1068,10 +1105,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       return (
                         <button
                           key={post.id}
-                          onClick={() => {
-                            onSelectPost(post);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
+                          type="button"
+                          onClick={() => handleSelectArticle(post)}
                           className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
                             isCurrent
                               ? 'bg-[#724319] text-white border-[#724319] shadow-2xs'
@@ -1099,10 +1134,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     {t('blog.pillarBadge')}
                   </div>
                   <button
-                    onClick={() => {
-                      onSelectPost(pillarPost);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
+                    type="button"
+                    onClick={() => handleSelectArticle(pillarPost)}
                     className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
                       pillarPost.id === activePost.id
                         ? 'bg-[#724319] text-white border-[#724319] shadow-xs'
@@ -1126,10 +1159,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     return (
                       <button
                         key={post.id}
-                        onClick={() => {
-                          onSelectPost(post);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        type="button"
+                        onClick={() => handleSelectArticle(post)}
                         className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
                           isCurrent
                             ? 'bg-[#FFF8F6] border-[#8A5A44] shadow-2xs'
@@ -1161,10 +1192,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       return (
                         <button
                           key={post.id}
-                          onClick={() => {
-                            onSelectPost(post);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
+                          type="button"
+                          onClick={() => handleSelectArticle(post)}
                           className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
                             isCurrent
                               ? 'bg-[#FFF8F6] border-[#8A5A44] shadow-2xs'
@@ -1193,17 +1222,35 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               <p className="text-xs text-white/80 leading-relaxed">
                 {t('blog.exploreAdelaideSub')}
               </p>
-              <button
-                onClick={() => onBackHome('marketplace')}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#724319] hover:bg-[#FFF8F6] text-xs font-semibold transition-colors cursor-pointer"
+              <a
+                href={getPageHref('vendors')}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#724319] hover:bg-[#FFF8F6] text-xs font-semibold transition-colors"
               >
                 <span>{t('blog.exploreMarketplaceBtn')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </div>
           </aside>
         </div>
       </div>
+
+      {/* Unified Non-Scrolling Journal Browser Below Article Canvas */}
+      <section
+        aria-label={t('blog.directoryHeading')}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 mt-14 border-t border-[#EBC1B6]/60"
+      >
+        <JournalArticleBrowser
+          selectedCategory={selectedJournalCategory}
+          onSelectCategory={setSelectedJournalCategory}
+          activePostId={activePost.id}
+          onSelectPost={(post) => {
+            onSelectPost(post);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          heading={t('blog.directoryHeading')}
+          subheading={t('blog.directorySub')}
+        />
+      </section>
     </div>
   );
 };

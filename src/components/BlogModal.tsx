@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { BlogPost } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,13 +10,33 @@ interface BlogModalProps {
 
 export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (!post) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [post, onClose]);
+
   if (!post) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="blog-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#FFF8F6] border border-[#EBC1B6] flex items-center justify-center text-[#724319] hover:bg-[#724319] hover:text-white transition-all shadow-sm cursor-pointer"
           aria-label={t('blog.closeReader')}
@@ -34,7 +54,10 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
             <span>{post.publishedDate}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#724319] leading-tight">
+          <h2
+            id="blog-modal-title"
+            className="text-2xl sm:text-3xl font-serif font-bold text-[#724319] leading-tight"
+          >
             {t(`blog.${post.id}.title`)}
           </h2>
 

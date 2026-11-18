@@ -3,6 +3,8 @@ import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { StatsSection } from './components/StatsSection';
 import { AboutSection } from './components/AboutSection';
+import { FeaturedVendorsSection } from './components/FeaturedVendorsSection';
+import { HowItWorksTeaserSection } from './components/HowItWorksTeaserSection';
 import { ServicesSection } from './components/ServicesSection';
 import { HowItWorksSection } from './components/HowItWorksSection';
 import { VendorMarketplaceSection } from './components/VendorMarketplaceSection';
@@ -13,6 +15,7 @@ import { BlogSection } from './components/BlogSection';
 import { BlogPage } from './components/BlogPage';
 import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
+import { VendorInsightsSection } from './components/VendorInsightsSection';
 import { Footer } from './components/Footer';
 import { VendorModal } from './components/VendorModal';
 import { WishlistModal } from './components/WishlistModal';
@@ -20,46 +23,53 @@ import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { blogPostsData, vendorsData } from './data/mockData';
-import { Vendor, BlogPost } from './types';
+import { Vendor, BlogPost, PageId, PlanPreviewContextData } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { PAGE_CONFIGS, detectCurrentPage, getPageHref } from './utils/navigation';
+import { trackEvent, trackPageView } from './utils/analytics';
 
 const WISHLIST_STORAGE_KEY = 'eventsphere_vendor_wishlist_v1';
 
-function parseBlogRoute(hash: string, pathname = ''): { isBlog: boolean; postId: string } {
-  const defaultId = blogPostsData[0]?.id || 'b0';
-  let slug = '';
+function extractBlogPostIdFromLocation(): string | null {
+  if (typeof window === 'undefined') return null;
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const queryPost = searchParams.get('post');
+  if (queryPost) {
+    const matched = blogPostsData.find(
+      (p) => p.slug === queryPost || p.id === queryPost
+    );
+    if (matched) return matched.id;
+  }
+
+  const hash = window.location.hash || '';
   if (hash.startsWith('#/blog')) {
-    slug = hash.replace(/^#\/blog\/?/, '').trim();
-  } else if (pathname.includes('/blog')) {
-    const [, afterBlog = ''] = pathname.split('/blog');
-    slug = afterBlog.replace(/^\/+|\/+$/g, '').trim();
-  } else {
-    return { isBlog: false, postId: defaultId };
+    const slug = hash.replace(/^#\/blog\/?/, '').trim();
+    if (!slug) return null;
+    const matched = blogPostsData.find((p) => p.slug === slug || p.id === slug);
+    return matched ? matched.id : null;
   }
 
-  if (!slug) {
-    return { isBlog: true, postId: defaultId };
-  }
-  const matched = blogPostsData.find((p) => p.slug === slug || p.id === slug);
-  return { isBlog: true, postId: matched ? matched.id : defaultId };
+  return null;
 }
 
 function EventSphereApp() {
   const { t, tFor, currentLanguage } = useLanguage();
-  const initialRoute = parseBlogRoute(
-    typeof window !== 'undefined' ? window.location.hash : '',
-    typeof window !== 'undefined' ? window.location.pathname : ''
+  const currentPage: PageId = useMemo(() => detectCurrentPage(), []);
+  const [activeBlogId, setActiveBlogId] = useState<string | null>(() =>
+    extractBlogPostIdFromLocation()
   );
-  const [currentPage, setCurrentPage] = useState<'home' | 'blog'>(
-    initialRoute.isBlog ? 'blog' : 'home'
-  );
-  const [activeBlogId, setActiveBlogId] = useState<string>(initialRoute.postId);
+
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [previewInquiry, setPreviewInquiry] = useState<{
+    vendor: Vendor;
+    previewContext: PlanPreviewContextData;
+  } | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+
   const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -88,24 +98,75 @@ function EventSphereApp() {
       .filter((v): v is Vendor => Boolean(v));
   }, [wishlistIds]);
 
+  // Sync page metadata and fire GA4 page_view when active page or blog article changes
   useEffect(() => {
-    const handleHashChange = () => {
-      const parsed = parseBlogRoute(
-        window.location.hash,
-        window.location.pathname
-      );
-      if (parsed.isBlog) {
-        setCurrentPage('blog');
-        setActiveBlogId(parsed.postId);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        setCurrentPage('home');
+    const config = PAGE_CONFIGS[currentPage];
+    if (currentPage === 'blog' && activeBlogId) {
+      const post = blogPostsData.find((p) => p.id === activeBlogId);
+      const articleTitle = post?.seo?.seoTitle || `${post?.title || 'Journal'} | EventSphere`;
+      trackPageView('blog', articleTitle);
+      return;
+    }
+
+    document.title = config.title;
+    const descTag = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (descTag) {
+      descTag.setAttribute('content', config.description);
+    }
+    trackPageView(currentPage, config.title);
+  }, [currentPage, activeBlogId]);
+
+  // Sync browser back/forward navigation & legacy #/blog/ hashes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const nextBlogId = extractBlogPostIdFromLocation();
+      if (currentPage === 'home' && window.location.hash.startsWith('#/blog')) {
+        const slug = window.location.hash.replace(/^#\/blog\/?/, '').trim();
+        window.location.assign(getPageHref('blog', slug ? `?post=${encodeURIComponent(slug)}` : ''));
+        return;
       }
+      setActiveBlogId(nextBlogId);
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, [currentPage]);
+
+  // Observe visible sections once per page visit for non-PII GA4 analytics
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+
+    const seenSections = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const sectionId = (entry.target as HTMLElement).id;
+            if (sectionId && !seenSections.has(sectionId)) {
+              seenSections.add(sectionId);
+              trackEvent('section_view', {
+                page: currentPage,
+                section_id: sectionId,
+              });
+            }
+          }
+        }
+      },
+      { threshold: 0.25 }
+    );
+
+    const sectionEls = document.querySelectorAll('main section[id]');
+    sectionEls.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [currentPage, activeBlogId]);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -147,52 +208,78 @@ function EventSphereApp() {
     showToast(t('wishlist.clearedToast'));
   }, [showToast, t]);
 
-  const openBlogPage = useCallback((post?: BlogPost) => {
-    const target = post || blogPostsData[0];
-    setActiveBlogId(target.id);
-    setCurrentPage('blog');
-    const nextHash = target.slug ? `#/blog/${target.slug}` : '#/blog';
-    if (window.location.hash !== nextHash) {
-      window.location.hash = nextHash;
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  const openBlogArticle = useCallback(
+    (post?: BlogPost) => {
+      const target = post || blogPostsData[0];
+      const slug = target.slug || target.id;
+      const targetUrl = getPageHref('blog', `?post=${encodeURIComponent(slug)}`);
 
-  const scrollTo = useCallback(
-    (id?: string) => {
-      const targetId = id || 'home';
-      if (currentPage !== 'home') {
-        setCurrentPage('home');
-        if (window.location.hash.startsWith('#/blog')) {
-          window.history.replaceState(null, '', `#${targetId}`);
-        }
-        setTimeout(() => {
-          const el = document.getElementById(targetId);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }, 60);
+      if (currentPage !== 'blog') {
+        window.location.assign(targetUrl);
         return;
       }
 
-      const el = document.getElementById(targetId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+      setActiveBlogId(target.id);
+      try {
+        window.history.pushState(null, '', targetUrl);
+      } catch {
+        // Ignore history restrictions
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [currentPage]
   );
 
+  const handleBackToJournal = useCallback(() => {
+    setActiveBlogId(null);
+    try {
+      window.history.pushState(null, '', getPageHref('blog'));
+    } catch {
+      // Ignore history restrictions
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleOpenStandardVendor = useCallback((vendor: Vendor) => {
+    setPreviewInquiry(null);
+    setSelectedVendor(vendor);
+  }, []);
+
+  const handleOpenPreviewInquiry = useCallback(
+    (vendor: Vendor, previewContext: PlanPreviewContextData) => {
+      setSelectedVendor(null);
+      setPreviewInquiry({ vendor, previewContext });
+    },
+    []
+  );
+
+  const handleCloseVendorModal = useCallback(() => {
+    setSelectedVendor(null);
+    setPreviewInquiry(null);
+  }, []);
+
+  const handleExploreMarketplaceFromWishlist = useCallback(() => {
+    if (currentPage === 'vendors') {
+      const el = document.getElementById('marketplace');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+    window.location.assign(getPageHref('vendors'));
+  }, [currentPage]);
+
+  const activeModalVendor = previewInquiry?.vendor ?? selectedVendor;
+
   return (
     <div className="min-h-screen bg-[#FFF8F6] text-[#724319] font-sans flex flex-col selection:bg-[#EBC1B6] selection:text-[#724319]">
-      {/* 1. Navigation Bar with Language Switcher */}
+      <a href="#main-content" className="skip-to-content">
+        {t('a11y.skipToContent')}
+      </a>
+
+      {/* Shared Navigation Bar */}
       <Navbar
         currentPage={currentPage}
-        onOpenBlogPage={() => openBlogPage()}
-        onNavigateHomeSection={(sectionId) => scrollTo(sectionId)}
-        onGetStarted={() => scrollTo('ai-planner')}
         wishlistCount={wishlistedVendors.length}
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onLanguageChange={(langName, langCode) => {
@@ -200,92 +287,108 @@ function EventSphereApp() {
         }}
       />
 
-      {currentPage === 'blog' ? (
-        <main className="flex-grow">
-          <BlogPage
-            activePostId={activeBlogId}
-            onSelectPost={(post) => openBlogPage(post)}
-            onBackHome={(sectionId) => scrollTo(sectionId)}
-            onSelectVendor={(vendor) => setSelectedVendor(vendor)}
-            onShowToast={showToast}
-          />
-        </main>
-      ) : (
-        <main className="flex-grow">
-          {/* 2. Hero Section */}
-          <HeroSection
-            onStartPlanning={() => scrollTo('ai-planner')}
-            onExploreVendors={() => scrollTo('marketplace')}
-          />
+      {/* Per-page Main Landmark */}
+      <main id="main-content" className="flex-grow">
+        {currentPage === 'home' && (
+          <>
+            <HeroSection />
+            <StatsSection />
+            <AboutSection
+              ctaHref={getPageHref('about')}
+              ctaLabel={t('home.aboutOverviewCta')}
+            />
+            <FeaturedVendorsSection
+              onSelectVendor={handleOpenStandardVendor}
+              wishlistIds={wishlistIds}
+              onToggleWishlist={toggleWishlist}
+            />
+            <HowItWorksTeaserSection />
+          </>
+        )}
 
-          {/* 3. Statistics Section */}
-          <StatsSection />
+        {currentPage === 'about' && (
+          <>
+            <AboutSection isPagePrimary={true} />
+            <PersonasSection />
+            <TestimonialsSection />
+          </>
+        )}
 
-          {/* 4. About EventSphere ("Why EventSphere") */}
-          <AboutSection onLearnMore={() => scrollTo('services')} />
+        {currentPage === 'services' && (
+          <>
+            <ServicesSection isPagePrimary={true} />
+            <HowItWorksSection onOpenPreviewInquiry={handleOpenPreviewInquiry} />
+          </>
+        )}
 
-          {/* 5. Services Section */}
-          <ServicesSection onSelectService={() => scrollTo('ai-planner')} />
+        {currentPage === 'ai-planner' && (
+          <>
+            <AIPlannerSection
+              isPagePrimary={true}
+              onScheduleExported={(msg) => showToast(msg)}
+            />
+            <FAQSection />
+          </>
+        )}
 
-          {/* 6. How It Works (3-step timeline) */}
-          <HowItWorksSection />
-
-          {/* 7. Vendor Marketplace Preview */}
+        {currentPage === 'vendors' && (
           <VendorMarketplaceSection
-            onSelectVendor={(vendor) => setSelectedVendor(vendor)}
+            isPagePrimary={true}
+            onSelectVendor={handleOpenStandardVendor}
             onNotify={showToast}
             wishlistIds={wishlistIds}
             onToggleWishlist={toggleWishlist}
           />
+        )}
 
-          {/* 8. AI Event Planner Section (SaaS dashboard preview) */}
-          <AIPlannerSection
-            onExploreVendors={() => scrollTo('marketplace')}
-            onOpenConsult={() => scrollTo('contact')}
-            onScheduleExported={(msg) => showToast(msg)}
-          />
+        {currentPage === 'blog' &&
+          (activeBlogId ? (
+            <BlogPage
+              activePostId={activeBlogId}
+              onSelectPost={(post) => openBlogArticle(post)}
+              onBackToJournal={handleBackToJournal}
+              onSelectVendor={handleOpenStandardVendor}
+              onShowToast={showToast}
+            />
+          ) : (
+            <BlogSection
+              isPagePrimary={true}
+              onReadPost={(post) => openBlogArticle(post)}
+              onOpenBlogPage={() => openBlogArticle(blogPostsData[0])}
+            />
+          ))}
 
-          {/* 9. Customer and Vendor Personas */}
-          <PersonasSection />
+        {currentPage === 'contact' && (
+          <>
+            <ContactSection
+              isPagePrimary={true}
+              onFormSubmitted={({ name }) => {
+                showToast(t('toast.inquiryReceived', { name }));
+              }}
+            />
+            <FAQSection />
+          </>
+        )}
 
-          {/* 10. Testimonials */}
-          <TestimonialsSection />
+        {currentPage === 'vendor-insights' && (
+          <VendorInsightsSection onCopied={showToast} />
+        )}
+      </main>
 
-          {/* 11. Blog Preview */}
-          <BlogSection
-            onReadPost={(post) => openBlogPage(post)}
-            onOpenBlogPage={() => openBlogPage()}
-          />
-
-          {/* 12. Multicultural Adelaide FAQ */}
-          <FAQSection
-            onOpenContact={() => scrollTo('contact')}
-            onOpenPlanner={() => scrollTo('ai-planner')}
-          />
-
-          {/* 13. Contact Section */}
-          <ContactSection
-            onFormSubmitted={({ name }) => {
-              showToast(t('toast.inquiryReceived', { name }));
-            }}
-          />
-        </main>
-      )}
-
-      {/* 13. Footer */}
+      {/* Shared Footer */}
       <Footer
         onOpenPrivacy={() => setLegalModalType('privacy')}
         onOpenTerms={() => setLegalModalType('terms')}
-        onOpenBlogPage={() => openBlogPage()}
-        onNavigateHomeSection={(sectionId) => scrollTo(sectionId)}
       />
 
       {/* Interactive Modals & Toasts */}
       <VendorModal
-        vendor={selectedVendor}
-        onClose={() => setSelectedVendor(null)}
-        isWishlisted={selectedVendor ? wishlistIds.includes(selectedVendor.id) : false}
+        vendor={activeModalVendor}
+        onClose={handleCloseVendorModal}
+        isWishlisted={activeModalVendor ? wishlistIds.includes(activeModalVendor.id) : false}
         onToggleWishlist={toggleWishlist}
+        initialTab={previewInquiry ? 'proposal' : 'overview'}
+        previewContext={previewInquiry?.previewContext ?? null}
         onRequestSent={(name) => {
           showToast(t('toast.proposalSent', { name }));
         }}
@@ -297,25 +400,16 @@ function EventSphereApp() {
         onClose={() => setIsWishlistOpen(false)}
         onRemoveVendor={removeFromWishlist}
         onClearAll={clearWishlist}
-        onSelectVendor={(vendor) => setSelectedVendor(vendor)}
-        onExploreMarketplace={() => scrollTo('marketplace')}
+        onSelectVendor={handleOpenStandardVendor}
+        onExploreMarketplace={handleExploreMarketplaceFromWishlist}
       />
 
-      <BlogModal
-        post={selectedPost}
-        onClose={() => setSelectedPost(null)}
-      />
+      <BlogModal post={selectedPost} onClose={() => setSelectedPost(null)} />
 
-      <LegalModal
-        type={legalModalType}
-        onClose={() => setLegalModalType(null)}
-      />
+      <LegalModal type={legalModalType} onClose={() => setLegalModalType(null)} />
 
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setToastMessage(null)}
-        />
+        <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
       )}
     </div>
   );

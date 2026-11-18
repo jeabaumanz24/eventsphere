@@ -7,6 +7,7 @@ import { VendorCompareModal } from './VendorCompareModal';
 import { trackEvent } from '../utils/analytics';
 
 interface VendorMarketplaceSectionProps {
+  isPagePrimary?: boolean;
   onSelectVendor: (vendor: Vendor) => void;
   onNotify?: (message: string) => void;
   wishlistIds?: string[];
@@ -43,12 +44,14 @@ const VENDOR_CATEGORIES = [
 ];
 
 export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> = ({
+  isPagePrimary = false,
   onSelectVendor,
   onNotify,
   wishlistIds,
   onToggleWishlist,
 }) => {
   const { t } = useLanguage();
+  const HeadingTag = isPagePrimary ? 'h1' : 'h2';
   const [selectedEventType, setSelectedEventType] = useState<'All Events' | EventTypeTag>('All Events');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -141,15 +144,20 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
   };
 
   return (
-    <section id="marketplace" className="py-20 md:py-28 bg-[#FFF8F6] relative">
+    <section
+      id="marketplace"
+      className={`${
+        isPagePrimary ? 'pt-32 pb-20 md:pt-36 md:pb-24' : 'py-20 md:py-28'
+      } bg-[#FFF8F6] relative`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
             {t('marketplace.kicker')}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] [text-wrap:balance]">
+          <HeadingTag className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] [text-wrap:balance]">
             {t('marketplace.title')}
-          </h2>
+          </HeadingTag>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
             {t('marketplace.subtitle')}
           </p>

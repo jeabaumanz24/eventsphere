@@ -180,3 +180,43 @@ export interface Persona {
   eventSphereSolutions: string[];
   quote: string;
 }
+
+export type PageId =
+  | 'home'
+  | 'about'
+  | 'services'
+  | 'ai-planner'
+  | 'vendors'
+  | 'blog'
+  | 'contact'
+  | 'vendor-insights';
+
+export interface PlanPreviewVendorSummary {
+  id: string;
+  businessName: string;
+  category: VendorCategory;
+  location: string;
+  fitScore: number;
+  unitPriceLabel: string;
+  scaledPriceSummary: string;
+}
+
+export interface PlanPreviewContextData {
+  eventType: EventTypeTag;
+  traditionLabel: string;
+  culturalElements: string[];
+  headcount: string;
+  location: string;
+  budgetLabel: string;
+  preferredTime: string;
+  overallFitScore: number;
+  packageEstimatedTotal: number;
+  selectedVendorId: string;
+  selectedVendorName: string;
+  selectedVendorCategory: VendorCategory;
+  selectedVendorFitScore: number;
+  selectedVendorPriceSummary: string;
+  quoteLineItems: string[];
+  sampleQuoteText: string;
+  recommendedVendors: PlanPreviewVendorSummary[];
+}

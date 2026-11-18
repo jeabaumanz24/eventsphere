@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, MessageCircle, Sparkles } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { getPageHref } from '../utils/navigation';
 
 type FaqCategory = 'all' | 'venues' | 'rituals' | 'budget';
 
@@ -81,22 +82,32 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
                 {t('faq.ctaDesc')}
               </p>
               <div className="flex flex-col gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={onOpenContact}
-                  className="w-full py-3 px-5 rounded-full bg-[#724319] hover:bg-[#8A5A44] text-white text-xs sm:text-sm font-semibold transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                <a
+                  href={getPageHref('contact')}
+                  onClick={(e) => {
+                    if (onOpenContact) {
+                      e.preventDefault();
+                      onOpenContact();
+                    }
+                  }}
+                  className="w-full py-3 px-5 rounded-full bg-[#724319] hover:bg-[#8A5A44] text-white text-xs sm:text-sm font-semibold transition-colors shadow-xs flex items-center justify-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4 shrink-0" />
                   <span>{t('faq.ctaContactBtn')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onOpenPlanner}
-                  className="w-full py-2.5 px-5 rounded-full bg-white hover:bg-[#F2CCC3]/35 text-[#724319] border border-[#EBC1B6] text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                </a>
+                <a
+                  href={getPageHref('ai-planner')}
+                  onClick={(e) => {
+                    if (onOpenPlanner) {
+                      e.preventDefault();
+                      onOpenPlanner();
+                    }
+                  }}
+                  className="w-full py-2.5 px-5 rounded-full bg-white hover:bg-[#F2CCC3]/35 text-[#724319] border border-[#EBC1B6] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#8A5A44] shrink-0" />
                   <span>{t('faq.ctaPlannerBtn')}</span>
-                </button>
+                </a>
               </div>
             </div>
           </div>
