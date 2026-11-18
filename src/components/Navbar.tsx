@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Heart } from 'lucide-react';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -11,6 +11,8 @@ interface NavbarProps {
   currentPage?: 'home' | 'blog';
   onOpenBlogPage?: () => void;
   onNavigateHomeSection?: (sectionId: string) => void;
+  wishlistCount?: number;
+  onOpenWishlist?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,6 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentPage = 'home',
   onOpenBlogPage,
   onNavigateHomeSection,
+  wishlistCount = 0,
+  onOpenWishlist,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -83,13 +87,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Bar Contract: Zone 1 (Wordmark) — Zone 2 (Nav Links) — Zone 3 (Language Switcher + Primary CTA) */}
-        <div className="flex items-center justify-between gap-6 lg:gap-8">
+        {/* Top Bar Contract: Zone 1 (Wordmark) — Zone 2 (Nav Links) — Zone 3 (Language Switcher + Floating Wishlist + Primary CTA) */}
+        <div className="flex items-center justify-between gap-3 lg:gap-4 xl:gap-8">
           {/* Zone 1: Brand wordmark (single element in display face) */}
           <a
             href="#home"
             onClick={(e) => handleNavClick(e, 'home', '#home')}
-            className="flex items-center gap-2.5 group text-2xl font-serif font-bold text-[#724319] tracking-tight whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 sm:gap-2.5 group text-lg sm:text-2xl font-serif font-bold text-[#724319] tracking-tight whitespace-nowrap shrink-0"
           >
             <div className="h-14 w-[84px] sm:h-16 sm:w-24 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <img
@@ -102,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </a>
 
           {/* Zone 2: 4-7 single-line concise navigation links */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-[13px] font-medium text-[#724319]/80">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-7 text-[13px] font-medium text-[#724319]/80">
             {navLinks.map((link) => {
               const isActive =
                 currentPage === 'blog'
@@ -126,9 +130,29 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* Zone 3: Language Switcher Dropdown + 1 primary action */}
-          <div className="hidden lg:flex items-center gap-3 shrink-0">
+          {/* Zone 3: Language Switcher + Floating Wishlist Heart Button + Primary CTA */}
+          <div className="hidden lg:flex items-center gap-2.5 xl:gap-3 shrink-0">
             <LanguageSwitcher onLanguageChange={onLanguageChange} />
+            {onOpenWishlist && (
+              <button
+                type="button"
+                onClick={onOpenWishlist}
+                className="relative w-10 h-10 rounded-full bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] hover:border-[#8A5A44] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center text-[#724319] cursor-pointer shrink-0"
+                aria-label={t('wishlist.headerBtnAria', { count: wishlistCount })}
+                title={t('wishlist.headerBtnTooltip', { count: wishlistCount })}
+              >
+                <Heart
+                  className={`w-4 h-4 transition-colors ${
+                    wishlistCount > 0 ? 'fill-rose-500 text-rose-500' : 'text-[#724319]'
+                  }`}
+                />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs ring-2 ring-[#FFF8F6] tabular-nums">
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               onClick={onGetStarted}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-xs hover:shadow-md transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer"
@@ -139,11 +163,31 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Mobile controls */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-1.5 sm:gap-2">
             <LanguageSwitcher onLanguageChange={onLanguageChange} />
+            {onOpenWishlist && (
+              <button
+                type="button"
+                onClick={onOpenWishlist}
+                className="relative w-9 h-9 rounded-full bg-white hover:bg-[#FFF8F6] border border-[#EBC1B6] shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center text-[#724319] cursor-pointer shrink-0"
+                aria-label={t('wishlist.headerBtnAria', { count: wishlistCount })}
+                title={t('wishlist.headerBtnTooltip', { count: wishlistCount })}
+              >
+                <Heart
+                  className={`w-4 h-4 transition-colors ${
+                    wishlistCount > 0 ? 'fill-rose-500 text-rose-500' : 'text-[#724319]'
+                  }`}
+                />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs ring-2 ring-[#FFF8F6] tabular-nums">
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               onClick={onGetStarted}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full shrink-0"
+              className="hidden sm:inline-flex px-3 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full shrink-0"
             >
               {t('nav.getStarted')}
             </button>

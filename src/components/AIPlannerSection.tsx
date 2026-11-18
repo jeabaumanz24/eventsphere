@@ -14,37 +14,51 @@ interface AIPlannerSectionProps {
   onScheduleExported?: (msg: string) => void;
 }
 
+interface PlannerPreset {
+  id: string;
+  labelKey: string;
+  defaultBudget: number;
+  defaultGuests: number;
+}
+
+const PLANNER_PRESETS: PlannerPreset[] = [
+  { id: 'milestone', labelKey: 'planner.preset.milestone', defaultBudget: 8500, defaultGuests: 70 },
+  { id: 'diwali', labelKey: 'planner.preset.diwali', defaultBudget: 14000, defaultGuests: 120 },
+  { id: 'lunar', labelKey: 'planner.preset.lunar', defaultBudget: 18000, defaultGuests: 140 },
+  { id: 'eid', labelKey: 'planner.preset.eid', defaultBudget: 9500, defaultGuests: 85 },
+  { id: 'filipino', labelKey: 'planner.culture.filipino', defaultBudget: 48000, defaultGuests: 180 },
+];
+
 export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   onExploreVendors,
-  onOpenConsult,
   onScheduleExported,
 }) => {
   const { t } = useLanguage();
-  const [totalBudget, setTotalBudget] = useState<number>(55000);
-  const [guestCount, setGuestCount] = useState<number>(180);
-  const [selectedCulture, setSelectedCulture] = useState<string>('filipino');
+  const [totalBudget, setTotalBudget] = useState<number>(8500);
+  const [guestCount, setGuestCount] = useState<number>(70);
+  const [selectedCulture, setSelectedCulture] = useState<string>('milestone');
   const [activeTab, setActiveTab] = useState<'budget' | 'timeline' | 'insights'>('budget');
 
-  const cultures = [
-    { id: 'filipino', label: t('planner.culture.filipino') },
-    { id: 'southasian', label: t('planner.culture.southasian') },
-    { id: 'mediterranean', label: t('planner.culture.mediterranean') },
-    { id: 'botanical', label: t('planner.culture.botanical') },
-  ];
+  const handleSelectPreset = (preset: PlannerPreset) => {
+    setSelectedCulture(preset.id);
+    setTotalBudget(preset.defaultBudget);
+    setGuestCount(preset.defaultGuests);
+  };
 
-  // Dynamic budget percentage allocations
+  // Dynamic budget percentage allocations suited across milestones, festivals & weddings
   const allocations = useMemo(() => {
     return [
-      { key: 'venue', pct: 0.44, icon: '🍷' },
-      { key: 'photo', pct: 0.16, icon: '📷' },
-      { key: 'floral', pct: 0.14, icon: '🌸' },
-      { key: 'cultural', pct: 0.09, icon: '✨' },
-      { key: 'beauty', pct: 0.09, icon: '💄' },
-      { key: 'buffer', pct: 0.08, icon: '🛡️' },
+      { key: 'venueHire', pct: 0.26, icon: '🏛️' },
+      { key: 'catering', pct: 0.36, icon: '🍽️' },
+      { key: 'decor', pct: 0.14, icon: '✨' },
+      { key: 'entertainment', pct: 0.11, icon: '🥁' },
+      { key: 'photoKeepsakes', pct: 0.06, icon: '📷' },
+      { key: 'buffer', pct: 0.07, icon: '🛡️' },
     ];
   }, []);
 
   const costPerGuest = Math.round(totalBudget / guestCount);
+  const estimatedSavings = Math.round(totalBudget * 0.07);
 
   return (
     <section id="ai-planner" className="py-20 md:py-28 bg-[#F2CCC3]/25 relative">
@@ -53,7 +67,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
             {t('planner.kicker')}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] [text-wrap:balance]">
             {t('planner.title')}
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
@@ -111,20 +125,20 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
             </div>
           </div>
 
-          {/* Culture Preset Switcher */}
+          {/* Celebration & Culture Preset Switcher */}
           <div className="px-6 py-3.5 bg-white border-b border-[#EBC1B6]/30 flex flex-wrap items-center gap-2 text-xs">
             <span className="font-semibold text-[#8A5A44] shrink-0">{t('planner.traditionLabel')}</span>
-            {cultures.map((c) => (
+            {PLANNER_PRESETS.map((preset) => (
               <button
-                key={c.id}
-                onClick={() => setSelectedCulture(c.id)}
-                className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${
-                  selectedCulture === c.id
+                key={preset.id}
+                onClick={() => handleSelectPreset(preset)}
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                  selectedCulture === preset.id
                     ? 'bg-[#724319] text-white font-medium'
                     : 'bg-[#FFF8F6] text-[#724319] hover:bg-[#F2CCC3]/50 border border-[#EBC1B6]'
                 }`}
               >
-                {c.label}
+                {t(preset.labelKey)}
               </button>
             ))}
           </div>
@@ -137,23 +151,23 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-[#724319]">{t('planner.estBudget')}</span>
-                    <span className="font-mono font-bold text-base text-[#724319]">
+                    <span className="font-mono font-bold text-base text-[#724319] tabular-nums">
                       ${totalBudget.toLocaleString()} AUD
                     </span>
                   </div>
                   <input
                     type="range"
-                    min={20000}
+                    min={2500}
                     max={120000}
-                    step={2500}
+                    step={500}
                     value={totalBudget}
                     onChange={(e) => setTotalBudget(Number(e.target.value))}
                     className="w-full accent-[#724319] cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-[#8A5A44] font-mono">
-                    <span>$20k</span>
+                    <span>$2.5k</span>
+                    <span>$15k</span>
                     <span>$50k</span>
-                    <span>$80k</span>
                     <span>$120k+</span>
                   </div>
                 </div>
@@ -161,23 +175,23 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-[#724319]">{t('planner.invitedGuests')}</span>
-                    <span className="font-mono font-bold text-base text-[#724319]">
+                    <span className="font-mono font-bold text-base text-[#724319] tabular-nums">
                       {guestCount} {t('planner.guestsUnit')}
                     </span>
                   </div>
                   <input
                     type="range"
-                    min={50}
+                    min={20}
                     max={400}
-                    step={10}
+                    step={5}
                     value={guestCount}
                     onChange={(e) => setGuestCount(Number(e.target.value))}
                     className="w-full accent-[#724319] cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-[#8A5A44] font-mono">
-                    <span>{t('planner.rangeIntimate')}</span>
-                    <span>{t('planner.rangeStandard')}</span>
-                    <span>{t('planner.rangeGrand')}</span>
+                    <span>{t('planner.rangeGuestsMin')}</span>
+                    <span>{t('planner.rangeGuestsMid')}</span>
+                    <span>{t('planner.rangeGuestsMax')}</span>
                   </div>
                 </div>
               </div>
@@ -197,7 +211,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <div className="p-4 bg-white rounded-2xl border border-[#EBC1B6]/70 shadow-xs">
                   <span className="text-[11px] text-[#8A5A44] uppercase font-semibold">{t('planner.buffer')}</span>
                   <div className="text-xl font-bold font-serif text-[#724319] mt-1 tabular-nums">
-                    ${Math.round(totalBudget * 0.08).toLocaleString()} AUD
+                    ${Math.round(totalBudget * 0.07).toLocaleString()} AUD
                   </div>
                   <span className="text-[10px] text-[#8A5A44]">{t('planner.bufferSub')}</span>
                 </div>
@@ -213,7 +227,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <div className="p-4 bg-white rounded-2xl border border-[#EBC1B6]/70 shadow-xs">
                   <span className="text-[11px] text-[#8A5A44] uppercase font-semibold">{t('planner.savings')}</span>
                   <div className="text-xl font-bold font-serif text-[#724319] mt-1 tabular-nums">
-                    $3,850 AUD
+                    ${estimatedSavings.toLocaleString()} AUD
                   </div>
                   <span className="text-[10px] text-emerald-700">{t('planner.savingsSub')}</span>
                 </div>
@@ -244,7 +258,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs font-bold font-mono text-[#724319]">
+                          <div className="text-xs font-bold font-mono text-[#724319] tabular-nums">
                             ${amount.toLocaleString()}
                           </div>
                         </div>
@@ -288,20 +302,20 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/60 space-y-2">
                   <span className="font-semibold text-[#724319] flex items-center gap-1.5">
                     <TrendingUp className="w-4 h-4 text-amber-600" />
-                    {t('planner.insightFloralTitle')}
+                    {t('planner.insightPresetNoteTitle')}
                   </span>
                   <p className="text-[11px] text-[#724319]/80 leading-relaxed">
-                    {t('planner.insightFloralBody')}
+                    {t('planner.insightPresetNoteBody')}
                   </p>
                 </div>
 
                 <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/60 space-y-2">
                   <span className="font-semibold text-[#724319] flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-[#8A5A44]" />
-                    {t('planner.insightTimingTitle')}
+                    {t('planner.insightFloralTitle')}
                   </span>
                   <p className="text-[11px] text-[#724319]/80 leading-relaxed">
-                    {t('planner.insightTimingBody')}
+                    {t('planner.insightFloralBody')}
                   </p>
                 </div>
               </div>

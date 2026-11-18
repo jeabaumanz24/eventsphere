@@ -9,6 +9,7 @@ import {
   ThumbsUp,
   Filter,
   Plus,
+  Heart,
 } from 'lucide-react';
 import { Vendor, VendorReview } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,12 +18,16 @@ interface VendorModalProps {
   vendor: Vendor | null;
   onClose: () => void;
   onRequestSent: (vendorName: string) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: (vendor: Vendor) => void;
 }
 
 export const VendorModal: React.FC<VendorModalProps> = ({
   vendor,
   onClose,
   onRequestSent,
+  isWishlisted = false,
+  onToggleWishlist,
 }) => {
   if (!vendor) return null;
   return (
@@ -31,6 +36,8 @@ export const VendorModal: React.FC<VendorModalProps> = ({
       vendor={vendor}
       onClose={onClose}
       onRequestSent={onRequestSent}
+      isWishlisted={isWishlisted}
+      onToggleWishlist={onToggleWishlist}
     />
   );
 };
@@ -39,12 +46,16 @@ interface VendorModalContentProps {
   vendor: Vendor;
   onClose: () => void;
   onRequestSent: (vendorName: string) => void;
+  isWishlisted: boolean;
+  onToggleWishlist?: (vendor: Vendor) => void;
 }
 
 const VendorModalContent: React.FC<VendorModalContentProps> = ({
   vendor,
   onClose,
   onRequestSent,
+  isWishlisted,
+  onToggleWishlist,
 }) => {
   const { t } = useLanguage();
 
@@ -70,9 +81,9 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
       {
         id: `rev-default-1-${vendor.id}`,
         author: 'Sarah & Daniel K.',
-        role: 'Verified Couple',
+        role: 'Verified Host',
         eventDate: 'September 2026',
-        eventType: 'Bespoke Adelaide Wedding',
+        eventType: 'Adelaide Cultural Celebration',
         location: `${vendor.location}`,
         rating: 5,
         comment: `${vendor.businessName} was an absolute dream to work with. Highly responsive, deeply respectful of our traditions, and delivered flawless quality on our special day.`,
@@ -146,7 +157,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
       author: newReviewAuthor,
       role: 'Verified Client',
       eventDate: 'November 2026',
-      eventType: newReviewEvent || 'Multicultural Wedding',
+      eventType: newReviewEvent || 'Adelaide Multicultural Celebration',
       location: newReviewLocation || vendor.location,
       rating: newReviewRating,
       comment: newReviewComment,
@@ -187,16 +198,36 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   }, [vendor.rating, vendor.reviewCount, addedReviews, totalReviewsCount]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-3xl bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#724319] hover:bg-white hover:text-black transition-all shadow-md cursor-pointer"
-          aria-label={t('vendorModal.close')}
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Wishlist Save + Close Buttons */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {onToggleWishlist && (
+            <button
+              type="button"
+              onClick={() => onToggleWishlist(vendor)}
+              className={`h-9 px-3 rounded-full backdrop-blur-md flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md cursor-pointer ${
+                isWishlisted
+                  ? 'bg-rose-500 text-white hover:bg-rose-600'
+                  : 'bg-white/90 text-[#724319] hover:bg-white hover:text-rose-600'
+              }`}
+              aria-label={isWishlisted ? t('wishlist.savedAria') : t('wishlist.saveAria')}
+              aria-pressed={isWishlisted}
+            >
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white text-white' : ''}`} />
+              <span className="hidden sm:inline">
+                {isWishlisted ? t('wishlist.savedBtn') : t('wishlist.saveBtn')}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#724319] hover:bg-white hover:text-black transition-all shadow-md cursor-pointer"
+            aria-label={t('vendorModal.close')}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Header Hero Image & Trust Stats */}
         <div className="relative h-48 sm:h-56 bg-[#F2CCC3] shrink-0 overflow-hidden">
@@ -311,6 +342,22 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
                     <p className="text-xs sm:text-sm text-[#724319]/85 leading-relaxed">
                       {t(`vendor.${vendor.id}.desc`)}
                     </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
+                      {t('vendorModal.eventTypesLabel')}
+                    </h4>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {vendor.eventTypes.map((evType) => (
+                        <span
+                          key={evType}
+                          className="px-3 py-1 bg-[#F2CCC3]/45 border border-[#EBC1B6] rounded-full text-[#724319] font-medium"
+                        >
+                          {t(`eventType.${evType}`)}
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
                   <div>
@@ -517,7 +564,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
                         />
                         <input
                           type="text"
-                          placeholder="Event Type (e.g. Barossa Wedding)"
+                          placeholder="Event Type (e.g. Diwali Night or 50th Birthday)"
                           value={newReviewEvent}
                           onChange={(e) => setNewReviewEvent(e.target.value)}
                           className="w-full px-3 py-2 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-1 focus:ring-[#8A5A44]"

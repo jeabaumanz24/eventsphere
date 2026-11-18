@@ -11,21 +11,73 @@ export interface VendorReview {
   helpfulCount?: number;
 }
 
+export type EventTypeTag =
+  | 'Weddings'
+  | 'Engagements & Proposals'
+  | 'Elopements'
+  | 'Milestone Birthdays'
+  | 'Diwali & Festival of Lights'
+  | 'Lunar New Year'
+  | 'Eid'
+  | 'Christenings & Baby Showers'
+  | 'Graduations'
+  | 'Community Festivals'
+  | 'Corporate Events';
+
+export type VendorCategory =
+  | 'Photographers'
+  | 'Planners'
+  | 'Caterers'
+  | 'Florists'
+  | 'Makeup Artists'
+  | 'Cultural Specialists'
+  | 'Entertainment & DJs'
+  | 'Venues & Marquees'
+  | 'Decor & Styling'
+  | 'Proposal & Elopement';
+
+export type JournalCategory =
+  | 'Weddings'
+  | 'Festivals'
+  | 'Birthdays'
+  | 'Proposals & Elopements'
+  | 'Corporate'
+  | 'Planning Tips';
+
+export type CulturalTradition =
+  | 'Filipino'
+  | 'Greek'
+  | 'Indian'
+  | 'Chinese'
+  | 'Italian'
+  | 'Middle Eastern or Muslim'
+  | 'Pacific Islander'
+  | 'Vietnamese'
+  | 'Korean';
+
 export interface Vendor {
   id: string;
   name: string;
   businessName: string;
-  category: 'Photographers' | 'Planners' | 'Caterers' | 'Florists' | 'Makeup Artists' | 'Cultural Specialists';
+  category: VendorCategory;
   rating: number;
   reviewCount: number;
   location: string;
   startingPrice: string;
   image: string;
+  traditions: CulturalTradition[];
   culturalSpecialties: string[];
+  eventTypes: EventTypeTag[];
   description: string;
   features: string[];
   featured?: boolean;
   reviews?: VendorReview[];
+}
+
+export interface BlogBudgetItem {
+  category: string;
+  estimateAud: string;
+  notes: string;
 }
 
 export interface BlogArticleGroup {
@@ -84,6 +136,7 @@ export interface BlogPost {
   id: string;
   slug?: string;
   clusterRole?: 'pillar' | 'cluster' | 'editorial';
+  journalCategory?: JournalCategory;
   title: string;
   category: string;
   readTime: string;
@@ -91,6 +144,12 @@ export interface BlogPost {
   summary: string;
   content: string[];
   sections?: BlogArticleSection[];
+  budgetGuide?: {
+    title: string;
+    subtitle: string;
+    items: BlogBudgetItem[];
+  };
+  recommendedVendorIds?: string[];
   faqs?: BlogFAQ[];
   seo?: BlogSEOMetadata;
   featuredImage?: string;

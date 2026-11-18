@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Calendar,
   Check,
@@ -18,18 +19,30 @@ import {
   MapPin,
   Share2,
   Sparkles,
+  Star,
   HelpCircle,
 } from 'lucide-react';
-import { blogPostsData } from '../data/mockData';
-import { BlogPost } from '../types';
+import { blogPostsData, vendorsData } from '../data/mockData';
+import { BlogPost, JournalCategory, Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 
 interface BlogPageProps {
   activePostId: string;
   onSelectPost: (post: BlogPost) => void;
   onBackHome: (sectionId?: string) => void;
+  onSelectVendor?: (vendor: Vendor) => void;
   onShowToast?: (message: string) => void;
 }
+
+const JOURNAL_CATEGORIES: Array<'All' | JournalCategory> = [
+  'All',
+  'Festivals',
+  'Birthdays',
+  'Proposals & Elopements',
+  'Corporate',
+  'Weddings',
+  'Planning Tips',
+];
 
 const CHECKLIST_STORAGE_KEY = 'eventsphere_wedding_checklist_v1';
 
@@ -62,12 +75,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
   activePostId,
   onSelectPost,
   onBackHome,
+  onSelectVendor,
   onShowToast,
 }) => {
   const { t, currentLanguage } = useLanguage();
   const activePost =
     blogPostsData.find((p) => p.id === activePostId) || blogPostsData[0];
 
+  const [selectedJournalCategory, setSelectedJournalCategory] = useState<'All' | JournalCategory>('All');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem(CHECKLIST_STORAGE_KEY);
@@ -244,7 +259,22 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
   const pillarPost = blogPostsData.find((p) => p.clusterRole === 'pillar');
   const clusterPosts = blogPostsData.filter((p) => p.clusterRole === 'cluster');
-  const editorialPosts = blogPostsData.filter((p) => p.clusterRole === 'editorial');
+  const culturalPlaybooks = blogPostsData.filter((p) => p.id.startsWith('j'));
+  const editorialPosts = blogPostsData.filter((p) => p.clusterRole === 'editorial' && !p.id.startsWith('j'));
+
+  const stripPosts = useMemo(() => {
+    if (selectedJournalCategory === 'All') return blogPostsData;
+    return blogPostsData.filter(
+      (p) => (p.journalCategory || 'Planning Tips') === selectedJournalCategory
+    );
+  }, [selectedJournalCategory]);
+
+  const recommendedVendors = useMemo(() => {
+    if (!activePost.recommendedVendorIds || activePost.recommendedVendorIds.length === 0) {
+      return [];
+    }
+    return vendorsData.filter((v) => activePost.recommendedVendorIds!.includes(v.id));
+  }, [activePost.recommendedVendorIds]);
 
   return (
     <div className="pt-24 pb-20 bg-[#FFF8F6] min-h-screen">
@@ -253,11 +283,20 @@ export const BlogPage: React.FC<BlogPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5 text-xs">
             <button
-              onClick={() => onBackHome()}
+              onClick={() => onBackHome('blog')}
               className="inline-flex items-center gap-1.5 font-semibold text-[#724319] hover:text-[#8A5A44] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{t('blog.backHome')}</span>
+              <span>{t('blog.backToJournal')}</span>
+            </button>
+            <span aria-hidden="true" className="text-[#EBC1B6]">
+              /
+            </span>
+            <button
+              onClick={() => onBackHome()}
+              className="text-[#8A5A44] hover:text-[#724319] transition-colors cursor-pointer"
+            >
+              {t('blog.backHome')}
             </button>
             <span aria-hidden="true" className="text-[#EBC1B6]">
               /
@@ -300,11 +339,30 @@ export const BlogPage: React.FC<BlogPageProps> = ({
         </div>
       </div>
 
-      {/* Topic Cluster Article Switcher Strip */}
+      {/* Category Filter + Article Switcher Strip */}
       <div className="bg-[#F2CCC3]/25 border-b border-[#EBC1B6]/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2.5">
+          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+            {JOURNAL_CATEGORIES.map((cat) => {
+              const isSelected = selectedJournalCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedJournalCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#724319] text-white font-semibold'
+                      : 'bg-white/90 text-[#724319]/80 hover:bg-white border border-[#EBC1B6]/70'
+                  }`}
+                >
+                  {t(`blog.cat.${cat}`)}
+                </button>
+              );
+            })}
+          </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {blogPostsData.map((post) => {
+            {stripPosts.map((post) => {
               const isSelected = post.id === activePost.id;
               const postTitle = t(`blog.${post.id}.title`);
               return (
@@ -610,6 +668,50 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 </div>
               )}
 
+              {/* Rough AUD Budget Guide Table */}
+              {activePost.budgetGuide && activePost.budgetGuide.items.length > 0 && (
+                <section
+                  id="blog-sec-budget-guide"
+                  className="pt-8 border-t border-[#EBC1B6]/60 space-y-4 scroll-mt-28"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
+                      <Calculator className="w-5 h-5 text-[#8A5A44]" />
+                      <h2 className="text-2xl sm:text-[1.75rem] font-serif font-bold text-[#724319]">
+                        {activePost.budgetGuide.title}
+                      </h2>
+                    </div>
+                    {activePost.budgetGuide.subtitle && (
+                      <p className="text-xs sm:text-sm text-[#724319]/80">
+                        {activePost.budgetGuide.subtitle}
+                      </p>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto rounded-2xl border border-[#EBC1B6]/80 bg-[#FFF8F6]">
+                    <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#EBC1B6] bg-[#F2CCC3]/35 text-[#724319]">
+                          <th className="py-3 px-4 font-serif font-bold">{t('blog.budgetGuideItem')}</th>
+                          <th className="py-3 px-4 font-serif font-bold whitespace-nowrap">{t('blog.budgetGuideEst')}</th>
+                          <th className="py-3 px-4 font-serif font-bold">{t('blog.budgetGuideNotes')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EBC1B6]/50">
+                        {activePost.budgetGuide.items.map((row) => (
+                          <tr key={row.category} className="bg-white/75 hover:bg-white transition-colors">
+                            <td className="py-3 px-4 font-semibold text-[#724319]">{row.category}</td>
+                            <td className="py-3 px-4 font-mono font-bold text-[#8A5A44] whitespace-nowrap tabular-nums">
+                              {row.estimateAud}
+                            </td>
+                            <td className="py-3 px-4 text-[#724319]/80">{row.notes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
               {/* FAQ Section (Schema-backed FAQPage) */}
               {activePost.faqs && activePost.faqs.length > 0 && (
                 <section
@@ -656,8 +758,66 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                 </section>
               )}
 
+              {/* Recommended Event Sphere Vendors Linking Back to Marketplace */}
+              {recommendedVendors.length > 0 && (
+                <section
+                  id="blog-sec-vendors"
+                  className="pt-8 border-t border-[#EBC1B6]/60 space-y-5 scroll-mt-28"
+                >
+                  <div className="space-y-1">
+                    <h2 className="text-2xl sm:text-[1.75rem] font-serif font-bold text-[#724319]">
+                      {t('blog.recVendorsTitle')}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#724319]/80">
+                      {t('blog.recVendorsSub')}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {recommendedVendors.map((vendor) => (
+                      <div
+                        key={vendor.id}
+                        onClick={() =>
+                          onSelectVendor ? onSelectVendor(vendor) : onBackHome('marketplace')
+                        }
+                        className="group p-4 rounded-2xl bg-[#FFF8F6] border border-[#EBC1B6]/80 hover:border-[#8A5A44] hover:shadow-md transition-all cursor-pointer flex gap-3.5 items-center"
+                      >
+                        <img
+                          src={vendor.image}
+                          alt={vendor.businessName}
+                          className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#EBC1B6]"
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A5A44] truncate">
+                              {t(`cat.${vendor.category}`)}
+                            </span>
+                            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums shrink-0">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              {vendor.rating}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] truncate">
+                            {vendor.businessName}
+                          </h3>
+                          <div className="flex items-center justify-between gap-2 text-[11px] text-[#724319]/75">
+                            <span className="truncate">{vendor.location}</span>
+                            <span className="font-mono font-semibold text-[#724319] shrink-0">
+                              {vendor.startingPrice}
+                            </span>
+                          </div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-[#8A5A44] group-hover:text-[#724319] shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {/* Bottom Action Callout Inside Article */}
-              <div className="pt-8 border-t border-[#EBC1B6]/60">
+              <div className="pt-8 border-t border-[#EBC1B6]/60 space-y-6">
                 <div className="rounded-3xl bg-gradient-to-br from-[#F2CCC3]/45 via-[#FFF8F6] to-[#EBC1B6]/35 border border-[#EBC1B6] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44]">
@@ -686,6 +846,24 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       <span>{t('blog.browseVendorsBtn')}</span>
                     </button>
                   </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onBackHome('blog')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/40 border border-[#EBC1B6] transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{t('blog.backToJournal')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onBackHome()}
+                    className="text-xs font-medium text-[#8A5A44] hover:text-[#724319] underline decoration-[#EBC1B6] underline-offset-4 cursor-pointer"
+                  >
+                    {t('blog.backHome')}
+                  </button>
                 </div>
               </div>
 
@@ -872,15 +1050,51 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               </div>
             )}
 
-            {/* Wedding Planning Pillar & Cluster Map */}
-            <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs space-y-4">
+            {/* Cultural & Event Planning Journal Library */}
+            <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs space-y-5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8A5A44]">
                 <Link2 className="w-3.5 h-3.5" />
                 <span>{t('blog.clusterSidebarTitle')}</span>
               </div>
 
-              {pillarPost && (
+              {culturalPlaybooks.length > 0 && (
                 <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
+                    {t('blog.tabCluster')} ({culturalPlaybooks.length})
+                  </div>
+                  <div className="space-y-2">
+                    {culturalPlaybooks.map((post) => {
+                      const isCurrent = post.id === activePost.id;
+                      return (
+                        <button
+                          key={post.id}
+                          onClick={() => {
+                            onSelectPost(post);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
+                            isCurrent
+                              ? 'bg-[#724319] text-white border-[#724319] shadow-2xs'
+                              : 'bg-[#FFF8F6] border-[#EBC1B6]/70 text-[#724319] hover:bg-[#F2CCC3]/30'
+                          }`}
+                        >
+                          <div className={`flex items-center gap-2 text-[10px] mb-0.5 ${isCurrent ? 'text-white/75' : 'text-[#8A5A44]'}`}>
+                            <span>{t(`blog.cat.${post.journalCategory || 'Planning Tips'}`)}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>{post.readTime}</span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-serif font-bold leading-snug">
+                            {t(`blog.${post.id}.title`)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {pillarPost && (
+                <div className="pt-2 border-t border-[#EBC1B6]/50">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-1.5">
                     {t('blog.pillarBadge')}
                   </div>

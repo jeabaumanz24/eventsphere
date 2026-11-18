@@ -14,7 +14,7 @@ export const TestimonialsSection: React.FC = () => {
           <span className="text-xs font-semibold tracking-wider uppercase text-[#8A5A44]">
             {t('testimonials.kicker')}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319]">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#724319] [text-wrap:balance]">
             {t('testimonials.title')}
           </h2>
           <p className="text-sm sm:text-base text-[#724319]/80 leading-relaxed [text-wrap:balance]">
@@ -22,14 +22,14 @@ export const TestimonialsSection: React.FC = () => {
           </p>
         </div>
 
-        {/* 3 Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* 8 Testimonials Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {testimonialsData.map((item, idx) => {
             const Icon = highlightIcons[idx % highlightIcons.length];
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl p-8 border border-[#EBC1B6]/70 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+                className="bg-white rounded-3xl p-6 border border-[#EBC1B6]/70 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
               >
                 <div>
                   {/* Rating Stars + Highlight badge */}

@@ -31,9 +31,9 @@ export const AVAILABLE_SERVICES: ServiceRequirement[] = [
   { id: 'photo', name: 'Photography & Film', icon: Camera, description: 'Maria Santos or documentary team' },
   { id: 'catering', name: 'Multicultural Banquet', icon: Utensils, description: 'Dual-culture feast & Barossa wine' },
   { id: 'florals', name: 'Botanical Styling', icon: Flower2, description: 'Native proteas & table arches' },
-  { id: 'rituals', name: 'Sacred Cultural Rites', icon: Heart, description: 'Veil, Cord, Sangeet, or Stefana' },
-  { id: 'music', name: 'Music & Bilingual MC', icon: Music, description: 'Ceremony acoustic & cultural reception' },
-  { id: 'beauty', name: 'Bridal Hair & Makeup', icon: Sparkles, description: 'All-day 16hr luminous beauty' },
+  { id: 'rituals', name: 'Sacred Cultural Rites', icon: Heart, description: 'Dhol, Lion Dance, Veil, Cord, or Stefana' },
+  { id: 'music', name: 'Music & Bilingual MC', icon: Music, description: 'Live performers, DJs & cultural MCs' },
+  { id: 'beauty', name: 'Hair, Makeup & Attire', icon: Sparkles, description: 'Celebration hair, makeup & traditional styling' },
 ];
 
 const LOCALE_MAP: Record<LanguageCode, string> = {
@@ -66,7 +66,7 @@ interface EventTimelineProps {
 }
 
 export const EventTimeline: React.FC<EventTimelineProps> = ({
-  selectedCulture = 'filipino',
+  selectedCulture = 'milestone',
   onExploreVendors,
   onExportSchedule,
 }) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, Search, MapPin, Sparkles, Heart, ShieldCheck, Award } from 'lucide-react';
-import { heroWeddingImg } from '../data/mockData';
+import { heroCelebrationImg } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
@@ -86,8 +86,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Main image container with luxury frame */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] group bg-[#F2CCC3]">
                 <img
-                  src={heroWeddingImg}
-                  alt="Luxury multicultural wedding celebration in Adelaide botanical glasshouse and vineyard"
+                  src={heroCelebrationImg}
+                  alt="Vibrant multicultural celebration evening with warm lanterns, dining platters, and guests across Adelaide"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                   loading="eager"

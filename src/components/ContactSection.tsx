@@ -23,11 +23,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onFormSubmitted 
   const [errorMessage, setErrorMessage] = useState('');
 
   const eventTypeKeys = [
+    'eventType.5',
+    'eventType.4',
+    'eventType.6',
+    'eventType.7',
+    'eventType.8',
+    'eventType.9',
     'eventType.0',
     'eventType.1',
     'eventType.2',
     'eventType.3',
-    'eventType.4',
   ];
 
   const handleSubmit = (e: React.FormEvent) => {

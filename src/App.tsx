@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { StatsSection } from './components/StatsSection';
@@ -15,12 +15,15 @@ import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { VendorModal } from './components/VendorModal';
+import { WishlistModal } from './components/WishlistModal';
 import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
-import { blogPostsData } from './data/mockData';
+import { blogPostsData, vendorsData } from './data/mockData';
 import { Vendor, BlogPost } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+
+const WISHLIST_STORAGE_KEY = 'eventsphere_vendor_wishlist_v1';
 
 function parseBlogRoute(hash: string, pathname = ''): { isBlog: boolean; postId: string } {
   const defaultId = blogPostsData[0]?.id || 'b0';
@@ -56,6 +59,34 @@ function EventSphereApp() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = window.localStorage.getItem(WISHLIST_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      const validIds = new Set(vendorsData.map((v) => v.id));
+      return parsed.filter((id): id is string => typeof id === 'string' && validIds.has(id));
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistIds));
+    } catch {
+      // Ignore storage quota or private-mode restrictions
+    }
+  }, [wishlistIds]);
+
+  const wishlistedVendors = useMemo(() => {
+    return wishlistIds
+      .map((id) => vendorsData.find((v) => v.id === id))
+      .filter((v): v is Vendor => Boolean(v));
+  }, [wishlistIds]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -76,12 +107,45 @@ function EventSphereApp() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((prev) => (prev === msg ? null : prev));
     }, 4000);
-  };
+  }, []);
+
+  const toggleWishlist = useCallback(
+    (vendor: Vendor) => {
+      const alreadySaved = wishlistIds.includes(vendor.id);
+      setWishlistIds((prev) =>
+        prev.includes(vendor.id)
+          ? prev.filter((id) => id !== vendor.id)
+          : [...prev, vendor.id]
+      );
+      showToast(
+        t(alreadySaved ? 'wishlist.removedToast' : 'wishlist.addedToast', {
+          name: vendor.businessName,
+        })
+      );
+    },
+    [wishlistIds, showToast, t]
+  );
+
+  const removeFromWishlist = useCallback(
+    (vendorId: string) => {
+      const target = vendorsData.find((v) => v.id === vendorId);
+      setWishlistIds((prev) => prev.filter((id) => id !== vendorId));
+      if (target) {
+        showToast(t('wishlist.removedToast', { name: target.businessName }));
+      }
+    },
+    [showToast, t]
+  );
+
+  const clearWishlist = useCallback(() => {
+    setWishlistIds([]);
+    showToast(t('wishlist.clearedToast'));
+  }, [showToast, t]);
 
   const openBlogPage = useCallback((post?: BlogPost) => {
     const target = post || blogPostsData[0];
@@ -129,6 +193,8 @@ function EventSphereApp() {
         onOpenBlogPage={() => openBlogPage()}
         onNavigateHomeSection={(sectionId) => scrollTo(sectionId)}
         onGetStarted={() => scrollTo('ai-planner')}
+        wishlistCount={wishlistedVendors.length}
+        onOpenWishlist={() => setIsWishlistOpen(true)}
         onLanguageChange={(langName, langCode) => {
           showToast(tFor(langCode || currentLanguage, 'toast.langSwitched', { lang: langName }));
         }}
@@ -140,6 +206,7 @@ function EventSphereApp() {
             activePostId={activeBlogId}
             onSelectPost={(post) => openBlogPage(post)}
             onBackHome={(sectionId) => scrollTo(sectionId)}
+            onSelectVendor={(vendor) => setSelectedVendor(vendor)}
             onShowToast={showToast}
           />
         </main>
@@ -166,6 +233,9 @@ function EventSphereApp() {
           {/* 7. Vendor Marketplace Preview */}
           <VendorMarketplaceSection
             onSelectVendor={(vendor) => setSelectedVendor(vendor)}
+            onNotify={showToast}
+            wishlistIds={wishlistIds}
+            onToggleWishlist={toggleWishlist}
           />
 
           {/* 8. AI Event Planner Section (SaaS dashboard preview) */}
@@ -214,9 +284,21 @@ function EventSphereApp() {
       <VendorModal
         vendor={selectedVendor}
         onClose={() => setSelectedVendor(null)}
+        isWishlisted={selectedVendor ? wishlistIds.includes(selectedVendor.id) : false}
+        onToggleWishlist={toggleWishlist}
         onRequestSent={(name) => {
           showToast(t('toast.proposalSent', { name }));
         }}
+      />
+
+      <WishlistModal
+        isOpen={isWishlistOpen}
+        vendors={wishlistedVendors}
+        onClose={() => setIsWishlistOpen(false)}
+        onRemoveVendor={removeFromWishlist}
+        onClearAll={clearWishlist}
+        onSelectVendor={(vendor) => setSelectedVendor(vendor)}
+        onExploreMarketplace={() => scrollTo('marketplace')}
       />
 
       <BlogModal

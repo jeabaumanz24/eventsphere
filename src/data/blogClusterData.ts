@@ -1,8 +1,7 @@
 import heroWeddingImg from '../assets/images/hero_aus_filipino_couple_1794614353550.jpg';
-import littleDayImg from '../assets/images/vendor_little_day_styling_1794611001787.jpg';
-import elysianPlanningImg from '../assets/images/vendor_elysian_planning_1794610373962.jpg';
+import heritageMarqueeImg from '../assets/images/adelaide_heritage_marquee_venue_1794957289677.jpg';
+import culturalFeastImg from '../assets/images/cultural_feast_spread_1794957308726.jpg';
 import wattleWillowFloralsImg from '../assets/images/vendor_wattle_willow_florals_1794612779605.jpg';
-import photographerMariaImg from '../assets/images/vendor_photographer_maria_1793613516394.jpg';
 
 const santosPortfolioImg = `${import.meta.env.BASE_URL}assets/aistudio/Santos_Fine_Art_Wedding_Portfolio_393d84a8.png`;
 
@@ -14,6 +13,8 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'b0',
     slug: 'ultimate-wedding-planning-guide',
     clusterRole: 'pillar',
+    journalCategory: 'Weddings',
+    recommendedVendorIds: ['v1', 'v3', 'v4', 'v14', 'v22'],
     title: 'The Ultimate Wedding Planning Guide: Budget, Checklist, Photographers & Venues',
     category: 'Pillar Planning Guide',
     readTime: '6 min read',
@@ -191,12 +192,14 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'c1',
     slug: 'how-to-create-a-realistic-wedding-budget',
     clusterRole: 'cluster',
+    journalCategory: 'Planning Tips',
+    recommendedVendorIds: ['v4', 'v10', 'v11', 'v24'],
     title: 'How to Create a Realistic Wedding Budget in 2027',
     category: 'Budgeting & Finance',
     readTime: '7 min read',
     publishedDate: 'November 2026',
     author: 'Marcus Vance, Event Sphere Financial Strategist',
-    featuredImage: elysianPlanningImg,
+    featuredImage: culturalFeastImg,
     summary:
       'Learn how to build a realistic wedding budget in 2027 using Australian cost benchmarks, smart spending tiers, and AI-powered wedding budget planner tools.',
     seo: {
@@ -397,12 +400,14 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'c2',
     slug: 'ultimate-wedding-to-do-list',
     clusterRole: 'cluster',
+    journalCategory: 'Planning Tips',
+    recommendedVendorIds: ['v4', 'v9', 'v10', 'v21'],
     title: 'The Ultimate Wedding To Do List for Stress-Free Planning',
     category: 'Checklists & Timelines',
     readTime: '7 min read',
     publishedDate: 'November 2026',
     author: 'Event Sphere Editorial Team',
-    featuredImage: littleDayImg,
+    featuredImage: heritageMarqueeImg,
     summary:
       'Follow our month-by-month wedding to do list and wedding planning timeline from 12+ months out right through to wedding week without the overwhelm.',
     seo: {
@@ -623,6 +628,8 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'c3',
     slug: 'how-to-choose-the-perfect-wedding-photographer',
     clusterRole: 'cluster',
+    journalCategory: 'Weddings',
+    recommendedVendorIds: ['v1', 'v7', 'v8', 'v31'],
     title: 'How to Choose the Perfect Wedding Photographer',
     category: 'Photography & Visuals',
     readTime: '7 min read',
@@ -816,12 +823,14 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'c4',
     slug: 'wedding-venues-with-accommodation',
     clusterRole: 'cluster',
+    journalCategory: 'Weddings',
+    recommendedVendorIds: ['v22', 'v23', 'v24', 'v3'],
     title: 'Wedding Venues With Accommodation: What Couples Should Know',
     category: 'Venues & Destination',
     readTime: '7 min read',
     publishedDate: 'November 2026',
     author: 'Sophie Henderson, Adelaide Venue Directory Lead',
-    featuredImage: photographerMariaImg,
+    featuredImage: heritageMarqueeImg,
     summary:
       'Explore the logistics, guest benefits, key contract questions, and budget smarts behind booking wedding venues with accommodation across South Australia.',
     seo: {
@@ -975,6 +984,8 @@ export const pillarAndClusterPosts: BlogPost[] = [
     id: 'c5',
     slug: 'must-have-wedding-planning-photos',
     clusterRole: 'cluster',
+    journalCategory: 'Weddings',
+    recommendedVendorIds: ['v1', 'v8', 'v13', 'v31'],
     title: 'Must-Have Wedding Planning Photos Before Your Big Day',
     category: 'Memories & Styling',
     readTime: '6 min read',

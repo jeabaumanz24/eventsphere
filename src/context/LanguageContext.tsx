@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translationsPart1 } from '../data/translationsPart1';
 import { translationsPart2 } from '../data/translationsPart2';
 import { translationsPart3 } from '../data/translationsPart3';
+import { translationsPart4 } from '../data/translationsPart4';
 
 export type LanguageCode = 'en' | 'it' | 'el' | 'zh' | 'vi' | 'tl' | 'hi';
 
@@ -69,6 +70,7 @@ const translations: Record<string, Record<LanguageCode, string>> = {
   ...translationsPart1,
   ...translationsPart2,
   ...translationsPart3,
+  ...translationsPart4,
 };
 
 interface LanguageContextType {
