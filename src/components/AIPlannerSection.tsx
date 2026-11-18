@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Sparkles,
   TrendingDown,
@@ -6,9 +6,12 @@ import {
   ShieldCheck,
   ChevronDown,
   Info,
+  Flame,
+  CalendarCheck,
 } from 'lucide-react';
 import { EventTimeline } from './EventTimeline';
-import { useLanguage } from '../context/LanguageContext';
+import { AdelaideDatePicker } from './AdelaideDatePicker';
+import { LanguageCode, useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
 import { EventTypeTag } from '../types';
@@ -31,6 +34,24 @@ import {
   plannerTraditionToSlug,
 } from '../utils/plannerMatching';
 
+import {
+  assessAdelaideDateAlignment,
+  buildDefaultDateFromLeadDays,
+  getSeasonInfoForIsoDate,
+  getTodayAdelaideDate,
+  parseIsoDateLocal,
+} from '../utils/adelaideSeasons';
+
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-AU',
+  it: 'it-IT',
+  el: 'el-GR',
+  zh: 'zh-CN',
+  vi: 'vi-VN',
+  tl: 'fil-PH',
+  hi: 'hi-IN',
+};
+
 interface AIPlannerSectionProps {
   isPagePrimary?: boolean;
   onExploreVendors?: () => void;
@@ -43,16 +64,21 @@ interface InitialPlannerState {
   tradition: PlannerCulturalTradition;
   budget: number;
   guests: number;
+  date: string;
+  hasExplicitDate: boolean;
 }
 
 function readPlannerStateFromUrl(): InitialPlannerState {
   const defaultEvent: EventTypeTag = 'Milestone Birthdays';
   const defaultConfig = PLANNER_EVENT_CONFIGS[defaultEvent];
+  const fallbackDate = buildDefaultDateFromLeadDays(defaultConfig.defaultLeadDays);
   const fallback: InitialPlannerState = {
     eventType: defaultEvent,
     tradition: 'None',
     budget: defaultConfig.defaultBudget,
     guests: defaultConfig.defaultGuests,
+    date: fallbackDate,
+    hasExplicitDate: false,
   };
 
   if (typeof window === 'undefined') return fallback;
@@ -68,11 +94,19 @@ function readPlannerStateFromUrl(): InitialPlannerState {
     const parsedBudget = parsePositiveIntParam(params.get('budget'), 2500, 120000);
     const parsedGuests = parsePositiveIntParam(params.get('guests'), 10, 400);
 
+    const rawDate = params.get('date') ?? '';
+    const parsedDateObj = parseIsoDateLocal(rawDate);
+    const today = getTodayAdelaideDate();
+    const isValidFutureDate =
+      parsedDateObj !== null && parsedDateObj.getTime() >= today.getTime();
+
     return {
       eventType,
       tradition,
       budget: parsedBudget ?? config.defaultBudget,
       guests: parsedGuests ?? config.defaultGuests,
+      date: isValidFutureDate ? rawDate : buildDefaultDateFromLeadDays(config.defaultLeadDays),
+      hasExplicitDate: isValidFutureDate,
     };
   } catch {
     return fallback;
@@ -84,7 +118,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   onExploreVendors,
   onScheduleExported,
 }) => {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
 
   const initialState = useMemo(() => readPlannerStateFromUrl(), []);
@@ -95,6 +129,8 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
     useState<PlannerCulturalTradition>(initialState.tradition);
   const [totalBudget, setTotalBudget] = useState<number>(initialState.budget);
   const [guestCount, setGuestCount] = useState<number>(initialState.guests);
+  const [eventDate, setEventDate] = useState<string>(initialState.date);
+  const hasCustomDateRef = useRef<boolean>(initialState.hasExplicitDate);
   const [activeTab, setActiveTab] = useState<'budget' | 'timeline' | 'insights'>(
     'budget'
   );
@@ -106,6 +142,8 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
       setSelectedTradition(next.tradition);
       setTotalBudget(next.budget);
       setGuestCount(next.guests);
+      setEventDate(next.date);
+      hasCustomDateRef.current = next.hasExplicitDate;
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -115,6 +153,16 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   const culturalAdjustment = useMemo(
     () => getCulturalAdjustment(selectedEventType, selectedTradition),
     [selectedEventType, selectedTradition]
+  );
+
+  const dateAssessment = useMemo(
+    () =>
+      assessAdelaideDateAlignment(
+        eventDate,
+        selectedEventType,
+        eventConfig.defaultLeadDays
+      ),
+    [eventDate, selectedEventType, eventConfig.defaultLeadDays]
   );
 
   const matchedPlan = useMemo(
@@ -151,11 +199,40 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
     });
   };
 
+  const handleDateChange = (nextIsoDate: string) => {
+    hasCustomDateRef.current = true;
+    setEventDate(nextIsoDate);
+    trackEvent('budget_calculator_used', {
+      action: 'date_select',
+      event_type: selectedEventType,
+      culture: selectedTradition,
+    });
+  };
+
+  const handleTopDateChange = (nextIsoDate: string) => {
+    handleDateChange(nextIsoDate);
+    if (activeTab === 'timeline') {
+      trackEvent('timeline_generated', {
+        action: 'date_change',
+        event_type: selectedEventType,
+        culture: selectedTradition,
+        view_mode: 'roadmap',
+        season: getSeasonInfoForIsoDate(nextIsoDate).tier,
+      });
+    }
+  };
+
   const handleEventTypeChange = (nextType: EventTypeTag) => {
     const nextConfig = PLANNER_EVENT_CONFIGS[nextType];
     setSelectedEventType(nextType);
     setTotalBudget(nextConfig.defaultBudget);
     setGuestCount(nextConfig.defaultGuests);
+    const nextDate = !hasCustomDateRef.current
+      ? buildDefaultDateFromLeadDays(nextConfig.defaultLeadDays)
+      : eventDate;
+    if (!hasCustomDateRef.current) {
+      setEventDate(nextDate);
+    }
 
     trackEvent('budget_calculator_used', {
       action: 'event_type_select',
@@ -171,6 +248,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
         event_type: nextType,
         culture: selectedTradition,
         view_mode: 'roadmap',
+        season: getSeasonInfoForIsoDate(nextDate).tier,
       });
     }
   };
@@ -191,6 +269,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
         event_type: selectedEventType,
         culture: nextTradition,
         view_mode: 'roadmap',
+        season: getSeasonInfoForIsoDate(eventDate).tier,
       });
     }
   };
@@ -203,6 +282,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
         event_type: selectedEventType,
         culture: selectedTradition,
         view_mode: 'roadmap',
+        season: getSeasonInfoForIsoDate(eventDate).tier,
       });
     }
   };
@@ -233,9 +313,9 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
         </div>
 
         {/* SaaS-Style Interface Window */}
-        <div className="bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-hidden max-w-5xl mx-auto">
+        <div className="bg-white rounded-3xl border border-[#EBC1B6] shadow-2xl overflow-visible max-w-5xl mx-auto">
           {/* Top App Toolbar Header */}
-          <div className="bg-[#FFF8F6] px-6 py-4 border-b border-[#EBC1B6]/60 flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-[#FFF8F6] rounded-t-3xl px-6 py-4 border-b border-[#EBC1B6]/60 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5" aria-hidden="true">
                 <span className="w-3 h-3 rounded-full bg-rose-400/80 inline-block" />
@@ -301,8 +381,8 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
             </div>
           </div>
 
-          {/* Celebration Type + Optional Cultural Tradition Dropdown Bar */}
-          <div className="px-6 py-4 bg-white border-b border-[#EBC1B6]/40 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+          {/* Celebration Type + Cultural Tradition + Adelaide Peak-Season Date Bar */}
+          <div className="px-6 py-4 bg-white border-b border-[#EBC1B6]/40 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="space-y-1.5">
               <label
                 htmlFor="planner-celebration-type"
@@ -358,6 +438,59 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                 />
               </div>
             </div>
+
+            <div>
+              <AdelaideDatePicker
+                id="planner-event-date"
+                label="Target Date · Adelaide Seasons"
+                value={eventDate}
+                onChange={handleTopDateChange}
+                locale={LOCALE_MAP[currentLanguage] || 'en-AU'}
+              />
+            </div>
+          </div>
+
+          {/* Adelaide Seasonal Demand & Timeline Alignment Strip */}
+          <div
+            aria-live="polite"
+            className={`px-6 py-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs ${
+              dateAssessment.statusLevel === 'tight'
+                ? 'bg-rose-50/90 border-rose-200 text-rose-950'
+                : dateAssessment.statusLevel === 'caution'
+                ? 'bg-amber-50/90 border-amber-200 text-amber-950'
+                : 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+            }`}
+          >
+            <div className="flex items-start gap-2.5 min-w-0">
+              {dateAssessment.seasonInfo.tier === 'peak' ? (
+                <Flame className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" aria-hidden="true" />
+              ) : dateAssessment.seasonInfo.tier === 'quieter' ? (
+                <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-emerald-700" aria-hidden="true" />
+              ) : (
+                <CalendarCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#724319]" aria-hidden="true" />
+              )}
+              <div className="space-y-0.5 min-w-0">
+                <div className="font-semibold leading-snug">
+                  {dateAssessment.headline}
+                </div>
+                <p className="text-[11px] sm:text-xs opacity-90 leading-snug">
+                  {dateAssessment.guidance}{' '}
+                  <span className="font-medium">
+                    ({dateAssessment.seasonInfo.weatherSummary})
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {activeTab !== 'timeline' && (
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('timeline')}
+                className="shrink-0 self-start sm:self-center px-3 py-1.5 rounded-full bg-white/90 hover:bg-white border border-current/20 text-[11px] font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
+              >
+                Align timeline →
+              </button>
+            )}
           </div>
 
           {/* Sample Estimate Simulation Notice */}
@@ -612,6 +745,8 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
               <EventTimeline
                 celebrationType={selectedEventType}
                 selectedTradition={selectedTradition}
+                eventDate={eventDate}
+                onEventDateChange={handleDateChange}
                 vendorsMatchHref={vendorsMatchHref}
                 onMatchVendorsClick={handleMatchVendorsClick}
                 onExploreVendors={onExploreVendors}
@@ -682,7 +817,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
           )}
 
           {/* Bottom Action Footer */}
-          <div className="px-6 py-4 bg-[#FFF8F6] border-t border-[#EBC1B6]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="px-6 py-4 bg-[#FFF8F6] rounded-b-3xl border-t border-[#EBC1B6]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <span className="text-[#8A5A44]">{t('planner.footerPrompt')}</span>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <a

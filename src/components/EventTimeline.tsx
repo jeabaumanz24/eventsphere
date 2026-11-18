@@ -10,6 +10,7 @@ import {
   AlertCircle,
   CalendarCheck,
   ShieldCheck,
+  Flame,
 } from 'lucide-react';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
 import { EventTypeTag } from '../types';
@@ -21,6 +22,21 @@ import {
 } from '../data/plannerConfigs';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
+import { AdelaideDatePicker } from './AdelaideDatePicker';
+import {
+  PEAK_LEAD_TIME_EXTRA_DAYS,
+  buildDefaultDateFromLeadDays,
+  formatLeadLabelFromDays,
+  getSeasonInfoForIsoDate,
+  getTodayAdelaideDate,
+  parseIsoDateLocal,
+} from '../utils/adelaideSeasons';
+
+const PEAK_BUFFER_SERVICE_IDS = new Set<TimelineMilestoneTemplate['serviceId']>([
+  'venue',
+  'catering',
+  'photo',
+]);
 
 const LOCALE_MAP: Record<LanguageCode, string> = {
   en: 'en-AU',
@@ -35,21 +51,19 @@ const LOCALE_MAP: Record<LanguageCode, string> = {
 interface EventTimelineProps {
   celebrationType: EventTypeTag;
   selectedTradition: PlannerCulturalTradition;
+  eventDate?: string;
+  onEventDateChange?: (nextIsoDate: string) => void;
   vendorsMatchHref?: string;
   onMatchVendorsClick?: () => void;
   onExploreVendors?: () => void;
   onExportSchedule?: (msg: string) => void;
 }
 
-function buildDateFromLeadDays(leadDays: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + Math.max(7, leadDays));
-  return d.toISOString().split('T')[0];
-}
-
 export const EventTimeline: React.FC<EventTimelineProps> = ({
   celebrationType,
   selectedTradition,
+  eventDate: controlledEventDate,
+  onEventDateChange,
   vendorsMatchHref,
   onMatchVendorsClick,
   onExploreVendors,
@@ -58,20 +72,32 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   const { t, currentLanguage } = useLanguage();
   const eventConfig = PLANNER_EVENT_CONFIGS[celebrationType];
 
-  const [eventDate, setEventDate] = useState<string>(() =>
-    buildDateFromLeadDays(eventConfig.defaultLeadDays)
+  const [internalEventDate, setInternalEventDate] = useState<string>(() =>
+    buildDefaultDateFromLeadDays(eventConfig.defaultLeadDays)
   );
+  const eventDate = controlledEventDate ?? internalEventDate;
+
+  const updateEventDate = (nextIsoDate: string) => {
+    if (onEventDateChange) {
+      onEventDateChange(nextIsoDate);
+    } else {
+      setInternalEventDate(nextIsoDate);
+    }
+  };
+
   const [viewMode, setViewMode] = useState<'roadmap' | 'dayOf'>('roadmap');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [completedItems, setCompletedItems] = useState<Record<string, boolean>>({});
   const [hiddenServiceIds, setHiddenServiceIds] = useState<string[]>([]);
 
-  // Reset date lead-time and filters when Celebration Type changes
+  // Reset date lead-time (when uncontrolled) and filters when Celebration Type changes
   useEffect(() => {
-    setEventDate(buildDateFromLeadDays(eventConfig.defaultLeadDays));
+    if (!controlledEventDate) {
+      setInternalEventDate(buildDefaultDateFromLeadDays(eventConfig.defaultLeadDays));
+    }
     setCategoryFilter('all');
     setHiddenServiceIds([]);
-  }, [celebrationType, eventConfig.defaultLeadDays]);
+  }, [celebrationType, eventConfig.defaultLeadDays, controlledEventDate]);
 
   // Reset category filter if cultural tradition switches
   useEffect(() => {
@@ -111,37 +137,87 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     [allMilestones, activeServiceIds]
   );
 
+  const seasonInfo = useMemo(() => getSeasonInfoForIsoDate(eventDate), [eventDate]);
+  const isPeakSeason = seasonInfo.tier === 'peak';
+
+  const todayAdelaide = getTodayAdelaideDate();
+  const localeStr = LOCALE_MAP[currentLanguage] || 'en-AU';
+
+  const daysUntilEvent = useMemo(() => {
+    const today = getTodayAdelaideDate();
+    const target = parseIsoDateLocal(eventDate) ?? today;
+    const diffTime = target.getTime() - today.getTime();
+    return Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+  }, [eventDate]);
+
+  interface ComputedMilestone extends TimelineMilestoneTemplate {
+    effectiveLeadDays: number;
+    effectiveLeadLabel: string;
+    hasPeakBuffer: boolean;
+    isDueNow: boolean;
+    targetDateStr: string;
+  }
+
+  const visibleComputedMilestones: ComputedMilestone[] = useMemo(() => {
+    const today = getTodayAdelaideDate();
+    const base = parseIsoDateLocal(eventDate) ?? today;
+
+    return visibleByService.map((item) => {
+      const hasPeakBuffer =
+        isPeakSeason && PEAK_BUFFER_SERVICE_IDS.has(item.serviceId) && item.leadDays > 0;
+      const effectiveLeadDays = hasPeakBuffer
+        ? item.leadDays + PEAK_LEAD_TIME_EXTRA_DAYS
+        : item.leadDays;
+      const effectiveLeadLabel = hasPeakBuffer
+        ? formatLeadLabelFromDays(effectiveLeadDays)
+        : item.leadLabel;
+
+      const targetDate = new Date(
+        base.getFullYear(),
+        base.getMonth(),
+        base.getDate() - effectiveLeadDays
+      );
+      const isDueNow = targetDate.getTime() <= today.getTime();
+      const targetDateStr = targetDate.toLocaleDateString(localeStr, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+
+      return {
+        ...item,
+        effectiveLeadDays,
+        effectiveLeadLabel,
+        hasPeakBuffer,
+        isDueNow,
+        targetDateStr,
+      };
+    });
+  }, [visibleByService, eventDate, isPeakSeason, localeStr]);
+
+  const dueNowCount = useMemo(
+    () => visibleComputedMilestones.filter((m) => m.isDueNow).length,
+    [visibleComputedMilestones]
+  );
+
+  const isCompressedTimeline =
+    dueNowCount > 0 ||
+    daysUntilEvent <= Math.max(45, Math.round(eventConfig.defaultLeadDays * 0.55));
+
   const filteredMilestones = useMemo(() => {
-    let list = [...visibleByService];
+    let list = [...visibleComputedMilestones];
     if (categoryFilter !== 'all') {
       list = list.filter((item) => item.serviceId === categoryFilter);
     }
 
     if (viewMode === 'roadmap') {
-      list.sort((a, b) => b.leadDays - a.leadDays);
+      list.sort((a, b) => b.effectiveLeadDays - a.effectiveLeadDays);
     } else {
       list.sort((a, b) => a.dayOfTime.localeCompare(b.dayOfTime));
     }
 
     return list;
-  }, [visibleByService, categoryFilter, viewMode]);
-
-  const daysUntilEvent = useMemo(() => {
-    const target = new Date(eventDate);
-    const today = new Date();
-    const diffTime = target.getTime() - today.getTime();
-    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-  }, [eventDate]);
-
-  const getCalculatedDate = (leadDays: number): string => {
-    const d = new Date(eventDate);
-    d.setDate(d.getDate() - leadDays);
-    return d.toLocaleDateString(LOCALE_MAP[currentLanguage] || 'en-AU', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+  }, [visibleComputedMilestones, categoryFilter, viewMode]);
 
   const toggleService = (serviceId: string) => {
     setHiddenServiceIds((prev) =>
@@ -154,6 +230,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       event_type: celebrationType,
       culture: selectedTradition,
       view_mode: viewMode,
+      season: seasonInfo.tier,
     });
   };
 
@@ -170,8 +247,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
 
   const handleExport = () => {
-    const formattedDate = new Date(eventDate).toLocaleDateString(
-      LOCALE_MAP[currentLanguage] || 'en-AU',
+    const formattedDate = (parseIsoDateLocal(eventDate) ?? todayAdelaide).toLocaleDateString(
+      localeStr,
       {
         day: 'numeric',
         month: 'long',
@@ -184,6 +261,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       event_type: celebrationType,
       culture: selectedTradition,
       view_mode: viewMode,
+      season: seasonInfo.tier,
     });
     const msg = t('timeline.exportToast', { date: formattedDate, mode: modeLabel });
     if (onExportSchedule) {
@@ -213,28 +291,22 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
 
           {/* Date Picker & Days Counter */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-[#EBC1B6] shadow-2xs">
-              <Calendar className="w-4 h-4 text-[#8A5A44] shrink-0" aria-hidden="true" />
-              <label
-                htmlFor="timeline-event-date"
-                className="text-xs font-semibold text-[#724319] shrink-0"
-              >
-                {t('timeline.eventDate')}
-              </label>
-              <input
+            <div className="min-w-[235px]">
+              <AdelaideDatePicker
                 id="timeline-event-date"
-                type="date"
                 value={eventDate}
-                onChange={(e) => {
-                  setEventDate(e.target.value);
+                compact
+                locale={localeStr}
+                onChange={(nextIso) => {
+                  updateEventDate(nextIso);
                   trackEvent('timeline_generated', {
                     action: 'date_change',
                     event_type: celebrationType,
                     culture: selectedTradition,
                     view_mode: viewMode,
+                    season: getSeasonInfoForIsoDate(nextIso).tier,
                   });
                 }}
-                className="text-xs font-medium text-[#724319] bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] rounded cursor-pointer"
               />
             </div>
 
@@ -251,7 +323,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             <span className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44]">
               {t('timeline.activeReq')} ({activeServiceIds.length}/{availableServices.length}):
             </span>
-            <span className="text-[11px] text-[#724319]/65">
+            <span className="text-[11px] text-[#724319]/75">
               {t('timeline.clickToggle')}
             </span>
           </div>
@@ -265,10 +337,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => toggleService(srv.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
                     isSelected
                       ? 'bg-[#724319] text-white shadow-2xs'
-                      : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319]/75 border border-[#EBC1B6]/60'
+                      : 'bg-white hover:bg-[#F2CCC3]/40 text-[#724319]/85 border border-[#EBC1B6]/60'
                   }`}
                 >
                   <span>{srv.label}</span>
@@ -296,12 +368,13 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   event_type: celebrationType,
                   culture: selectedTradition,
                   view_mode: 'roadmap',
+                  season: seasonInfo.tier,
                 });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
                 viewMode === 'roadmap'
                   ? 'bg-[#724319] text-white font-semibold'
-                  : 'text-[#724319]/75 hover:text-[#724319]'
+                  : 'text-[#724319]/80 hover:text-[#724319]'
               }`}
             >
               <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
@@ -317,12 +390,13 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   event_type: celebrationType,
                   culture: selectedTradition,
                   view_mode: 'dayOf',
+                  season: seasonInfo.tier,
                 });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
                 viewMode === 'dayOf'
                   ? 'bg-[#724319] text-white font-semibold'
-                  : 'text-[#724319]/75 hover:text-[#724319]'
+                  : 'text-[#724319]/80 hover:text-[#724319]'
               }`}
             >
               <Clock className="w-3.5 h-3.5" aria-hidden="true" />
@@ -395,12 +469,49 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           ))}
       </div>
 
+      {/* Season & Timeline Notices */}
+      {(isPeakSeason || (viewMode === 'roadmap' && isCompressedTimeline)) && (
+        <div aria-live="polite" className="space-y-2.5">
+          {isPeakSeason && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-[#7C2D12] text-xs flex items-start gap-2.5">
+              <Flame className="w-4 h-4 shrink-0 mt-0.5 text-[#9A3412]" aria-hidden="true" />
+              <div>
+                <strong className="font-semibold">
+                  Peak season: extra lead time added to venue and catering milestones.
+                </strong>{' '}
+                <span>
+                  Photography milestones also shift +4 weeks earlier for {seasonInfo.monthName} Adelaide dates.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'roadmap' && isCompressedTimeline && (
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-[#881337] text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#9F1239]" aria-hidden="true" />
+              <div>
+                <strong className="font-semibold">Compressed timeline</strong> —{' '}
+                <span>
+                  {dueNowCount > 0
+                    ? `${dueNowCount} ${
+                        dueNowCount === 1 ? 'milestone falls' : 'milestones fall'
+                      } on or before today (Australia/Adelaide time) and ${
+                        dueNowCount === 1 ? 'is' : 'are'
+                      } marked Due now.`
+                    : `Only ${daysUntilEvent} days until your selected date. Prioritise venue and catering enquiries first.`}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Timeline Stream Display */}
       {filteredMilestones.length === 0 ? (
         <div className="p-8 text-center bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6] space-y-2">
           <AlertCircle className="w-8 h-8 text-[#8A5A44] mx-auto" aria-hidden="true" />
           <h4 className="text-sm font-semibold text-[#724319]">{t('timeline.noMilestones')}</h4>
-          <p className="text-xs text-[#724319]/70">
+          <p className="text-xs text-[#724319]/80">
             {t('timeline.noMilestonesDesc')}
           </p>
         </div>
@@ -408,18 +519,19 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         <div className="relative pl-6 sm:pl-8 border-l-2 border-[#EBC1B6] space-y-4">
           {filteredMilestones.map((item) => {
             const isDone = !!completedItems[item.id];
-            const targetDateStr = getCalculatedDate(item.leadDays);
 
             return (
               <div key={item.id} className="relative">
                 {/* Timeline Node Bullet on the left line */}
                 <div
                   aria-hidden="true"
-                  className={`absolute -left-[31px] sm:-left-[39px] top-5 w-4 h-4 rounded-full border-2 transition-colors ${
+                  className={`absolute -left-[31px] sm:-left-[39px] top-5 w-4 h-4 rounded-full border-2 transition-colors motion-reduce:transition-none ${
                     isDone
                       ? 'bg-[#724319] border-[#724319]'
+                      : item.isDueNow && viewMode === 'roadmap'
+                      ? 'bg-[#9F1239] border-white ring-2 ring-rose-300'
                       : item.isCritical
-                      ? 'bg-rose-500 border-white ring-2 ring-rose-300'
+                      ? 'bg-rose-600 border-white ring-2 ring-rose-300'
                       : 'bg-white border-[#8A5A44]'
                   }`}
                 />
@@ -428,7 +540,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   type="button"
                   aria-pressed={isDone}
                   onClick={() => toggleComplete(item.id)}
-                  className={`w-full text-left group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
+                  className={`w-full text-left group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
                     isDone
                       ? 'border-[#EBC1B6]/60 bg-white/70 opacity-85'
                       : 'border-[#EBC1B6] hover:border-[#8A5A44] shadow-xs hover:shadow-md'
@@ -437,8 +549,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
                     <div className="flex flex-wrap items-center gap-2">
                       {viewMode === 'roadmap' ? (
-                        <span className="text-[11px] font-mono font-bold text-[#8A5A44] bg-[#FFF8F6] border border-[#EBC1B6] px-2.5 py-0.5 rounded-md">
-                          {item.leadLabel}
+                        <span className="text-[11px] font-mono font-bold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] px-2.5 py-0.5 rounded-md">
+                          {item.effectiveLeadLabel}
                         </span>
                       ) : (
                         <span className="text-[11px] font-mono font-bold text-[#724319] bg-[#F2CCC3]/50 border border-[#EBC1B6] px-2.5 py-0.5 rounded-md flex items-center gap-1">
@@ -447,18 +559,29 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                         </span>
                       )}
 
-                      {viewMode === 'roadmap' && (
-                        <span className="text-[11px] text-[#724319]/75 font-mono">
-                          {t('timeline.targetDate')} <strong>{targetDateStr}</strong>
+                      {viewMode === 'roadmap' && item.hasPeakBuffer && (
+                        <span className="text-[10px] font-bold text-[#7C2D12] bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-md">
+                          +4 wks peak
                         </span>
                       )}
 
-                      <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">
+                      {viewMode === 'roadmap' &&
+                        (item.isDueNow ? (
+                          <span className="inline-flex items-center text-[11px] font-bold text-[#881337] bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-md">
+                            Due now
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-[#724319]/85 font-mono">
+                            {t('timeline.targetDate')} <strong>{item.targetDateStr}</strong>
+                          </span>
+                        ))}
+
+                      <span className="text-[10px] text-[#6E432F] uppercase font-semibold">
                         · {item.serviceLabel}
                       </span>
 
                       {item.isCritical && (
-                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-[#881337] bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-md">
                           {t('timeline.critical')}
                         </span>
                       )}
