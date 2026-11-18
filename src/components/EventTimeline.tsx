@@ -35,6 +35,8 @@ const LOCALE_MAP: Record<LanguageCode, string> = {
 interface EventTimelineProps {
   celebrationType: EventTypeTag;
   selectedTradition: PlannerCulturalTradition;
+  vendorsMatchHref?: string;
+  onMatchVendorsClick?: () => void;
   onExploreVendors?: () => void;
   onExportSchedule?: (msg: string) => void;
 }
@@ -48,6 +50,8 @@ function buildDateFromLeadDays(leadDays: number): string {
 export const EventTimeline: React.FC<EventTimelineProps> = ({
   celebrationType,
   selectedTradition,
+  vendorsMatchHref,
+  onMatchVendorsClick,
   onExploreVendors,
   onExportSchedule,
 }) => {
@@ -507,8 +511,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           <span>{t('timeline.syncBanner')}</span>
         </div>
         <a
-          href={getPageHref('vendors')}
+          href={vendorsMatchHref || getPageHref('vendors')}
           onClick={(e) => {
+            onMatchVendorsClick?.();
             if (onExploreVendors) {
               e.preventDefault();
               onExploreVendors();

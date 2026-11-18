@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Sparkles,
   TrendingDown,
@@ -20,12 +20,63 @@ import {
   PLANNER_EVENT_TYPES,
   PlannerCulturalTradition,
 } from '../data/plannerConfigs';
+import {
+  buildPlanQueryString,
+  getEventSlug,
+  matchVendorsToPlan,
+  parseEventParam,
+  parsePlannerTraditionParam,
+  parsePositiveIntParam,
+  plannerTraditionToMarketplace,
+  plannerTraditionToSlug,
+} from '../utils/plannerMatching';
 
 interface AIPlannerSectionProps {
   isPagePrimary?: boolean;
   onExploreVendors?: () => void;
   onOpenConsult?: () => void;
   onScheduleExported?: (msg: string) => void;
+}
+
+interface InitialPlannerState {
+  eventType: EventTypeTag;
+  tradition: PlannerCulturalTradition;
+  budget: number;
+  guests: number;
+}
+
+function readPlannerStateFromUrl(): InitialPlannerState {
+  const defaultEvent: EventTypeTag = 'Milestone Birthdays';
+  const defaultConfig = PLANNER_EVENT_CONFIGS[defaultEvent];
+  const fallback: InitialPlannerState = {
+    eventType: defaultEvent,
+    tradition: 'None',
+    budget: defaultConfig.defaultBudget,
+    guests: defaultConfig.defaultGuests,
+  };
+
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const parsedEvent = parseEventParam(params.get('event') ?? params.get('eventType'));
+    const eventType: EventTypeTag =
+      parsedEvent !== 'All Events' && parsedEvent in PLANNER_EVENT_CONFIGS
+        ? parsedEvent
+        : defaultEvent;
+    const config = PLANNER_EVENT_CONFIGS[eventType];
+    const tradition = parsePlannerTraditionParam(params.get('tradition'));
+    const parsedBudget = parsePositiveIntParam(params.get('budget'), 2500, 120000);
+    const parsedGuests = parsePositiveIntParam(params.get('guests'), 10, 400);
+
+    return {
+      eventType,
+      tradition,
+      budget: parsedBudget ?? config.defaultBudget,
+      guests: parsedGuests ?? config.defaultGuests,
+    };
+  } catch {
+    return fallback;
+  }
 }
 
 export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
@@ -36,19 +87,29 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   const { t } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
 
+  const initialState = useMemo(() => readPlannerStateFromUrl(), []);
+
   const [selectedEventType, setSelectedEventType] =
-    useState<EventTypeTag>('Milestone Birthdays');
+    useState<EventTypeTag>(initialState.eventType);
   const [selectedTradition, setSelectedTradition] =
-    useState<PlannerCulturalTradition>('None');
-  const [totalBudget, setTotalBudget] = useState<number>(
-    PLANNER_EVENT_CONFIGS['Milestone Birthdays'].defaultBudget
-  );
-  const [guestCount, setGuestCount] = useState<number>(
-    PLANNER_EVENT_CONFIGS['Milestone Birthdays'].defaultGuests
-  );
+    useState<PlannerCulturalTradition>(initialState.tradition);
+  const [totalBudget, setTotalBudget] = useState<number>(initialState.budget);
+  const [guestCount, setGuestCount] = useState<number>(initialState.guests);
   const [activeTab, setActiveTab] = useState<'budget' | 'timeline' | 'insights'>(
     'budget'
   );
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const next = readPlannerStateFromUrl();
+      setSelectedEventType(next.eventType);
+      setSelectedTradition(next.tradition);
+      setTotalBudget(next.budget);
+      setGuestCount(next.guests);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const eventConfig = PLANNER_EVENT_CONFIGS[selectedEventType];
   const culturalAdjustment = useMemo(
@@ -56,10 +117,39 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
     [selectedEventType, selectedTradition]
   );
 
-  const matchingVendorCount = useMemo(
-    () => vendorsData.filter((v) => v.eventTypes.includes(selectedEventType)).length,
-    [selectedEventType]
+  const matchedPlan = useMemo(
+    () =>
+      matchVendorsToPlan({
+        vendors: vendorsData,
+        eventType: selectedEventType,
+        tradition: plannerTraditionToMarketplace(selectedTradition),
+        budget: totalBudget,
+        guests: guestCount,
+      }),
+    [selectedEventType, selectedTradition, totalBudget, guestCount]
   );
+
+  const matchingVendorCount = matchedPlan.vendors.length;
+
+  const planQueryString = useMemo(
+    () =>
+      buildPlanQueryString({
+        event: selectedEventType,
+        traditionSlug: plannerTraditionToSlug(selectedTradition),
+        budget: totalBudget,
+        guests: guestCount,
+      }),
+    [selectedEventType, selectedTradition, totalBudget, guestCount]
+  );
+
+  const vendorsMatchHref = getPageHref('vendors', planQueryString);
+
+  const handleMatchVendorsClick = () => {
+    trackEvent('marketplace_filter_used', {
+      filter_type: 'planner_match',
+      event_type: getEventSlug(selectedEventType),
+    });
+  };
 
   const handleEventTypeChange = (nextType: EventTypeTag) => {
     const nextConfig = PLANNER_EVENT_CONFIGS[nextType];
@@ -408,6 +498,9 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
                   </div>
                   <span className="text-[10px] text-[#8A5A44]">
                     Matching {t(`eventType.${selectedEventType}`)}
+                    {selectedTradition !== 'None' && selectedTradition !== 'Other'
+                      ? ` · ${t(`planner.tradition.${selectedTradition}`)}`
+                      : ''}
                   </span>
                 </div>
 
@@ -519,6 +612,8 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
               <EventTimeline
                 celebrationType={selectedEventType}
                 selectedTradition={selectedTradition}
+                vendorsMatchHref={vendorsMatchHref}
+                onMatchVendorsClick={handleMatchVendorsClick}
                 onExploreVendors={onExploreVendors}
                 onExportSchedule={onScheduleExported}
               />
@@ -591,8 +686,9 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
             <span className="text-[#8A5A44]">{t('planner.footerPrompt')}</span>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <a
-                href={getPageHref('vendors')}
+                href={vendorsMatchHref}
                 onClick={(e) => {
+                  handleMatchVendorsClick();
                   if (onExploreVendors) {
                     e.preventDefault();
                     onExploreVendors();
