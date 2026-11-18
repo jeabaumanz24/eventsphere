@@ -1,8 +1,9 @@
 import React from 'react';
 import { Instagram, Facebook, Linkedin, Pin as Pinterest, Heart } from 'lucide-react';
-import logoImg from '../assets/images/eventsphere_logo_transparent.png';
 import { useLanguage } from '../context/LanguageContext';
 import { getPageHref } from '../utils/navigation';
+
+const logoImg = `${import.meta.env.BASE_URL}assets/aistudio/a_clean_minimal_graphic_logo_image_on_a_transpare_861d7c48.png`;
 
 interface FooterProps {
   onOpenPrivacy?: () => void;
@@ -22,11 +23,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
               href={getPageHref('home')}
               className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] rounded-xl"
             >
-              <div className="w-10 h-10 rounded-full bg-[#F2CCC3]/60 border border-[#8A5A44]/25 flex items-center justify-center p-1 shadow-xs overflow-hidden">
+              <div className="h-12 w-[72px] sm:h-14 sm:w-20 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
                 <img
                   src={logoImg}
                   alt="EventSphere Logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain animate-logo-float"
                 />
               </div>
               <span className="text-2xl font-serif font-bold text-[#724319] tracking-tight">
