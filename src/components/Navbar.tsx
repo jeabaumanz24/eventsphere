@@ -9,6 +9,7 @@ const logoImg = `${import.meta.env.BASE_URL}assets/aistudio/a_clean_minimal_grap
 
 interface NavbarProps {
   currentPage: PageId;
+  hideGetStarted?: boolean;
   onLanguageChange?: (langName: string, langCode?: LanguageCode) => void;
   wishlistCount?: number;
   onOpenWishlist?: () => void;
@@ -27,6 +28,7 @@ const NAV_ITEMS: Array<{ id: PageId; labelKey: string }> = [
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentPage,
+  hideGetStarted = false,
   onLanguageChange,
   wishlistCount = 0,
   onOpenWishlist,
@@ -57,7 +59,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const aiPlannerHref = getPageHref('ai-planner');
   const homeHref = getPageHref('home');
   const showGetStarted =
-    currentPage !== 'ai-planner' && currentPage !== 'vendor-insights';
+    !hideGetStarted &&
+    currentPage !== 'ai-planner' &&
+    currentPage !== 'vendor-insights';
 
   return (
     <header

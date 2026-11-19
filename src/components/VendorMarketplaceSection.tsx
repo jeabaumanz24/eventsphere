@@ -34,6 +34,7 @@ interface VendorMarketplaceSectionProps {
   onNotify?: (message: string) => void;
   wishlistIds?: string[];
   onToggleWishlist?: (vendor: Vendor) => void;
+  onPlannerFilterChange?: (isPlannerFiltered: boolean) => void;
 }
 
 const EVENT_TYPE_FILTERS: Array<'All Events' | EventTypeTag> = [
@@ -71,6 +72,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
   onNotify,
   wishlistIds,
   onToggleWishlist,
+  onPlannerFilterChange,
 }) => {
   const { t } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
@@ -209,6 +211,10 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     selectedCategory !== 'All' ||
     searchQuery.trim() !== '' ||
     hasBudgetPlan;
+
+  useEffect(() => {
+    onPlannerFilterChange?.(hasBudgetPlan);
+  }, [hasBudgetPlan, onPlannerFilterChange]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { All: allCategoriesMatch.vendors.length };

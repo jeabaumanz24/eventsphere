@@ -30,6 +30,7 @@ import { Vendor, BlogPost, PageId, PlanPreviewContextData } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { PAGE_CONFIGS, detectCurrentPage, getPageHref } from './utils/navigation';
 import { trackEvent, trackPageView } from './utils/analytics';
+import { parseMarketplaceUrlParams } from './utils/plannerMatching';
 
 const WISHLIST_STORAGE_KEY = 'eventsphere_vendor_wishlist_v1';
 
@@ -274,6 +275,12 @@ function EventSphereApp() {
 
   const activeModalVendor = previewInquiry?.vendor ?? selectedVendor;
 
+  const [isMarketplacePlannerFiltered, setIsMarketplacePlannerFiltered] = useState<boolean>(() => {
+    if (typeof window === 'undefined' || currentPage !== 'vendors') return false;
+    const parsed = parseMarketplaceUrlParams(window.location.search);
+    return parsed.budget !== null && parsed.guests !== null;
+  });
+
   return (
     <div className="min-h-screen bg-[#FFF8F6] text-[#724319] font-sans flex flex-col selection:bg-[#EBC1B6] selection:text-[#724319]">
       <a href="#main-content" className="skip-to-content">
@@ -283,6 +290,7 @@ function EventSphereApp() {
       {/* Shared Navigation Bar */}
       <Navbar
         currentPage={currentPage}
+        hideGetStarted={currentPage === 'vendors' && isMarketplacePlannerFiltered}
         wishlistCount={wishlistedVendors.length}
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onLanguageChange={(langName, langCode) => {
@@ -339,6 +347,7 @@ function EventSphereApp() {
             onNotify={showToast}
             wishlistIds={wishlistIds}
             onToggleWishlist={toggleWishlist}
+            onPlannerFilterChange={setIsMarketplacePlannerFiltered}
           />
         )}
 
