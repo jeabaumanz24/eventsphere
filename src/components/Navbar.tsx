@@ -56,6 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const aiPlannerHref = getPageHref('ai-planner');
   const homeHref = getPageHref('home');
+  const showGetStarted =
+    currentPage !== 'ai-planner' && currentPage !== 'vendor-insights';
 
   return (
     <header
@@ -178,13 +180,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
             )}
-            <a
-              href={aiPlannerHref}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-xs hover:shadow-md transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
-            >
-              <span>{t('nav.getStarted')}</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
+            {showGetStarted && (
+              <a
+                href={aiPlannerHref}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full shadow-xs hover:shadow-md transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
+              >
+                <span>{t('nav.getStarted')}</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            )}
           </div>
 
           {/* Mobile controls */}
@@ -210,12 +214,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
             )}
-            <a
-              href={aiPlannerHref}
-              className="hidden sm:inline-flex px-3 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
-            >
-              {t('nav.getStarted')}
-            </a>
+            {showGetStarted && (
+              <a
+                href={aiPlannerHref}
+                className="hidden sm:inline-flex px-3 py-1.5 text-xs font-medium text-white bg-[#724319] rounded-full shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
+              >
+                {t('nav.getStarted')}
+              </a>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -279,16 +285,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             />
 
-            <div className="pt-3">
-              <a
-                href={aiPlannerHref}
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#724319] rounded-xl cursor-pointer"
-              >
-                <span>{t('nav.getStarted')}</span>
-                <ArrowRight className="w-4 h-4" />
-              </a>
-            </div>
+            {showGetStarted && (
+              <div className="pt-3">
+                <a
+                  href={aiPlannerHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#724319] rounded-xl cursor-pointer"
+                >
+                  <span>{t('nav.getStarted')}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            )}
           </nav>
         )}
       </div>
