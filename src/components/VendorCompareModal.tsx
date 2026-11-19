@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { VendorImage } from './VendorImage';
 
 interface VendorCompareModalProps {
   isOpen: boolean;
@@ -124,11 +125,10 @@ export const VendorCompareModal: React.FC<VendorCompareModalProps> = ({
                       >
                         <div className="space-y-3">
                           <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#F2CCC3]/40 border border-[#EBC1B6]/60">
-                            <img
-                              src={vendor.image}
-                              alt={vendor.businessName}
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
+                            <VendorImage
+                              vendor={vendor}
+                              variant="card"
+                              imgClassName="w-full h-full object-cover"
                             />
                             <button
                               type="button"

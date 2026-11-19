@@ -64,7 +64,8 @@ export interface Vendor {
   reviewCount: number;
   location: string;
   startingPrice: string;
-  image: string;
+  image: string | null;
+  imageAlt: string;
   traditions: CulturalTradition[];
   culturalSpecialties: string[];
   eventTypes: EventTypeTag[];

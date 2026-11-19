@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarHeart, Globe2, Sparkles, Users } from 'lucide-react';
 import { COMMUNITY_LANGUAGES, useLanguage } from '../context/LanguageContext';
 import { vendorsData } from '../data/mockData';
+import { VendorImage } from './VendorImage';
 
 const ANIMATION_DURATION_MS = 1200;
 
@@ -127,13 +128,14 @@ export const StatsSection: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center -space-x-2" aria-hidden="true">
             {avatarVendors.map((vendor) => (
-              <img
+              <VendorImage
                 key={vendor.id}
-                src={vendor.image}
-                alt=""
-                className="w-7 h-7 rounded-full object-cover object-center ring-2 ring-[#724319] bg-[#5A3412] shrink-0"
+                vendor={vendor}
+                variant="avatar"
+                decorative
+                className="w-7 h-7 rounded-full ring-2 ring-[#724319] bg-[#5A3412] shrink-0"
+                imgClassName="w-7 h-7 rounded-full object-cover object-center ring-2 ring-[#724319] bg-[#5A3412] shrink-0"
                 loading="lazy"
-                referrerPolicy="no-referrer"
               />
             ))}
           </div>

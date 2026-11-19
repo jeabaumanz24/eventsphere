@@ -15,6 +15,7 @@ import {
 import { PlanPreviewContextData, Vendor, VendorReview } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { PlanSummaryActions } from './PlanSummaryActions';
+import { VendorImage } from './VendorImage';
 import { trackEvent } from '../utils/analytics';
 
 function headcountToNumericEstimate(headcount: string): string {
@@ -364,14 +365,24 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
         </div>
 
         {/* Header Hero Image & Trust Stats */}
-        <div className="relative h-48 sm:h-56 bg-[#F2CCC3] shrink-0 overflow-hidden print:hidden">
-          <img
-            src={vendor.image}
-            alt={vendor.businessName}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
+        <div
+          className={`relative h-48 sm:h-56 shrink-0 overflow-hidden print:hidden ${
+            vendor.image ? 'bg-[#F2CCC3]' : 'bg-[#FFF8F6] border-b border-[#EBC1B6]'
+          }`}
+        >
+          <VendorImage
+            vendor={vendor}
+            variant="card"
+            offsetBottomForOverlay
+            imgClassName="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div
+            className={`absolute inset-0 ${
+              vendor.image
+                ? 'bg-gradient-to-t from-black/80 via-black/30 to-transparent'
+                : 'bg-gradient-to-t from-[#724319]/90 via-[#724319]/25 to-transparent'
+            }`}
+          />
           <div className="absolute bottom-4 left-5 right-5 text-white">
             <span className="text-[11px] font-semibold bg-white/90 text-[#724319] px-2.5 py-0.5 rounded-full inline-block mb-1.5 shadow-xs">
               {t(`cat.${vendor.category}`)}

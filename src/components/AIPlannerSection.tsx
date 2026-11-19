@@ -59,6 +59,17 @@ interface AIPlannerSectionProps {
   onScheduleExported?: (msg: string) => void;
 }
 
+type PlannerTab = 'budget' | 'timeline' | 'insights';
+
+function parsePlannerTabParam(raw: string | null): PlannerTab {
+  if (!raw) return 'budget';
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === 'timeline' || normalized === 'insights' || normalized === 'budget') {
+    return normalized;
+  }
+  return 'budget';
+}
+
 interface InitialPlannerState {
   eventType: EventTypeTag;
   tradition: PlannerCulturalTradition;
@@ -66,6 +77,7 @@ interface InitialPlannerState {
   guests: number;
   date: string;
   hasExplicitDate: boolean;
+  tab: PlannerTab;
 }
 
 function readPlannerStateFromUrl(): InitialPlannerState {
@@ -79,6 +91,7 @@ function readPlannerStateFromUrl(): InitialPlannerState {
     guests: defaultConfig.defaultGuests,
     date: fallbackDate,
     hasExplicitDate: false,
+    tab: 'budget',
   };
 
   if (typeof window === 'undefined') return fallback;
@@ -93,6 +106,7 @@ function readPlannerStateFromUrl(): InitialPlannerState {
     const tradition = parsePlannerTraditionParam(params.get('tradition'));
     const parsedBudget = parsePositiveIntParam(params.get('budget'), 2500, 120000);
     const parsedGuests = parsePositiveIntParam(params.get('guests'), 10, 400);
+    const tab = parsePlannerTabParam(params.get('tab'));
 
     const rawDate = params.get('date') ?? '';
     const parsedDateObj = parseIsoDateLocal(rawDate);
@@ -107,6 +121,7 @@ function readPlannerStateFromUrl(): InitialPlannerState {
       guests: parsedGuests ?? config.defaultGuests,
       date: isValidFutureDate ? rawDate : buildDefaultDateFromLeadDays(config.defaultLeadDays),
       hasExplicitDate: isValidFutureDate,
+      tab,
     };
   } catch {
     return fallback;
@@ -131,9 +146,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
   const [guestCount, setGuestCount] = useState<number>(initialState.guests);
   const [eventDate, setEventDate] = useState<string>(initialState.date);
   const hasCustomDateRef = useRef<boolean>(initialState.hasExplicitDate);
-  const [activeTab, setActiveTab] = useState<'budget' | 'timeline' | 'insights'>(
-    'budget'
-  );
+  const [activeTab, setActiveTab] = useState<PlannerTab>(initialState.tab);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -144,6 +157,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
       setGuestCount(next.guests);
       setEventDate(next.date);
       hasCustomDateRef.current = next.hasExplicitDate;
+      setActiveTab(next.tab);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -274,8 +288,17 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
     }
   };
 
-  const handleSwitchTab = (tab: 'budget' | 'timeline' | 'insights') => {
+  const handleSwitchTab = (tab: PlannerTab) => {
     setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+      } catch {
+        // Ignore history restrictions in sandboxed environments
+      }
+    }
     if (tab === 'timeline') {
       trackEvent('timeline_generated', {
         action: 'tab_open',

@@ -16,6 +16,7 @@ import { CulturalTradition, EventTypeTag, PlanPreviewContextData, Vendor } from 
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
 import { PlanSummaryActions } from './PlanSummaryActions';
+import { VendorImage } from './VendorImage';
 
 type HeadcountOption = 'Under 30' | '30-60' | '60-100' | '100-200' | '200+';
 
@@ -2259,42 +2260,53 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                                 : 'border-[#EBC1B6]/50'
                             }`}
                           >
-                            <div className="min-w-0 space-y-0.5">
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A5A44]">
-                                  {t(`cat.${item.vendor.category}`)}
-                                </span>
-                                <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
-                                <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums">
-                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                  {Number.isInteger(item.vendor.rating)
-                                    ? `${item.vendor.rating}.0`
-                                    : item.vendor.rating}
-                                </span>
-                                <span className="text-[10px] font-mono font-semibold bg-[#FFF8F6] border border-[#EBC1B6] text-[#724319] px-1.5 py-0.5 rounded">
-                                  {t('how.mock2VendorFit', { score: item.fitScore })}
-                                </span>
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#EBC1B6]/70 bg-[#FFF8F6] shrink-0">
+                                <VendorImage
+                                  vendor={item.vendor}
+                                  variant="thumb"
+                                  className="w-full h-full"
+                                  imgClassName="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
                               </div>
-                              <div className="font-semibold text-[#724319] truncate">
-                                {item.vendor.businessName}
-                              </div>
-                              <div className="text-[11px] text-[#724319]/75 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                <span className="inline-flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-[#8A5A44] shrink-0" />
-                                  <span>{item.vendor.location}</span>
-                                </span>
-                                <span className="text-[10px] font-medium text-[#8A5A44]">
-                                  {t('how.mock2CoversLabel', {
-                                    traditions:
-                                      displayedTraditions || item.vendor.traditions.slice(0, 2).join(', '),
-                                  })}
-                                </span>
-                              </div>
-                              {item.quoteLineItems.length > 0 && (
-                                <div className="text-[10px] text-[#724319]/70 pt-0.5 truncate">
-                                  {item.quoteLineItems.join(' · ')}
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A5A44]">
+                                    {t(`cat.${item.vendor.category}`)}
+                                  </span>
+                                  <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
+                                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                    {Number.isInteger(item.vendor.rating)
+                                      ? `${item.vendor.rating}.0`
+                                      : item.vendor.rating}
+                                  </span>
+                                  <span className="text-[10px] font-mono font-semibold bg-[#FFF8F6] border border-[#EBC1B6] text-[#724319] px-1.5 py-0.5 rounded">
+                                    {t('how.mock2VendorFit', { score: item.fitScore })}
+                                  </span>
                                 </div>
-                              )}
+                                <div className="font-semibold text-[#724319] truncate">
+                                  {item.vendor.businessName}
+                                </div>
+                                <div className="text-[11px] text-[#724319]/75 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                  <span className="inline-flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-[#8A5A44] shrink-0" />
+                                    <span>{item.vendor.location}</span>
+                                  </span>
+                                  <span className="text-[10px] font-medium text-[#8A5A44]">
+                                    {t('how.mock2CoversLabel', {
+                                      traditions:
+                                        displayedTraditions || item.vendor.traditions.slice(0, 2).join(', '),
+                                    })}
+                                  </span>
+                                </div>
+                                {item.quoteLineItems.length > 0 && (
+                                  <div className="text-[10px] text-[#724319]/70 pt-0.5 truncate">
+                                    {item.quoteLineItems.join(' · ')}
+                                  </div>
+                                )}
+                              </div>
                             </div>
 
                             <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0">
@@ -2439,11 +2451,22 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                     {/* Synchronized Vendor Chat + Custom Sample Quote (Strictly Tradition & Service Scoped) */}
                     <div className="space-y-2.5 text-xs">
                       <div className="p-3.5 bg-white rounded-xl border border-[#EBC1B6]/50 space-y-2.5">
-                        <div className="flex items-start gap-2 text-[11px] text-[#724319]/85 leading-relaxed">
-                          <span className="font-bold text-[#724319] shrink-0">
-                            {activeStep3Item.vendor.name}:
-                          </span>
-                          <span>{buildVendorChatMessage(activeStep3Item)}</span>
+                        <div className="flex items-start gap-3 text-[11px] text-[#724319]/85 leading-relaxed">
+                          <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#EBC1B6]/70 bg-[#FFF8F6] shrink-0">
+                            <VendorImage
+                              vendor={activeStep3Item.vendor}
+                              variant="thumb"
+                              className="w-full h-full"
+                              imgClassName="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-bold text-[#724319] mb-0.5">
+                              {activeStep3Item.vendor.businessName} · {activeStep3Item.vendor.name}
+                            </div>
+                            <span>{buildVendorChatMessage(activeStep3Item)}</span>
+                          </div>
                         </div>
 
                         <div className="bg-[#FFF8F6] p-2.5 rounded-lg border border-[#EBC1B6]/50 space-y-1.5 text-[11px] text-[#724319]">

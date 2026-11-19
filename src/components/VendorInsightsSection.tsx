@@ -23,6 +23,7 @@ import {
 } from '../data/vendorInsightsData';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
+import { VendorImage } from './VendorImage';
 
 interface VendorInsightsSectionProps {
   onCopied?: (message: string) => void;
@@ -409,14 +410,25 @@ export const VendorInsightsSection: React.FC<VendorInsightsSectionProps> = ({
           {/* Selected Profile Metadata Context + Live Region Announcement */}
           <div
             aria-live="polite"
-            className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-[#4A2B10] bg-[#FFF8F6] border border-[#EBC1B6]/80 rounded-xl px-4 py-2.5"
+            className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#4A2B10] bg-[#FFF8F6] border border-[#EBC1B6]/80 rounded-xl px-4 py-2.5"
           >
-            <span>
-              Showing sample dashboard for{' '}
-              <strong className="text-[#724319]">{report.vendor.businessName}</strong> (
-              {report.roleLabel} · {report.vendor.location}) over{' '}
-              <strong className="text-[#724319]">{report.dateRange.label}</strong>.
-            </span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#EBC1B6] bg-white shrink-0">
+                <VendorImage
+                  vendor={report.vendor}
+                  variant="thumb"
+                  className="w-full h-full"
+                  imgClassName="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <span>
+                Showing sample dashboard for{' '}
+                <strong className="text-[#724319]">{report.vendor.businessName}</strong> (
+                {report.roleLabel} · {report.vendor.location}) over{' '}
+                <strong className="text-[#724319]">{report.dateRange.label}</strong>.
+              </span>
+            </div>
             <span className="text-xs text-[#724319] font-medium">
               Tagged traditions: {report.vendor.traditions.join(', ')}
             </span>

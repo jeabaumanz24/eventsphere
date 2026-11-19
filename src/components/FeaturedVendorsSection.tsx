@@ -4,6 +4,7 @@ import { vendorsData } from '../data/mockData';
 import { Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { getPageHref } from '../utils/navigation';
+import { VendorImage } from './VendorImage';
 
 interface FeaturedVendorsSectionProps {
   onSelectVendor: (vendor: Vendor) => void;
@@ -58,14 +59,15 @@ export const FeaturedVendorsSection: React.FC<FeaturedVendorsSectionProps> = ({
               >
                 <div>
                   <div className="relative aspect-[16/10] overflow-hidden bg-[#F2CCC3]/50">
-                    <img
-                      src={vendor.image}
-                      alt={vendor.businessName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
+                    <VendorImage
+                      vendor={vendor}
+                      variant="card"
+                      imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
+                    {vendor.image && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
+                    )}
 
                     <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-semibold text-[#724319] shadow-xs">
                       {t(`cat.${vendor.category}`)}

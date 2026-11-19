@@ -28,6 +28,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { PAGE_CONFIGS, getPageHref } from '../utils/navigation';
 import { trackEvent } from '../utils/analytics';
 import { JournalArticleBrowser } from './JournalArticleBrowser';
+import { VendorImage } from './VendorImage';
 
 interface BlogPageProps {
   activePostId: string;
@@ -754,11 +755,11 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                         }}
                         className="group p-4 rounded-2xl bg-[#FFF8F6] border border-[#EBC1B6]/80 hover:border-[#8A5A44] hover:shadow-md transition-all cursor-pointer flex gap-3.5 items-center"
                       >
-                        <img
-                          src={vendor.image}
-                          alt={vendor.businessName}
-                          className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#EBC1B6]"
-                          referrerPolicy="no-referrer"
+                        <VendorImage
+                          vendor={vendor}
+                          variant="thumb"
+                          className="w-16 h-16 rounded-xl shrink-0 border border-[#EBC1B6]"
+                          imgClassName="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#EBC1B6]"
                           loading="lazy"
                         />
                         <div className="min-w-0 flex-1 space-y-1">

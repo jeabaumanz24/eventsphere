@@ -16,6 +16,7 @@ import { vendorsData } from '../data/mockData';
 import { CulturalTradition, EventTypeTag, Vendor, VendorCategory } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { VendorCompareModal } from './VendorCompareModal';
+import { VendorImage } from './VendorImage';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
 import {
@@ -662,14 +663,15 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                   <div>
                     {/* Image with overlay badge and bookmark */}
                     <div className="relative aspect-[16/10] overflow-hidden bg-[#F2CCC3]/50">
-                      <img
-                        src={vendor.image}
-                        alt={vendor.businessName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                        referrerPolicy="no-referrer"
+                      <VendorImage
+                        vendor={vendor}
+                        variant="card"
+                        imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
+                      {vendor.image && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
+                      )}
 
                       {/* Category Label */}
                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-semibold text-[#724319] shadow-xs">
@@ -809,12 +811,12 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex -space-x-2 shrink-0">
               {comparedVendors.map((v) => (
-                <img
+                <VendorImage
                   key={v.id}
-                  src={v.image}
-                  alt={v.businessName}
-                  className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-xs"
-                  referrerPolicy="no-referrer"
+                  vendor={v}
+                  variant="avatar"
+                  className="w-8 h-8 rounded-full border-2 border-white shadow-xs"
+                  imgClassName="w-8 h-8 rounded-full object-cover border-2 border-white shadow-xs"
                 />
               ))}
             </div>

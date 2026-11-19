@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { VendorImage } from './VendorImage';
 
 interface WishlistModalProps {
   isOpen: boolean;
@@ -138,13 +139,14 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 >
                   <div>
                     <div className="relative aspect-[16/9] overflow-hidden bg-[#F2CCC3]/40">
-                      <img
-                        src={vendor.image}
-                        alt={vendor.businessName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        referrerPolicy="no-referrer"
+                      <VendorImage
+                        vendor={vendor}
+                        variant="card"
+                        imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      {vendor.image && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      )}
 
                       <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#724319] shadow-2xs">
                         {t(`cat.${vendor.category}`)}
