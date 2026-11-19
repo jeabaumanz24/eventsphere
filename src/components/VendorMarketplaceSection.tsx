@@ -13,7 +13,13 @@ import {
   Info,
 } from 'lucide-react';
 import { vendorsData } from '../data/mockData';
-import { CulturalTradition, EventTypeTag, Vendor, VendorCategory } from '../types';
+import {
+  CulturalTradition,
+  EventTypeTag,
+  MarketplaceFilterContext,
+  Vendor,
+  VendorCategory,
+} from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { VendorCompareModal } from './VendorCompareModal';
 import { VendorImage } from './VendorImage';
@@ -31,7 +37,7 @@ import {
 
 interface VendorMarketplaceSectionProps {
   isPagePrimary?: boolean;
-  onSelectVendor: (vendor: Vendor) => void;
+  onSelectVendor: (vendor: Vendor, filterContext?: MarketplaceFilterContext) => void;
   onNotify?: (message: string) => void;
   wishlistIds?: string[];
   onToggleWishlist?: (vendor: Vendor) => void;
@@ -233,6 +239,15 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     setSelectedCategory('All');
     setSearchQuery('');
   }, []);
+
+  const currentFilterContext = useMemo<MarketplaceFilterContext>(
+    () => ({
+      eventType: selectedEventType,
+      tradition: selectedTradition,
+      guests: planGuests,
+    }),
+    [selectedEventType, selectedTradition, planGuests]
+  );
 
   const editPlanHref = useMemo(() => {
     if (!hasBudgetPlan) return getPageHref('ai-planner');
@@ -653,7 +668,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
               return (
                 <div
                   key={vendor.id}
-                  onClick={() => onSelectVendor(vendor)}
+                  onClick={() => onSelectVendor(vendor, currentFilterContext)}
                   className={`group bg-white rounded-3xl overflow-hidden border shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 flex flex-col justify-between cursor-pointer ${
                     isCompared
                       ? 'border-[#724319] ring-2 ring-[#724319]/25'
@@ -857,7 +872,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
         onClose={() => setIsCompareOpen(false)}
         onRemoveVendor={removeFromCompare}
         onClearAll={clearCompare}
-        onSelectVendor={onSelectVendor}
+        onSelectVendor={(vendor) => onSelectVendor(vendor, currentFilterContext)}
       />
     </section>
   );

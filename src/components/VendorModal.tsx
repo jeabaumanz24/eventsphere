@@ -3,6 +3,7 @@ import {
   X,
   Star,
   MapPin,
+  Check,
   CheckCircle2,
   ShieldCheck,
   Send,
@@ -12,11 +13,18 @@ import {
   Heart,
   Sparkles,
 } from 'lucide-react';
-import { PlanPreviewContextData, Vendor, VendorReview } from '../types';
+import {
+  CulturalTradition,
+  MarketplaceFilterContext,
+  PlanPreviewContextData,
+  Vendor,
+  VendorReview,
+} from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { PlanSummaryActions } from './PlanSummaryActions';
 import { VendorImage } from './VendorImage';
 import { trackEvent } from '../utils/analytics';
+import { getProposalCulturalElements } from '../data/culturalElements';
 
 function headcountToNumericEstimate(headcount: string): string {
   switch (headcount) {
@@ -60,6 +68,7 @@ interface VendorModalProps {
   onToggleWishlist?: (vendor: Vendor) => void;
   initialTab?: 'overview' | 'reviews' | 'proposal';
   previewContext?: PlanPreviewContextData | null;
+  filterContext?: MarketplaceFilterContext | null;
 }
 
 export const VendorModal: React.FC<VendorModalProps> = ({
@@ -70,9 +79,13 @@ export const VendorModal: React.FC<VendorModalProps> = ({
   onToggleWishlist,
   initialTab = 'overview',
   previewContext = null,
+  filterContext = null,
 }) => {
   if (!vendor) return null;
-  const modalKey = `${vendor.id}-${initialTab}-${previewContext ? 'sample' : 'std'}`;
+  const filterKey = filterContext
+    ? `${filterContext.tradition}-${filterContext.eventType}-${filterContext.guests ?? ''}`
+    : 'none';
+  const modalKey = `${vendor.id}-${initialTab}-${previewContext ? 'sample' : 'std'}-${filterKey}`;
   return (
     <VendorModalContent
       key={modalKey}
@@ -83,6 +96,7 @@ export const VendorModal: React.FC<VendorModalProps> = ({
       onToggleWishlist={onToggleWishlist}
       initialTab={previewContext ? 'proposal' : initialTab}
       previewContext={previewContext}
+      filterContext={filterContext}
     />
   );
 };
@@ -95,6 +109,7 @@ interface VendorModalContentProps {
   onToggleWishlist?: (vendor: Vendor) => void;
   initialTab: 'overview' | 'reviews' | 'proposal';
   previewContext: PlanPreviewContextData | null;
+  filterContext: MarketplaceFilterContext | null;
 }
 
 const VendorModalContent: React.FC<VendorModalContentProps> = ({
@@ -105,6 +120,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   onToggleWishlist,
   initialTab,
   previewContext,
+  filterContext,
 }) => {
   const { t } = useLanguage();
   const isSamplePreview = Boolean(previewContext);
@@ -116,11 +132,53 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   // Tabs: overview, reviews, proposal
   const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'proposal'>(initialTab);
 
+  // Active cultural tradition for proposal Cultural Elements & Requests:
+  // Strictly aligned to the tradition filtered in AI Planner / Vendor Marketplace when set.
+  const hasFilteredTradition = Boolean(
+    filterContext?.tradition && filterContext.tradition !== 'All Traditions'
+  );
+  const filteredEventType = filterContext?.eventType ?? 'All Events';
+
+  const [selectedProposalTradition, setSelectedProposalTradition] = useState<
+    CulturalTradition | 'All Traditions'
+  >(() => {
+    if (filterContext?.tradition && filterContext.tradition !== 'All Traditions') {
+      return filterContext.tradition;
+    }
+    if (vendor.traditions.length > 0) {
+      return vendor.traditions[0];
+    }
+    return 'All Traditions';
+  });
+
+  const culturalElementOptions = useMemo(
+    () => getProposalCulturalElements(selectedProposalTradition, filteredEventType),
+    [selectedProposalTradition, filteredEventType]
+  );
+
+  const [selectedCulturalElements, setSelectedCulturalElements] = useState<string[]>(() =>
+    previewContext?.culturalElements ? [...previewContext.culturalElements] : []
+  );
+
+  const handleSwitchProposalTradition = (nextTradition: CulturalTradition | 'All Traditions') => {
+    setSelectedProposalTradition(nextTradition);
+    const nextOptions = getProposalCulturalElements(nextTradition, filteredEventType);
+    setSelectedCulturalElements((prev) => prev.filter((item) => nextOptions.includes(item)));
+  };
+
+  const handleToggleCulturalElement = (label: string) => {
+    setSelectedCulturalElements((prev) =>
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
+    );
+  };
+
   // Proposal form state
   const [date, setDate] = useState('');
-  const [guestCount, setGuestCount] = useState(() =>
-    previewContext ? headcountToNumericEstimate(previewContext.headcount) : '150'
-  );
+  const [guestCount, setGuestCount] = useState(() => {
+    if (previewContext) return headcountToNumericEstimate(previewContext.headcount);
+    if (filterContext?.guests) return String(filterContext.guests);
+    return '150';
+  });
   const [message, setMessage] = useState(() =>
     previewContext ? buildPrefilledInquiryMessage(previewContext) : ''
   );
@@ -244,7 +302,11 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
       trackEvent('inquiry_submit', {
         vendor_name: vendor.businessName,
         vendor_category: vendor.category,
-        event_type: previewContext?.eventType || 'Marketplace Inquiry',
+        event_type:
+          filteredEventType !== 'All Events'
+            ? filteredEventType
+            : previewContext?.eventType || 'Marketplace Inquiry',
+        cultural_elements_count: selectedCulturalElements.length,
         sample_preview: isSamplePreview,
       });
       onRequestSent(vendor.businessName);
@@ -485,6 +547,24 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
               <p className="text-xs sm:text-sm text-[#724319]/80 max-w-sm mx-auto leading-relaxed">
                 {t('vendorModal.inquirySentDesc', { name: vendor.name })}
               </p>
+              {selectedCulturalElements.length > 0 && (
+                <div className="max-w-md mx-auto pt-1 space-y-1.5">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#8A5A44]">
+                    {t('how.mock1RitualsLabel')}
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {selectedCulturalElements.map((item) => (
+                      <span
+                        key={item}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FFF8F6] text-[#724319] border border-[#EBC1B6]"
+                      >
+                        <Check className="w-3 h-3 text-[#8A5A44]" aria-hidden="true" />
+                        <span>{item}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {previewContext && (
                 <div className="text-left max-w-xl mx-auto pt-2">
                   <PlanSummaryActions plan={previewContext} variant="modal" />
@@ -996,6 +1076,84 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
                             onChange={(e) => setGuestCount(e.target.value)}
                             className="w-full px-3 py-2.5 bg-white border border-[#EBC1B6] rounded-xl text-xs text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40"
                           />
+                        </div>
+                      </div>
+
+                      {/* Cultural Elements & Requests aligned to active AI Planner / Marketplace tradition */}
+                      <div className="p-3.5 bg-white rounded-xl border border-[#EBC1B6]/70 space-y-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[11px] font-semibold text-[#724319]">
+                              {t('how.mock1RitualsLabel')}
+                            </span>
+                            {selectedProposalTradition !== 'All Traditions' && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FFF8F6] text-[#8A5A44] border border-[#EBC1B6]">
+                                {t(`tradition.${selectedProposalTradition}`)}
+                                {filteredEventType !== 'All Events'
+                                  ? ` · ${t(`eventType.${filteredEventType}`)}`
+                                  : ''}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-[#8A5A44]">
+                            {selectedCulturalElements.length > 0
+                              ? `${selectedCulturalElements.length} selected`
+                              : t('how.mock1SelectHint')}
+                          </span>
+                        </div>
+
+                        {/* When browsing All Traditions, let the client switch between this vendor's supported traditions */}
+                        {!hasFilteredTradition && vendor.traditions.length > 1 && (
+                          <div
+                            className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-[#EBC1B6]/40"
+                            role="group"
+                            aria-label={t('how.mock1TraditionLabel')}
+                          >
+                            {vendor.traditions.map((tr) => {
+                              const active = selectedProposalTradition === tr;
+                              return (
+                                <button
+                                  key={tr}
+                                  type="button"
+                                  aria-pressed={active}
+                                  onClick={() => handleSwitchProposalTradition(tr)}
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
+                                    active
+                                      ? 'bg-[#8A5A44] text-white border-[#8A5A44]'
+                                      : 'bg-[#FFF8F6] text-[#724319] border-[#EBC1B6] hover:bg-[#F2CCC3]/40'
+                                  }`}
+                                >
+                                  {t(`tradition.${tr}`)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div
+                          className="flex flex-wrap gap-1.5"
+                          role="group"
+                          aria-label={t('how.mock1RitualsLabel')}
+                        >
+                          {culturalElementOptions.map((label) => {
+                            const isSelected = selectedCulturalElements.includes(label);
+                            return (
+                              <button
+                                key={label}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => handleToggleCulturalElement(label)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
+                                  isSelected
+                                    ? 'bg-[#724319] text-white border-[#724319] shadow-2xs'
+                                    : 'bg-[#FFF8F6] text-[#724319] border-[#EBC1B6] hover:bg-[#F2CCC3]/40'
+                                }`}
+                              >
+                                {isSelected && <Check className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                                <span>{label}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 

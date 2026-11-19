@@ -222,3 +222,9 @@ export interface PlanPreviewContextData {
   sampleQuoteText: string;
   recommendedVendors: PlanPreviewVendorSummary[];
 }
+
+export interface MarketplaceFilterContext {
+  eventType: 'All Events' | EventTypeTag;
+  tradition: 'All Traditions' | CulturalTradition;
+  guests?: number | null;
+}

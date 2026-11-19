@@ -26,7 +26,7 @@ import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { blogPostsData, vendorsData } from './data/mockData';
-import { Vendor, BlogPost, PageId } from './types';
+import { Vendor, BlogPost, PageId, MarketplaceFilterContext } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { PAGE_CONFIGS, detectCurrentPage, getPageHref } from './utils/navigation';
 import { trackEvent, trackPageView } from './utils/analytics';
@@ -65,6 +65,9 @@ function EventSphereApp() {
   );
 
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [vendorFilterContext, setVendorFilterContext] = useState<MarketplaceFilterContext | null>(
+    null
+  );
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -240,12 +243,17 @@ function EventSphereApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleOpenStandardVendor = useCallback((vendor: Vendor) => {
-    setSelectedVendor(vendor);
-  }, []);
+  const handleOpenStandardVendor = useCallback(
+    (vendor: Vendor, filterContext?: MarketplaceFilterContext) => {
+      setSelectedVendor(vendor);
+      setVendorFilterContext(filterContext ?? null);
+    },
+    []
+  );
 
   const handleCloseVendorModal = useCallback(() => {
     setSelectedVendor(null);
+    setVendorFilterContext(null);
   }, []);
 
   const handleExploreMarketplaceFromWishlist = useCallback(() => {
@@ -385,6 +393,7 @@ function EventSphereApp() {
         onClose={handleCloseVendorModal}
         isWishlisted={selectedVendor ? wishlistIds.includes(selectedVendor.id) : false}
         onToggleWishlist={toggleWishlist}
+        filterContext={vendorFilterContext}
         onRequestSent={(name) => {
           showToast(t('toast.proposalSent', { name }));
         }}
