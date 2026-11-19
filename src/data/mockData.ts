@@ -158,12 +158,12 @@ export const howItWorksSteps = [
   },
   {
     step: '03',
-    title: 'Connect with verified vendors',
+    title: 'Connect with vendors',
     description:
-      'Preview tailored vendor messages built from your brief, review indicative itemised quotes, and prepare inquiries with transparent milestone plans.',
-    badgeText: 'Guided Inquiry Preview',
+      'See the kind of brief and quote a vendor could send back, based on your Step 1 choices. When you are ready, find vendors for your plan.',
+    badgeText: 'Example Vendor Reply',
     detail:
-      'All communication, custom quotes, and planned milestone contract checklists are designed to sit cleanly inside your EventSphere workspace.',
+      'Planned feature: keep briefs, quotes and payment milestones together in one workspace.',
   },
 ];
 

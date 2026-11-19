@@ -116,7 +116,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
   // Tabs: overview, reviews, proposal
   const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'proposal'>(initialTab);
 
-  // Proposal form state (pre-filled when opened from Step 3 Preview Inquiry)
+  // Proposal form state
   const [date, setDate] = useState('');
   const [guestCount, setGuestCount] = useState(() =>
     previewContext ? headcountToNumericEstimate(previewContext.headcount) : '150'

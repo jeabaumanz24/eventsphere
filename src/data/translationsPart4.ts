@@ -1427,13 +1427,13 @@ export const translationsPart4: TranslationDict = {
     hi: 'चरण 3 में सक्रिय',
   },
   'how.mock3ChooseVendor': {
-    en: 'Matched Vendor Brief:',
-    it: 'Fornitore Selezionato:',
-    el: 'Επιλεγμένος Προμηθευτής:',
-    zh: '当前对接示例商家：',
-    vi: 'Nhà cung cấp Đang xem:',
-    tl: 'Napiling Vendor Brief:',
-    hi: 'चयनित वेंडर ब्रीफ:',
+    en: 'Matched vendors',
+    it: 'Fornitori abbinati',
+    el: 'Αντιστοιχισμένοι προμηθευτές',
+    zh: '匹配的服务商',
+    vi: 'Nhà cung cấp phù hợp',
+    tl: 'Mga tugmang vendor',
+    hi: 'मैच किए गए वेंडर',
   },
   'how.mock3ServiceTime': {
     en: 'Service Time',
@@ -1452,15 +1452,6 @@ export const translationsPart4: TranslationDict = {
     vi: 'Báo giá Mẫu Tùy chỉnh',
     tl: 'Custom Sample Quote',
     hi: 'कस्टम सैंपल कोट',
-  },
-  'how.mock3PreviewSent': {
-    en: 'Sample inquiry preview updated for {vendor} — adjust Step 1 inputs anytime.',
-    it: 'Anteprima richiesta aggiornata per {vendor} — modifica pure il Passo 1 in qualsiasi momento.',
-    el: 'Η προεπισκόπηση αιτήματος ενημερώθηκε για {vendor}.',
-    zh: '已为您模拟生成发往 {vendor} 的询价预览——您可随时返回修改第 1 步条件。',
-    vi: 'Đã cập nhật bản xem trước yêu cầu cho {vendor}.',
-    tl: 'Na-preview na ang sample inquiry para sa {vendor}.',
-    hi: '{vendor} के लिए सैंपल पूछताछ पूर्वावलोकन तैयार है।',
   },
 
   // --- CULTURAL TRADITIONS & INTERACTIVE SIMULATION REFINEMENTS ---
@@ -1683,15 +1674,15 @@ export const translationsPart4: TranslationDict = {
     hi: 'दक्षिण ऑस्ट्रेलिया का पॉलिनेशियन डांस ग्रुप और ढोल वादक जो उत्सवों में पारंपरिक सिवा नृत्य प्रस्तुत करते हैं।',
   },
 
-  // Step 3 Plan Takeaway & Sample Inquiry Preview Modal
+  // Step 3 Plan Takeaway
   'planTakeaway.heading': {
-    en: 'Take this sample plan with you',
-    it: 'Porta con te questo piano di esempio',
-    el: 'Πάρτε αυτό το ενδεικτικό πλάνο μαζί σας',
-    zh: '保存或发送此示例方案',
-    vi: 'Lưu hoặc gửi kế hoạch mẫu này',
-    tl: 'I-save o ipadala ang sample plan na ito',
-    hi: 'इस सैंपल प्लान को अपने साथ ले जाएं',
+    en: 'Save your plan',
+    it: 'Salva il tuo piano',
+    el: 'Αποθηκεύστε το πλάνο σας',
+    zh: '保存您的方案',
+    vi: 'Lưu kế hoạch của bạn',
+    tl: 'I-save ang iyong plano',
+    hi: 'अपनी योजना सहेजें',
   },
   'planTakeaway.emailBtn': {
     en: 'Email me this plan',

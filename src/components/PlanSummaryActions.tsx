@@ -148,6 +148,10 @@ export const PlanSummaryActions: React.FC<PlanSummaryActionsProps> = ({
         </button>
       </div>
 
+      <p className="text-[10px] text-[#8A5A44] leading-snug print:hidden">
+        {t('planTakeaway.emailPrivacyNote')}
+      </p>
+
       {showEmailPanel && (
         <div className="pt-2 border-t border-[#EBC1B6]/50 space-y-2 print:hidden">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -169,12 +173,9 @@ export const PlanSummaryActions: React.FC<PlanSummaryActionsProps> = ({
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#724319] hover:bg-[#8A5A44] text-white text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319]"
             >
               <span>{t('planTakeaway.openMailApp')}</span>
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" aria-hidden="true" />
             </a>
           </div>
-          <p className="text-[10px] text-[#8A5A44] leading-snug">
-            {t('planTakeaway.emailPrivacyNote')}
-          </p>
         </div>
       )}
 

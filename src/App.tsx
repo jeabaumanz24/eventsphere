@@ -26,7 +26,7 @@ import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { blogPostsData, vendorsData } from './data/mockData';
-import { Vendor, BlogPost, PageId, PlanPreviewContextData } from './types';
+import { Vendor, BlogPost, PageId } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { PAGE_CONFIGS, detectCurrentPage, getPageHref } from './utils/navigation';
 import { trackEvent, trackPageView } from './utils/analytics';
@@ -65,10 +65,6 @@ function EventSphereApp() {
   );
 
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
-  const [previewInquiry, setPreviewInquiry] = useState<{
-    vendor: Vendor;
-    previewContext: PlanPreviewContextData;
-  } | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -245,21 +241,11 @@ function EventSphereApp() {
   }, []);
 
   const handleOpenStandardVendor = useCallback((vendor: Vendor) => {
-    setPreviewInquiry(null);
     setSelectedVendor(vendor);
   }, []);
 
-  const handleOpenPreviewInquiry = useCallback(
-    (vendor: Vendor, previewContext: PlanPreviewContextData) => {
-      setSelectedVendor(null);
-      setPreviewInquiry({ vendor, previewContext });
-    },
-    []
-  );
-
   const handleCloseVendorModal = useCallback(() => {
     setSelectedVendor(null);
-    setPreviewInquiry(null);
   }, []);
 
   const handleExploreMarketplaceFromWishlist = useCallback(() => {
@@ -272,8 +258,6 @@ function EventSphereApp() {
     }
     window.location.assign(getPageHref('vendors'));
   }, [currentPage]);
-
-  const activeModalVendor = previewInquiry?.vendor ?? selectedVendor;
 
   const [isMarketplacePlannerFiltered, setIsMarketplacePlannerFiltered] = useState<boolean>(() => {
     if (typeof window === 'undefined' || currentPage !== 'vendors') return false;
@@ -326,7 +310,7 @@ function EventSphereApp() {
         {currentPage === 'services' && (
           <>
             <ServicesSection isPagePrimary={true} />
-            <HowItWorksSection onOpenPreviewInquiry={handleOpenPreviewInquiry} />
+            <HowItWorksSection />
           </>
         )}
 
@@ -397,12 +381,10 @@ function EventSphereApp() {
 
       {/* Interactive Modals & Toasts */}
       <VendorModal
-        vendor={activeModalVendor}
+        vendor={selectedVendor}
         onClose={handleCloseVendorModal}
-        isWishlisted={activeModalVendor ? wishlistIds.includes(activeModalVendor.id) : false}
+        isWishlisted={selectedVendor ? wishlistIds.includes(selectedVendor.id) : false}
         onToggleWishlist={toggleWishlist}
-        initialTab={previewInquiry ? 'proposal' : 'overview'}
-        previewContext={previewInquiry?.previewContext ?? null}
         onRequestSent={(name) => {
           showToast(t('toast.proposalSent', { name }));
         }}

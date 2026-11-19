@@ -15,6 +15,8 @@ import { howItWorksSteps, vendorsData } from '../data/mockData';
 import { CulturalTradition, EventTypeTag, PlanPreviewContextData, Vendor } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
+import { getPageHref } from '../utils/navigation';
+import { getEventSlug, marketplaceTraditionToSlug } from '../utils/plannerMatching';
 import { PlanSummaryActions } from './PlanSummaryActions';
 import { VendorImage } from './VendorImage';
 
@@ -1376,13 +1378,7 @@ function getScopedVendorDetails(
   };
 }
 
-interface HowItWorksSectionProps {
-  onOpenPreviewInquiry?: (vendor: Vendor, previewData: PlanPreviewContextData) => void;
-}
-
-export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
-  onOpenPreviewInquiry,
-}) => {
+export const HowItWorksSection: React.FC = () => {
   const { t } = useLanguage();
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [selectedEventType, setSelectedEventType] = useState<EventTypeTag>(
@@ -1404,7 +1400,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     DEFAULT_SERVICE_TIME['Diwali & Festival of Lights']
   );
   const [chosenStep3VendorId, setChosenStep3VendorId] = useState<string>('');
-  const [inquiryPreviewVendorId, setInquiryPreviewVendorId] = useState<string | null>(null);
 
   const stepIcons = [Calendar, Sparkles, MessageCircle];
   const activeStep = howItWorksSteps[activeStepIndex];
@@ -1473,7 +1468,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     setHeadcount(nextHeadcount);
     setPreferredTime(nextTime);
     setChosenStep3VendorId('');
-    setInquiryPreviewVendorId(null);
 
     trackEvent('marketplace_filter_used', {
       event_type: nextType,
@@ -1499,7 +1493,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     setSelectedTradition(nextTradition);
     setSelectedElementIds(nextDefaults);
     setChosenStep3VendorId('');
-    setInquiryPreviewVendorId(null);
 
     fireTimelineEvent(
       selectedEventType,
@@ -1529,7 +1522,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     setFusionTraditions(nextFusion);
     setSelectedElementIds(nextDefaults);
     setChosenStep3VendorId('');
-    setInquiryPreviewVendorId(null);
 
     fireTimelineEvent(
       selectedEventType,
@@ -1549,7 +1541,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
       : [...selectedElementIds, chipId];
     setSelectedElementIds(nextIds);
     setChosenStep3VendorId('');
-    setInquiryPreviewVendorId(null);
     fireTimelineEvent(
       selectedEventType,
       selectedTradition,
@@ -1564,7 +1555,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
 
   const handleHeadcountChange = (nextHeadcount: HeadcountOption) => {
     setHeadcount(nextHeadcount);
-    setInquiryPreviewVendorId(null);
     fireTimelineEvent(
       selectedEventType,
       selectedTradition,
@@ -1579,7 +1569,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
 
   const handleLocationChange = (nextLocation: LocationOption) => {
     setLocation(nextLocation);
-    setInquiryPreviewVendorId(null);
     fireTimelineEvent(
       selectedEventType,
       selectedTradition,
@@ -1594,7 +1583,6 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
 
   const handleBudgetChange = (nextBudget: BudgetOption) => {
     setBudget(nextBudget);
-    setInquiryPreviewVendorId(null);
     fireTimelineEvent(
       selectedEventType,
       selectedTradition,
@@ -1836,6 +1824,40 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     return BUDGET_OPTIONS.find((b) => b.value === budget)?.label || t('how.mock1BudgetFlexible');
   }, [budget, t]);
 
+  const findVendorsHref = useMemo(() => {
+    const params = new URLSearchParams();
+    const eventSlug = getEventSlug(selectedEventType);
+    if (eventSlug) {
+      params.set('event', eventSlug);
+    }
+
+    const singleTradition =
+      selectedTradition !== 'Other or Fusion'
+        ? selectedTradition
+        : fusionTraditions.length === 1
+          ? fusionTraditions[0]
+          : null;
+    if (singleTradition) {
+      const traditionSlug = marketplaceTraditionToSlug(singleTradition);
+      if (traditionSlug) {
+        params.set('tradition', traditionSlug);
+      }
+    }
+
+    const selectedBudgetOption = BUDGET_OPTIONS.find((b) => b.value === budget);
+    if (selectedBudgetOption) {
+      params.set('budget', String(Math.round(selectedBudgetOption.maxAud)));
+    }
+
+    const selectedHeadcountOption = HEADCOUNT_OPTIONS.find((h) => h.value === headcount);
+    if (selectedHeadcountOption) {
+      params.set('guests', String(selectedHeadcountOption.midpoint));
+    }
+
+    const query = params.toString();
+    return getPageHref('vendors', query ? `?${query}` : '');
+  }, [selectedEventType, selectedTradition, fusionTraditions, budget, headcount]);
+
   const currentPlanPreviewData: PlanPreviewContextData | null = useMemo(() => {
     if (!activeStep3Item) return null;
     return {
@@ -1965,16 +1987,18 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                 </div>
               </div>
 
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleSelectStep((activeStepIndex + 1) % howItWorksSteps.length)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full transition-colors cursor-pointer"
-                >
-                  <span>{activeStepIndex === 2 ? t('how.backToStep1') : t('how.nextStep')}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              {activeStepIndex < 2 && (
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectStep(activeStepIndex + 1)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
+                  >
+                    <span>{t('how.nextStep')}</span>
+                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Interactive Step Preview Mockup */}
@@ -2372,16 +2396,13 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                   </div>
                 )}
 
-                {/* STEP 3: DYNAMIC VENDOR BRIEF, CUSTOM QUOTE & BOOKING BAR */}
+                {/* STEP 3: EXAMPLE VENDOR REPLY, SAMPLE QUOTE & FIND VENDORS CTA */}
                 {activeStepIndex === 2 && activeStep3Item && (
                   <div className="space-y-3.5">
                     <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EBC1B6]/50">
-                      <span className="text-xs font-semibold text-[#724319]">
+                      <h4 className="text-xs font-semibold text-[#724319]">
                         {t('how.mock3Header')}
-                      </span>
-                      <span className="text-[11px] text-[#8A5A44]">
-                        {t('how.mock3Encrypted')}
-                      </span>
+                      </h4>
                     </div>
 
                     {isClosestFallback && (
@@ -2411,9 +2432,8 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                               aria-pressed={active}
                               onClick={() => {
                                 setChosenStep3VendorId(item.vendor.id);
-                                setInquiryPreviewVendorId(null);
                               }}
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
                                 active
                                   ? 'bg-[#724319] text-white border-[#724319]'
                                   : 'bg-white text-[#724319] border-[#EBC1B6] hover:bg-[#F2CCC3]/40'
@@ -2430,7 +2450,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                           htmlFor="how-service-time-select"
                           className="text-[10px] font-semibold uppercase text-[#8A5A44] flex items-center gap-1"
                         >
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-3 h-3" aria-hidden="true" />
                           <span className="sr-only">{t('how.mock3ServiceTime')}</span>
                         </label>
                         <select
@@ -2472,7 +2492,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                         <div className="bg-[#FFF8F6] p-2.5 rounded-lg border border-[#EBC1B6]/50 space-y-1.5 text-[11px] text-[#724319]">
                           <div className="flex items-center justify-between gap-2 font-semibold">
                             <span className="inline-flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
                               <span>{t('how.mock3CustomQuoteLabel')}</span>
                             </span>
                             <span className="font-mono text-[#724319]">
@@ -2500,7 +2520,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                             <ul className="space-y-0.5 text-[10px] text-[#724319]/85">
                               {activeStep3Item.quoteLineItems.map((line) => (
                                 <li key={line} className="flex items-center gap-1.5">
-                                  <Check className="w-3 h-3 text-[#8A5A44] shrink-0" />
+                                  <Check className="w-3 h-3 text-[#8A5A44] shrink-0" aria-hidden="true" />
                                   <span>{line}</span>
                                 </li>
                               ))}
@@ -2509,51 +2529,42 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
                         </div>
                       </div>
 
-                      {/* Softened Booking Action Bar */}
-                      <div className="p-3.5 bg-[#724319] text-white rounded-xl flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <div className="text-xs font-semibold">{t('how.mock3Booking')}</div>
-                          <div className="text-[10px] text-white/80">{t('how.mock3Escrow')}</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            fireTimelineEvent(
-                              selectedEventType,
-                              selectedTradition,
-                              fusionTraditions,
-                              headcount,
-                              location,
-                              budget,
-                              selectedElementIds,
-                              2
-                            );
-                            if (onOpenPreviewInquiry && currentPlanPreviewData) {
-                              onOpenPreviewInquiry(activeStep3Item.vendor, currentPlanPreviewData);
-                            } else {
-                              setInquiryPreviewVendorId(activeStep3Item.vendor.id);
-                            }
-                          }}
-                          className="px-4 py-1.5 bg-white hover:bg-[#FFF8F6] text-[#724319] text-xs font-bold rounded-full transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                        >
-                          {t('how.mock3Approve')}
-                        </button>
+                      {/* Plain non-interactive informational milestone note */}
+                      <div className="p-3 bg-white rounded-xl border border-[#EBC1B6]/60 text-[11px] text-[#724319]/85 flex items-start gap-2">
+                        <CheckCircle2
+                          className="w-3.5 h-3.5 text-[#8A5A44] shrink-0 mt-0.5"
+                          aria-hidden="true"
+                        />
+                        <p>{t('how.mock3Escrow')}</p>
                       </div>
 
                       {currentPlanPreviewData && (
                         <PlanSummaryActions plan={currentPlanPreviewData} variant="step3" />
                       )}
 
-                      {inquiryPreviewVendorId === activeStep3Item.vendor.id && (
-                        <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-[11px] flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>
-                            {t('how.mock3PreviewSent', {
-                              vendor: activeStep3Item.vendor.businessName,
-                            })}
-                          </span>
-                        </div>
-                      )}
+                      {/* Step 3 Primary CTA + Secondary Back Button */}
+                      <div className="pt-1 flex flex-wrap items-center gap-3">
+                        <a
+                          href={findVendorsHref}
+                          onClick={() => {
+                            trackEvent('marketplace_filter_used', {
+                              filter_type: 'demo_match',
+                              event_type: getEventSlug(selectedEventType),
+                            });
+                          }}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full transition-colors shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
+                        >
+                          <span>{t('how.mock3FindVendors')}</span>
+                          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectStep(0)}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#724319] bg-white hover:bg-[#F2CCC3]/40 border border-[#EBC1B6] rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
+                        >
+                          <span>{t('how.backToStep1')}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
