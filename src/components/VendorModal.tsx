@@ -370,17 +370,28 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
     return combinedReviews.filter((r) => r.rating === selectedStarFilter);
   }, [combinedReviews, selectedStarFilter]);
 
-  // Accurate total count & average rating anchored to vendor baseline
-  const totalReviewsCount = vendor.reviewCount + addedReviews.length;
+  // Accurate total count & average rating anchored to vendor baseline (omitted for unrated listings)
+  const hasVendorRating =
+    typeof vendor.rating === 'number' && typeof vendor.reviewCount === 'number';
+  const baseReviewCount = vendor.reviewCount ?? 0;
+  const totalReviewsCount = baseReviewCount + addedReviews.length;
   const averageRating = useMemo(() => {
-    if (addedReviews.length === 0) {
+    if (!hasVendorRating && addedReviews.length === 0) {
+      return null;
+    }
+    if (addedReviews.length === 0 && typeof vendor.rating === 'number') {
       return Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating.toString();
     }
-    const baseTotal = vendor.rating * vendor.reviewCount;
+    const baseTotal = (vendor.rating ?? 0) * baseReviewCount;
     const addedTotal = addedReviews.reduce((acc, r) => acc + r.rating, 0);
-    const avg = (baseTotal + addedTotal) / totalReviewsCount;
+    const avg = totalReviewsCount > 0 ? (baseTotal + addedTotal) / totalReviewsCount : 0;
     return avg.toFixed(1);
-  }, [vendor.rating, vendor.reviewCount, addedReviews, totalReviewsCount]);
+  }, [hasVendorRating, vendor.rating, baseReviewCount, addedReviews, totalReviewsCount]);
+
+  const vendorDescKey = `vendor.${vendor.id}.desc`;
+  const translatedVendorDesc = t(vendorDescKey);
+  const displayVendorDesc =
+    translatedVendorDesc === vendorDescKey ? vendor.description : translatedVendorDesc;
 
   return (
     <div
@@ -454,17 +465,22 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
             </h2>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90 mt-1">
               <span>{t('marketplace.lead')} {vendor.name}</span>
-              <span aria-hidden="true">·</span>
-              <button
-                onClick={() => setActiveTab('reviews')}
-                className="flex items-center gap-1 hover:underline cursor-pointer group"
-              >
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" />
-                <span className="font-semibold">{averageRating}</span>
-                <span className="text-[11px] text-white/80 font-normal">
-                  {t('vendorModal.verifiedReviewsCount', { count: totalReviewsCount })}
-                </span>
-              </button>
+              {averageRating !== null && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('reviews')}
+                    className="flex items-center gap-1 hover:underline cursor-pointer group"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" />
+                    <span className="font-semibold">{averageRating}</span>
+                    <span className="text-[11px] text-white/80 font-normal">
+                      {t('vendorModal.verifiedReviewsCount', { count: totalReviewsCount })}
+                    </span>
+                  </button>
+                </>
+              )}
               <span aria-hidden="true">·</span>
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 inline text-[#EBC1B6]" />
@@ -488,26 +504,28 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
             >
               {t('vendorModal.overviewTab')}
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('reviews')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
-                activeTab === 'reviews'
-                  ? 'bg-[#724319] text-white shadow-2xs'
-                  : 'text-[#724319]/75 hover:bg-[#F2CCC3]/40'
-              }`}
-            >
-              <span>{t('vendorModal.reviewsTab')}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+            {(hasVendorRating || combinedReviews.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('reviews')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] ${
                   activeTab === 'reviews'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#F2CCC3] text-[#724319]'
+                    ? 'bg-[#724319] text-white shadow-2xs'
+                    : 'text-[#724319]/75 hover:bg-[#F2CCC3]/40'
                 }`}
               >
-                {totalReviewsCount}
-              </span>
-            </button>
+                <span>{t('vendorModal.reviewsTab')}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'reviews'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-[#F2CCC3] text-[#724319]'
+                  }`}
+                >
+                  {totalReviewsCount}
+                </span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveTab('proposal')}
@@ -581,7 +599,7 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
                       {t('vendorModal.artisanOverview')}
                     </h4>
                     <p className="text-xs sm:text-sm text-[#724319]/85 leading-relaxed">
-                      {t(`vendor.${vendor.id}.desc`)}
+                      {displayVendorDesc}
                     </p>
                   </div>
 
@@ -632,27 +650,29 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
                   </div>
 
                   {/* Highlights of Verified Reviews Banner */}
-                  <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-[#EBC1B6] flex items-center justify-center text-amber-500 font-bold shrink-0">
-                        <Star className="w-5 h-5 fill-amber-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-[#724319]">
-                          {t('vendorModal.ratedBy', { rating: averageRating, count: totalReviewsCount })}
+                  {averageRating !== null && (
+                    <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white border border-[#EBC1B6] flex items-center justify-center text-amber-500 font-bold shrink-0">
+                          <Star className="w-5 h-5 fill-amber-400" />
                         </div>
-                        <div className="text-[11px] text-[#8A5A44]">
-                          {t('vendorModal.verifiedCeremonies')}
+                        <div>
+                          <div className="text-xs font-semibold text-[#724319]">
+                            {t('vendorModal.ratedBy', { rating: averageRating, count: totalReviewsCount })}
+                          </div>
+                          <div className="text-[11px] text-[#8A5A44]">
+                            {t('vendorModal.verifiedCeremonies')}
+                          </div>
                         </div>
                       </div>
+                      <button
+                        onClick={() => setActiveTab('reviews')}
+                        className="px-3.5 py-1.5 bg-white border border-[#EBC1B6] hover:bg-[#F2CCC3]/40 text-[#724319] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        {t('vendorModal.readReviews')}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setActiveTab('reviews')}
-                      className="px-3.5 py-1.5 bg-white border border-[#EBC1B6] hover:bg-[#F2CCC3]/40 text-[#724319] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      {t('vendorModal.readReviews')}
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -660,64 +680,73 @@ const VendorModalContent: React.FC<VendorModalContentProps> = ({
               {activeTab === 'reviews' && (
                 <div className="space-y-6">
                   {/* Reviews Summary Header Card */}
-                  <div className="p-5 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/80 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                    {/* Overall Score */}
-                    <div className="md:col-span-5 text-center md:text-left md:border-r md:border-[#EBC1B6]/60 md:pr-4">
-                      <div className="flex items-baseline justify-center md:justify-start gap-2">
-                        <span className="text-4xl sm:text-5xl font-serif font-bold text-[#724319] tabular-nums">
-                          {averageRating}
-                        </span>
-                        <span className="text-xs text-[#8A5A44] font-medium">/ 5.0</span>
+                  {averageRating !== null ? (
+                    <div className="p-5 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/80 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                      {/* Overall Score */}
+                      <div className="md:col-span-5 text-center md:text-left md:border-r md:border-[#EBC1B6]/60 md:pr-4">
+                        <div className="flex items-baseline justify-center md:justify-start gap-2">
+                          <span className="text-4xl sm:text-5xl font-serif font-bold text-[#724319] tabular-nums">
+                            {averageRating}
+                          </span>
+                          <span className="text-xs text-[#8A5A44] font-medium">/ 5.0</span>
+                        </div>
+                        <div className="flex items-center justify-center md:justify-start gap-1 my-1.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                        <div className="text-xs font-semibold text-[#724319] flex items-center justify-center md:justify-start gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#8A5A44]" />
+                          <span>{t('vendorModal.verifiedEventReviews')}</span>
+                        </div>
+                        <p className="text-[11px] text-[#724319]/70 mt-0.5">
+                          {t('vendorModal.basedOnWeddings', { count: totalReviewsCount })}
+                        </p>
                       </div>
-                      <div className="flex items-center justify-center md:justify-start gap-1 my-1.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        ))}
+
+                      {/* Criteria Sub-Scores */}
+                      <div className="md:col-span-7 grid grid-cols-2 gap-2.5 text-xs">
+                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
+                          <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.culturalRespect')}</span>
+                          <div className="text-sm font-bold text-[#724319] tabular-nums">5.0 ★</div>
+                          <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
+                            <div className="bg-[#724319] h-full rounded-full w-full" />
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
+                          <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.artisticCraft')}</span>
+                          <div className="text-sm font-bold text-[#724319] tabular-nums">4.98 ★</div>
+                          <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
+                            <div className="bg-[#724319] h-full rounded-full w-[99%]" />
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
+                          <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.punctuality')}</span>
+                          <div className="text-sm font-bold text-[#724319] tabular-nums">4.95 ★</div>
+                          <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
+                            <div className="bg-[#724319] h-full rounded-full w-[98%]" />
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
+                          <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.valueBudget')}</span>
+                          <div className="text-sm font-bold text-[#724319] tabular-nums">4.92 ★</div>
+                          <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
+                            <div className="bg-[#724319] h-full rounded-full w-[97%]" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs font-semibold text-[#724319] flex items-center justify-center md:justify-start gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#8A5A44]" />
-                        <span>{t('vendorModal.verifiedEventReviews')}</span>
-                      </div>
-                      <p className="text-[11px] text-[#724319]/70 mt-0.5">
-                        {t('vendorModal.basedOnWeddings', { count: totalReviewsCount })}
+                    </div>
+                  ) : (
+                    <div className="p-5 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/80 text-xs text-[#724319]/80">
+                      <p className="font-semibold text-[#724319] mb-1">No published reviews yet</p>
+                      <p>
+                        This vendor serves celebrations across South Australia and does not have published reviews on EventSphere yet.
                       </p>
                     </div>
-
-                    {/* Criteria Sub-Scores */}
-                    <div className="md:col-span-7 grid grid-cols-2 gap-2.5 text-xs">
-                      <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
-                        <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.culturalRespect')}</span>
-                        <div className="text-sm font-bold text-[#724319] tabular-nums">5.0 ★</div>
-                        <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
-                          <div className="bg-[#724319] h-full rounded-full w-full" />
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
-                        <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.artisticCraft')}</span>
-                        <div className="text-sm font-bold text-[#724319] tabular-nums">4.98 ★</div>
-                        <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
-                          <div className="bg-[#724319] h-full rounded-full w-[99%]" />
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
-                        <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.punctuality')}</span>
-                        <div className="text-sm font-bold text-[#724319] tabular-nums">4.95 ★</div>
-                        <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
-                          <div className="bg-[#724319] h-full rounded-full w-[98%]" />
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
-                        <span className="text-[10px] text-[#8A5A44] uppercase font-semibold">{t('vendorModal.valueBudget')}</span>
-                        <div className="text-sm font-bold text-[#724319] tabular-nums">4.92 ★</div>
-                        <div className="w-full bg-[#EBC1B6]/40 h-1 rounded-full mt-1">
-                          <div className="bg-[#724319] h-full rounded-full w-[97%]" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Filter and Leave Review Buttons */}
                   <div className="flex flex-wrap items-center justify-between gap-3">

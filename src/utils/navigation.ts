@@ -8,6 +8,9 @@ export interface PageMetaConfig {
   description: string;
 }
 
+export const SITE_ORIGIN = 'https://jeabaumanz24.github.io';
+export const SITE_BASE_PATH = '/eventsphere/';
+
 export const PAGE_CONFIGS: Record<PageId, PageMetaConfig> = {
   home: {
     id: 'home',
@@ -81,6 +84,22 @@ export const PAGE_CONFIGS: Record<PageId, PageMetaConfig> = {
     description:
       'Apply to list your event business on EventSphere. Adelaide caterers, photographers, planners, venues and cultural specialists welcome.',
   },
+  checklists: {
+    id: 'checklists',
+    slug: 'checklists',
+    navKey: 'nav.checklists',
+    title: 'Celebration Vendor Checklists | EventSphere',
+    description:
+      'Browse vendor checklists for 11 celebrations in Adelaide. See which suppliers to book first, typical lead times, and direct marketplace links.',
+  },
+  'checklist-detail': {
+    id: 'checklist-detail',
+    slug: 'checklists',
+    navKey: 'nav.checklists',
+    title: 'Celebration Vendor Checklists | EventSphere',
+    description:
+      'Browse vendor checklists for 11 celebrations in Adelaide. See which suppliers to book first, typical lead times, and direct marketplace links.',
+  },
 };
 
 export function getBaseUrl(): string {
@@ -93,6 +112,30 @@ export function getPageHref(page: PageId, suffix = ''): string {
   const slug = PAGE_CONFIGS[page].slug;
   const pagePath = slug ? `${base}${slug}/` : base;
   return `${pagePath}${suffix}`;
+}
+
+export function getChecklistHref(eventSlug: string): string {
+  const base = getBaseUrl();
+  return `${base}checklists/${eventSlug}/`;
+}
+
+export function detectCurrentChecklistSlug(): string | null {
+  if (typeof document !== 'undefined') {
+    const declaredSlug = document.documentElement.dataset.checklistSlug;
+    if (declaredSlug && declaredSlug.trim()) {
+      return declaredSlug.trim().toLowerCase();
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    const pathname = window.location.pathname.toLowerCase();
+    const match = pathname.match(/\/checklists\/([a-z0-9-]+)(?:\/index\.html|\/|\.html)?$/);
+    if (match && match[1] && match[1] !== 'index') {
+      return match[1];
+    }
+  }
+
+  return null;
 }
 
 export function detectCurrentPage(): PageId {
@@ -110,6 +153,18 @@ export function detectCurrentPage(): PageId {
     }
 
     const pathname = window.location.pathname.toLowerCase();
+    if (/\/checklists\/[a-z0-9-]+(?:\/index\.html|\/|\.html)?$/.test(pathname)) {
+      const slug = detectCurrentChecklistSlug();
+      if (slug) return 'checklist-detail';
+    }
+    if (
+      pathname.includes('/checklists/') ||
+      pathname.endsWith('/checklists') ||
+      pathname.endsWith('/checklists.html')
+    ) {
+      return 'checklists';
+    }
+
     const candidates: PageId[] = [
       'about',
       'services',

@@ -175,15 +175,17 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                         <h4 className="text-base font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] transition-colors leading-snug">
                           {vendor.businessName}
                         </h4>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0 tabular-nums">
-                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          <span>
-                            {Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating}
-                          </span>
-                          <span className="text-[11px] text-[#724319]/50 font-normal">
-                            ({vendor.reviewCount})
-                          </span>
-                        </div>
+                        {typeof vendor.rating === 'number' && typeof vendor.reviewCount === 'number' && (
+                          <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0 tabular-nums">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span>
+                              {Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating}
+                            </span>
+                            <span className="text-[11px] text-[#724319]/50 font-normal">
+                              ({vendor.reviewCount})
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#8A5A44]">
@@ -198,7 +200,11 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                       </div>
 
                       <p className="text-xs text-[#724319]/80 line-clamp-2 leading-relaxed">
-                        {t(`vendor.${vendor.id}.desc`)}
+                        {(() => {
+                          const key = `vendor.${vendor.id}.desc`;
+                          const translated = t(key);
+                          return translated === key ? vendor.description : translated;
+                        })()}
                       </p>
 
                       <div className="flex flex-wrap gap-1.5 pt-1">

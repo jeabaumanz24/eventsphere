@@ -1,10 +1,24 @@
+import {
+  getEssentialCategoriesForEvent,
+  getOptionalCategoriesForEvent,
+} from '../data/eventEssentialCategories';
 import { PLANNER_EVENT_CONFIGS, PlannerCulturalTradition } from '../data/plannerConfigs';
 import {
+  ALL_SERVICE_ZONES,
+  getZoneByName,
+  METRO_SERVICE_ZONES,
   parseRegionParam,
   serviceZoneToSlug,
   vendorServesZone,
 } from '../data/serviceZones';
-import { CulturalTradition, EventTypeTag, ServiceZone, Vendor, VendorCategory } from '../types';
+import {
+  CulturalTradition,
+  EventTypeTag,
+  MatchTier,
+  ServiceZone,
+  Vendor,
+  VendorCategory,
+} from '../types';
 
 export const EVENT_SLUG_MAP: Record<EventTypeTag, string> = {
   Weddings: 'weddings',
@@ -28,8 +42,7 @@ const SLUG_TO_EVENT_MAP: Record<string, EventTypeTag> = Object.entries(EVENT_SLU
   {} as Record<string, EventTypeTag>
 );
 
-export const MARKETPLACE_TRADITION_FILTERS: Array<'All Traditions' | CulturalTradition> = [
-  'All Traditions',
+export const ALL_CULTURAL_TRADITIONS: CulturalTradition[] = [
   'Filipino',
   'Greek',
   'Indian',
@@ -39,6 +52,11 @@ export const MARKETPLACE_TRADITION_FILTERS: Array<'All Traditions' | CulturalTra
   'Pacific Islander',
   'Vietnamese',
   'Korean',
+];
+
+export const MARKETPLACE_TRADITION_FILTERS: Array<'All Traditions' | CulturalTradition> = [
+  'All Traditions',
+  ...ALL_CULTURAL_TRADITIONS,
 ];
 
 export const TRADITION_SLUG_MAP: Record<CulturalTradition, string> = {
@@ -113,6 +131,20 @@ const SLUG_TO_CATEGORY_MAP: Record<string, VendorCategory> = Object.entries(
   return acc;
 }, {} as Record<string, VendorCategory>);
 
+export const MATCH_TIER_LABELS: Record<MatchTier, string> = {
+  exact: 'Exact match',
+  area: 'Serves your area',
+  neutral: 'Experienced across traditions',
+  closest: 'Closest match',
+};
+
+const TIER_SEVERITY: Record<MatchTier, number> = {
+  exact: 0,
+  area: 1,
+  neutral: 2,
+  closest: 3,
+};
+
 export function getEventSlug(eventType: 'All Events' | EventTypeTag): string {
   if (eventType === 'All Events') return '';
   return EVENT_SLUG_MAP[eventType];
@@ -185,12 +217,35 @@ export function parsePlannerTraditionParam(raw: string | null): PlannerCulturalT
   return marketplaceTraditionToPlanner(mpTradition);
 }
 
+const CATEGORY_ALIAS_MAP: Record<string, VendorCategory> = {
+  photographer: 'Photographers',
+  caterer: 'Caterers',
+  venue: 'Venues & Marquees',
+  venues: 'Venues & Marquees',
+  marquee: 'Venues & Marquees',
+  celebrant: 'Cultural Specialists',
+  'cultural-specialist': 'Cultural Specialists',
+  florist: 'Florists',
+  decor: 'Decor & Styling',
+  styling: 'Decor & Styling',
+  makeup: 'Makeup Artists',
+  'makeup-artist': 'Makeup Artists',
+  dj: 'Entertainment & DJs',
+  entertainment: 'Entertainment & DJs',
+  planner: 'Planners',
+  proposal: 'Proposal & Elopement',
+  'proposal-specialist': 'Proposal & Elopement',
+};
+
 export function parseCategoryParam(raw: string | null): 'All' | VendorCategory {
   if (!raw) return 'All';
   const normalized = raw.trim().toLowerCase();
   if (!normalized || normalized === 'all') return 'All';
   if (normalized in SLUG_TO_CATEGORY_MAP) {
     return SLUG_TO_CATEGORY_MAP[normalized];
+  }
+  if (normalized in CATEGORY_ALIAS_MAP) {
+    return CATEGORY_ALIAS_MAP[normalized];
   }
   const byExactLabel = (Object.keys(VENDOR_CATEGORY_SLUGS) as VendorCategory[]).find(
     (cat) => cat.toLowerCase() === normalized
@@ -216,16 +271,28 @@ export interface PlanQueryInput {
   traditionSlug: string;
   budget: number;
   guests: number;
+  region?: 'All Regions' | ServiceZone;
 }
 
 export function buildPlanQueryString(input: PlanQueryInput): string {
   const params = new URLSearchParams();
   params.set('event', getEventSlug(input.event));
-  params.set('tradition', input.traditionSlug);
+  if (input.traditionSlug && input.traditionSlug.trim() !== '') {
+    params.set('tradition', input.traditionSlug);
+  }
+  if (input.region && input.region !== 'All Regions') {
+    const regionSlug = serviceZoneToSlug(input.region);
+    if (regionSlug) {
+      params.set('region', regionSlug);
+    }
+  }
   params.set('budget', String(Math.round(input.budget)));
   params.set('guests', String(Math.round(input.guests)));
+  params.set('mode', 'plan');
   return `?${params.toString()}`;
 }
+
+export type MarketplaceMatchMode = 'plan' | 'strict';
 
 export interface MarketplaceUrlState {
   eventType: 'All Events' | EventTypeTag;
@@ -235,6 +302,8 @@ export interface MarketplaceUrlState {
   guests: number | null;
   category: 'All' | VendorCategory;
   searchQuery: string;
+  matchMode: MarketplaceMatchMode;
+  isPlanEntry: boolean;
 }
 
 export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
@@ -248,6 +317,16 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
     const category = parseCategoryParam(params.get('category'));
     const rawQuery = params.get('q') ?? '';
     const searchQuery = rawQuery.trim().slice(0, 120);
+    const rawMode = (params.get('mode') ?? '').trim().toLowerCase();
+
+    const hasPlanParams =
+      rawMode === 'plan' ||
+      eventType !== 'All Events' ||
+      budget !== null ||
+      guests !== null;
+
+    const matchMode: MarketplaceMatchMode =
+      rawMode === 'strict' ? 'strict' : hasPlanParams ? 'plan' : 'strict';
 
     return {
       eventType,
@@ -257,6 +336,8 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
       guests,
       category,
       searchQuery,
+      matchMode,
+      isPlanEntry: rawMode === 'plan' || (budget !== null && guests !== null),
     };
   } catch {
     return {
@@ -267,11 +348,17 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
       guests: null,
       category: 'All',
       searchQuery: '',
+      matchMode: 'strict',
+      isPlanEntry: false,
     };
   }
 }
 
-export function buildMarketplaceUrlQuery(state: MarketplaceUrlState): string {
+export function buildMarketplaceUrlQuery(
+  state: Omit<MarketplaceUrlState, 'isPlanEntry' | 'matchMode'> & {
+    matchMode?: MarketplaceMatchMode;
+  }
+): string {
   const params = new URLSearchParams();
 
   if (state.eventType !== 'All Events') {
@@ -304,6 +391,19 @@ export function buildMarketplaceUrlQuery(state: MarketplaceUrlState): string {
   const trimmedQ = state.searchQuery.trim();
   if (trimmedQ) {
     params.set('q', trimmedQ);
+  }
+
+  const hasFilters =
+    state.eventType !== 'All Events' ||
+    state.tradition !== 'All Traditions' ||
+    state.region !== 'All Regions' ||
+    state.budget !== null ||
+    state.guests !== null;
+
+  if (hasFilters && state.matchMode === 'plan') {
+    params.set('mode', 'plan');
+  } else if (hasFilters && state.matchMode === 'strict') {
+    params.set('mode', 'strict');
   }
 
   const str = params.toString();
@@ -356,20 +456,92 @@ export function getCategoryAllocationPct(
   }
 }
 
+export function isStateWideVendor(vendor: Vendor): boolean {
+  return vendor.serviceAreas.length >= ALL_SERVICE_ZONES.length;
+}
+
+export function isMetroOrStateWideVendor(vendor: Vendor): boolean {
+  if (isStateWideVendor(vendor)) return true;
+  return METRO_SERVICE_ZONES.every((zone) => vendor.serviceAreas.includes(zone));
+}
+
+export function isTraditionNeutralVendor(vendor: Vendor): boolean {
+  return (
+    Boolean(vendor.traditionNeutral) ||
+    vendor.traditions.length === 0 ||
+    vendor.traditions.length >= ALL_CULTURAL_TRADITIONS.length
+  );
+}
+
+export interface TierVendorCounts {
+  exact: number;
+  area: number;
+  neutral: number;
+  closest: number;
+}
+
+export interface MatchedVendorItem {
+  vendor: Vendor;
+  matchTier: MatchTier;
+  matchLabel: string;
+  isEssential: boolean;
+  matchedTagCount: number;
+  withinBudget: boolean;
+  estimatedCost: number;
+  categoryBudgetLimit: number;
+  matchedZone: ServiceZone | null;
+}
+
+export interface CategoryTierEvaluation {
+  category: VendorCategory;
+  tierCounts: TierVendorCounts;
+  winningTier: MatchTier | null;
+  candidates: MatchedVendorItem[];
+}
+
+export interface EssentialCategoryGroup {
+  category: VendorCategory;
+  tier: MatchTier | null;
+  tierLabel: string | null;
+  vendors: MatchedVendorItem[];
+  emptyMessage: string | null;
+  tierCounts: TierVendorCounts;
+}
+
+export interface RelaxedCategoryNote {
+  category: VendorCategory;
+  tier: MatchTier;
+  label: string;
+}
+
 export interface MatchVendorsInput {
   vendors: Vendor[];
   eventType: 'All Events' | EventTypeTag;
   tradition: 'All Traditions' | CulturalTradition;
+  traditions?: CulturalTradition[];
   region?: 'All Regions' | ServiceZone;
   budget: number | null;
   guests: number | null;
   category?: 'All' | VendorCategory;
   searchQuery?: string;
   translatedDescriptions?: Record<string, string>;
+  matchMode?: MarketplaceMatchMode;
+  maxPerEssentialCategory?: number;
+  preferredKeywords?: string[];
 }
 
 export interface MatchVendorsResult {
   vendors: Vendor[];
+  matchedItems: MatchedVendorItem[];
+  essentialGroups: EssentialCategoryGroup[];
+  essentialVendors: MatchedVendorItem[];
+  addOnVendors: MatchedVendorItem[];
+  essentialServiceCount: number;
+  relaxedEssentialNotes: RelaxedCategoryNote[];
+  categoryCounts: Record<string, number>;
+  matchTierMap: Record<string, MatchTier>;
+  matchLabelMap: Record<string, string>;
+  overallMatchTier: MatchTier;
   withinBudgetMap: Record<string, boolean>;
   withinBudgetCount: number;
   estimatedCostMap: Record<string, number>;
@@ -378,23 +550,52 @@ export interface MatchVendorsResult {
   relaxedTradition: boolean;
   relaxedRegion: boolean;
   relaxationMessage: string | null;
+  isPlanModeActive: boolean;
 }
 
-export function matchVendorsToPlan({
-  vendors,
-  eventType,
-  tradition,
-  region = 'All Regions',
-  budget,
-  guests,
-  category = 'All',
-  searchQuery = '',
-  translatedDescriptions,
-}: MatchVendorsInput): MatchVendorsResult {
-  const q = searchQuery.toLowerCase().trim();
+function getZoneProximityScore(
+  vendor: Vendor,
+  region: 'All Regions' | ServiceZone
+): { priority: number; matchedZone: ServiceZone | null } {
+  if (region === 'All Regions') {
+    return {
+      priority: isStateWideVendor(vendor) ? 2 : 1,
+      matchedZone: vendor.serviceAreas[0] ?? null,
+    };
+  }
 
-  const matchesSearch = (vendor: Vendor): boolean => {
-    if (!q) return true;
+  if (vendorServesZone(vendor, region)) {
+    return { priority: 30, matchedZone: region };
+  }
+
+  if (isStateWideVendor(vendor)) {
+    return { priority: 22, matchedZone: region };
+  }
+
+  if (isMetroOrStateWideVendor(vendor)) {
+    return { priority: 18, matchedZone: vendor.serviceAreas[0] ?? null };
+  }
+
+  const nearbyZones = getZoneByName(region)?.nearbyZones ?? [];
+  const nearestIdx = nearbyZones.findIndex((nz) => vendor.serviceAreas.includes(nz));
+  if (nearestIdx >= 0) {
+    return {
+      priority: Math.max(2, 14 - nearestIdx * 2),
+      matchedZone: nearbyZones[nearestIdx],
+    };
+  }
+
+  return { priority: 0, matchedZone: vendor.serviceAreas[0] ?? null };
+}
+
+function buildSearchMatcher(
+  searchQuery: string,
+  translatedDescriptions?: Record<string, string>
+): (vendor: Vendor) => boolean {
+  const q = searchQuery.toLowerCase().trim();
+  if (!q) return () => true;
+
+  return (vendor: Vendor): boolean => {
     const translatedDesc = (translatedDescriptions?.[vendor.id] ?? '').toLowerCase();
     return (
       vendor.name.toLowerCase().includes(q) ||
@@ -408,112 +609,536 @@ export function matchVendorsToPlan({
       vendor.eventTypes.some((et) => et.toLowerCase().includes(q))
     );
   };
+}
 
-  const matchesCategory = (vendor: Vendor): boolean =>
-    category === 'All' || vendor.category === category;
+function resolveTargetTraditions(
+  tradition: 'All Traditions' | CulturalTradition,
+  traditions?: CulturalTradition[]
+): CulturalTradition[] {
+  if (traditions !== undefined) {
+    return traditions;
+  }
+  return tradition === 'All Traditions' ? [] : [tradition];
+}
 
-  const matchesEvent = (vendor: Vendor): boolean =>
-    eventType === 'All Events' || vendor.eventTypes.includes(eventType);
+function computeBudgetFit(
+  vendor: Vendor,
+  eventType: 'All Events' | EventTypeTag,
+  budget: number | null,
+  guests: number | null
+): { withinBudget: boolean; estimatedCost: number; categoryBudgetLimit: number } {
+  const effectiveGuests = guests !== null && guests > 0 ? guests : 60;
+  const estimatedCost = estimateVendorCostForPlan(vendor.startingPrice, effectiveGuests);
+  if (budget === null || budget <= 0) {
+    return { withinBudget: false, estimatedCost, categoryBudgetLimit: 0 };
+  }
+  const sharePct = getCategoryAllocationPct(eventType, vendor.category);
+  const categoryBudgetLimit = Math.round(budget * sharePct);
+  const withinBudget = estimatedCost > 0 && estimatedCost <= categoryBudgetLimit;
+  return { withinBudget, estimatedCost, categoryBudgetLimit };
+}
 
-  const matchesTradition = (vendor: Vendor): boolean =>
-    tradition === 'All Traditions' || vendor.traditions.includes(tradition);
+function countMatchingTags(
+  vendor: Vendor,
+  eventType: 'All Events' | EventTypeTag,
+  targetTraditions: CulturalTradition[],
+  region: 'All Regions' | ServiceZone,
+  preferredKeywords: string[]
+): number {
+  let tags = 0;
 
-  const matchesRegion = (vendor: Vendor): boolean =>
-    region === 'All Regions' || vendorServesZone(vendor, region);
+  if (eventType !== 'All Events' && vendor.eventTypes.includes(eventType)) {
+    tags += 1;
+  }
 
-  let relaxedTradition = false;
-  let relaxedRegion = false;
-
-  let candidates = vendors.filter(
-    (v) =>
-      matchesEvent(v) &&
-      matchesTradition(v) &&
-      matchesRegion(v) &&
-      matchesCategory(v) &&
-      matchesSearch(v)
-  );
-
-  // If no exact match in the chosen region, first try relaxing region while keeping event + tradition
-  if (candidates.length === 0 && region !== 'All Regions') {
-    const withoutRegion = vendors.filter(
-      (v) => matchesEvent(v) && matchesTradition(v) && matchesCategory(v) && matchesSearch(v)
-    );
-    if (withoutRegion.length > 0) {
-      candidates = withoutRegion;
-      relaxedRegion = true;
+  for (const tr of targetTraditions) {
+    if (vendor.traditions.includes(tr)) {
+      tags += 1;
     }
   }
 
-  // If still no matches with the selected tradition, relax tradition while respecting region/event/category/search
-  if (candidates.length === 0 && tradition !== 'All Traditions') {
-    const eventInRegionWithoutTradition = vendors.filter(
-      (v) => matchesEvent(v) && matchesRegion(v) && matchesCategory(v) && matchesSearch(v)
-    );
-    if (eventInRegionWithoutTradition.length > 0) {
-      candidates = eventInRegionWithoutTradition;
-      relaxedTradition = true;
-    } else if (region !== 'All Regions') {
-      const eventAnyRegion = vendors.filter(
-        (v) => matchesEvent(v) && matchesCategory(v) && matchesSearch(v)
-      );
-      if (eventAnyRegion.length > 0) {
-        candidates = eventAnyRegion;
-        relaxedTradition = true;
-        relaxedRegion = true;
+  if (region !== 'All Regions' && vendorServesZone(vendor, region)) {
+    tags += 1;
+  }
+
+  if (preferredKeywords.length > 0) {
+    const searchable = [
+      vendor.businessName,
+      vendor.description,
+      ...vendor.culturalSpecialties,
+      ...vendor.features,
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    for (const kw of preferredKeywords) {
+      if (kw && searchable.includes(kw.toLowerCase())) {
+        tags += 1;
       }
     }
   }
 
-  const hasBudgetFilter = budget !== null && budget > 0 && guests !== null && guests > 0;
+  return tags;
+}
+
+export function evaluateCategoryTiers(params: {
+  vendors: Vendor[];
+  category: VendorCategory;
+  eventType: 'All Events' | EventTypeTag;
+  tradition: 'All Traditions' | CulturalTradition;
+  traditions?: CulturalTradition[];
+  region: 'All Regions' | ServiceZone;
+  budget: number | null;
+  guests: number | null;
+  isEssential: boolean;
+  searchQuery?: string;
+  translatedDescriptions?: Record<string, string>;
+  preferredKeywords?: string[];
+}): CategoryTierEvaluation {
+  const {
+    vendors,
+    category,
+    eventType,
+    tradition,
+    traditions,
+    region,
+    budget,
+    guests,
+    isEssential,
+    searchQuery = '',
+    translatedDescriptions,
+    preferredKeywords = [],
+  } = params;
+
+  const targetTraditions = resolveTargetTraditions(tradition, traditions);
+  const matchesSearch = buildSearchMatcher(searchQuery, translatedDescriptions);
+  const catVendors = vendors.filter((v) => v.category === category && matchesSearch(v));
+
+  const matchesEvent = (v: Vendor): boolean =>
+    eventType === 'All Events' || v.eventTypes.includes(eventType);
+
+  const matchesTraditionStrict = (v: Vendor): boolean => {
+    if (targetTraditions.length === 0) return true;
+    if (targetTraditions.length === 1) return v.traditions.includes(targetTraditions[0]);
+    return targetTraditions.every((tr) => v.traditions.includes(tr));
+  };
+
+  const matchesTraditionPartial = (v: Vendor): boolean => {
+    if (targetTraditions.length === 0) return true;
+    return targetTraditions.some((tr) => v.traditions.includes(tr));
+  };
+
+  const matchesRegion = (v: Vendor): boolean =>
+    region === 'All Regions' || vendorServesZone(v, region);
+
+  // Tier 1: event type + tradition + region
+  const tier1Raw = catVendors.filter(
+    (v) => matchesEvent(v) && matchesTraditionStrict(v) && matchesRegion(v)
+  );
+
+  // Tier 2: event type + tradition, any region (chosen region first, then metro-wide or state-wide)
+  let tier2Raw = catVendors.filter((v) => matchesEvent(v) && matchesTraditionStrict(v));
+  if (tier2Raw.length === 0 && targetTraditions.length > 1) {
+    tier2Raw = catVendors.filter((v) => matchesEvent(v) && matchesTraditionPartial(v));
+  }
+
+  // Tier 3: event type + region, tradition-neutral vendors
+  const tier3Raw = catVendors.filter(
+    (v) => matchesEvent(v) && matchesRegion(v) && isTraditionNeutralVendor(v)
+  );
+
+  // Tier 4: the category for any event type, tradition-neutral and state-wide
+  const tier4Raw = catVendors.filter(
+    (v) => isTraditionNeutralVendor(v) && isStateWideVendor(v)
+  );
+
+  const tierCounts: TierVendorCounts = {
+    exact: tier1Raw.length,
+    area: tier2Raw.length,
+    neutral: tier3Raw.length,
+    closest: tier4Raw.length,
+  };
+
+  let winningTier: MatchTier | null = null;
+  let winningRaw: Vendor[] = [];
+
+  if (tier1Raw.length > 0) {
+    winningTier = 'exact';
+    winningRaw = tier1Raw;
+  } else if (tier2Raw.length > 0) {
+    winningTier = 'area';
+    winningRaw = tier2Raw;
+  } else if (tier3Raw.length > 0) {
+    winningTier = 'neutral';
+    winningRaw = tier3Raw;
+  } else if (tier4Raw.length > 0) {
+    winningTier = 'closest';
+    winningRaw = tier4Raw;
+  } else if (catVendors.length > 0 && isEssential) {
+    // Final safety net if a category has non-neutral vendors only
+    winningTier = 'closest';
+    winningRaw = catVendors;
+  }
+
+  const hasBudget = budget !== null && budget > 0;
+
+  const ranked = winningRaw
+    .map((vendor) => {
+      const tagCount = countMatchingTags(
+        vendor,
+        eventType,
+        targetTraditions,
+        region,
+        preferredKeywords
+      );
+      const budgetInfo = computeBudgetFit(vendor, eventType, budget, guests);
+      const zoneInfo = getZoneProximityScore(vendor, region);
+
+      // Prefer tradition-focused specialists over broad multi-tradition listings when tied in Tier 1/2
+      const specificityBonus =
+        targetTraditions.length > 0 && !isTraditionNeutralVendor(vendor)
+          ? Math.max(0, 6 - vendor.traditions.length)
+          : 0;
+
+      return {
+        item: {
+          vendor,
+          matchTier: winningTier ?? 'closest',
+          matchLabel: MATCH_TIER_LABELS[winningTier ?? 'closest'],
+          isEssential,
+          matchedTagCount: tagCount,
+          withinBudget: budgetInfo.withinBudget,
+          estimatedCost: budgetInfo.estimatedCost,
+          categoryBudgetLimit: budgetInfo.categoryBudgetLimit,
+          matchedZone: zoneInfo.matchedZone,
+        } satisfies MatchedVendorItem,
+        zonePriority: zoneInfo.priority,
+        specificityBonus,
+      };
+    })
+    .sort((a, b) => {
+      // In Tier 2 (any region), rank chosen region first, then metro-wide or state-wide, then nearby
+      if (winningTier === 'area' && a.zonePriority !== b.zonePriority) {
+        return b.zonePriority - a.zonePriority;
+      }
+
+      // Within a tier, rank by number of matching tags
+      if (a.item.matchedTagCount !== b.item.matchedTagCount) {
+        return b.item.matchedTagCount - a.item.matchedTagCount;
+      }
+
+      // Then by fit to the budget if one was set
+      if (hasBudget) {
+        const aFits = a.item.withinBudget ? 1 : 0;
+        const bFits = b.item.withinBudget ? 1 : 0;
+        if (aFits !== bFits) {
+          return bFits - aFits;
+        }
+        if (a.item.estimatedCost !== b.item.estimatedCost) {
+          return a.item.estimatedCost - b.item.estimatedCost;
+        }
+      }
+
+      // Prefer higher cultural specificity on ties
+      if (a.specificityBonus !== b.specificityBonus) {
+        return b.specificityBonus - a.specificityBonus;
+      }
+
+      // Final stable tie-break
+      return (b.item.vendor.rating ?? 0) - (a.item.vendor.rating ?? 0);
+    })
+    .map((entry) => entry.item);
+
+  return {
+    category,
+    tierCounts,
+    winningTier,
+    candidates: ranked,
+  };
+}
+
+export function matchVendorsToPlan({
+  vendors,
+  eventType,
+  tradition,
+  traditions,
+  region = 'All Regions',
+  budget,
+  guests,
+  category = 'All',
+  searchQuery = '',
+  translatedDescriptions,
+  matchMode = 'plan',
+  maxPerEssentialCategory = 2,
+  preferredKeywords = [],
+}: MatchVendorsInput): MatchVendorsResult {
+  const targetTraditions = resolveTargetTraditions(tradition, traditions);
+  const matchesSearch = buildSearchMatcher(searchQuery, translatedDescriptions);
+  const hasBudgetFilter = budget !== null && budget > 0;
+  const isPlanModeWithEvent = matchMode === 'plan' && eventType !== 'All Events';
+
   const withinBudgetMap: Record<string, boolean> = {};
   const estimatedCostMap: Record<string, number> = {};
   const categoryLimitMap: Record<string, number> = {};
-  let withinBudgetCount = 0;
+  const matchTierMap: Record<string, MatchTier> = {};
+  const matchLabelMap: Record<string, string> = {};
 
-  if (hasBudgetFilter) {
-    for (const vendor of candidates) {
-      const sharePct = getCategoryAllocationPct(eventType, vendor.category);
-      const categoryBudgetLimit = Math.round(budget * sharePct);
-      const estimatedCost = estimateVendorCostForPlan(vendor.startingPrice, guests);
-      const fits = estimatedCost <= categoryBudgetLimit;
+  const recordItemMaps = (items: MatchedVendorItem[]) => {
+    for (const item of items) {
+      matchTierMap[item.vendor.id] = item.matchTier;
+      matchLabelMap[item.vendor.id] = item.matchLabel;
+      if (hasBudgetFilter) {
+        withinBudgetMap[item.vendor.id] = item.withinBudget;
+        estimatedCostMap[item.vendor.id] = item.estimatedCost;
+        categoryLimitMap[item.vendor.id] = item.categoryBudgetLimit;
+      }
+    }
+  };
 
-      withinBudgetMap[vendor.id] = fits;
-      estimatedCostMap[vendor.id] = estimatedCost;
-      categoryLimitMap[vendor.id] = categoryBudgetLimit;
-      if (fits) {
-        withinBudgetCount += 1;
+  // STRICT MODE (manual filter changes) or Plan Mode with no specific event type selected
+  if (!isPlanModeWithEvent) {
+    const matchesEvent = (v: Vendor): boolean =>
+      eventType === 'All Events' || v.eventTypes.includes(eventType);
+
+    const matchesTradition = (v: Vendor): boolean => {
+      if (targetTraditions.length === 0) return true;
+      if (targetTraditions.length === 1) return v.traditions.includes(targetTraditions[0]);
+      return targetTraditions.every((tr) => v.traditions.includes(tr));
+    };
+
+    const matchesRegion = (v: Vendor): boolean =>
+      region === 'All Regions' || vendorServesZone(v, region);
+
+    const baseCandidates = vendors.filter(
+      (v) => matchesEvent(v) && matchesTradition(v) && matchesRegion(v) && matchesSearch(v)
+    );
+
+    const allCategoryCounts: Record<string, number> = { All: baseCandidates.length };
+    for (const v of baseCandidates) {
+      allCategoryCounts[v.category] = (allCategoryCounts[v.category] || 0) + 1;
+    }
+
+    const categoryFiltered =
+      category === 'All'
+        ? baseCandidates
+        : baseCandidates.filter((v) => v.category === category);
+
+    const matchedItems: MatchedVendorItem[] = categoryFiltered
+      .map((vendor) => {
+        const budgetInfo = computeBudgetFit(vendor, eventType, budget, guests);
+        const zoneInfo = getZoneProximityScore(vendor, region);
+        const tagCount = countMatchingTags(
+          vendor,
+          eventType,
+          targetTraditions,
+          region,
+          preferredKeywords
+        );
+        return {
+          vendor,
+          matchTier: 'exact' as MatchTier,
+          matchLabel: MATCH_TIER_LABELS.exact,
+          isEssential: false,
+          matchedTagCount: tagCount,
+          withinBudget: budgetInfo.withinBudget,
+          estimatedCost: budgetInfo.estimatedCost,
+          categoryBudgetLimit: budgetInfo.categoryBudgetLimit,
+          matchedZone: zoneInfo.matchedZone,
+        };
+      })
+      .sort((a, b) => {
+        if (hasBudgetFilter) {
+          const aFits = a.withinBudget ? 1 : 0;
+          const bFits = b.withinBudget ? 1 : 0;
+          if (aFits !== bFits) return bFits - aFits;
+        }
+        return 0;
+      });
+
+    recordItemMaps(matchedItems);
+    const withinBudgetCount = hasBudgetFilter
+      ? matchedItems.filter((item) => item.withinBudget).length
+      : 0;
+
+    return {
+      vendors: matchedItems.map((i) => i.vendor),
+      matchedItems,
+      essentialGroups: [],
+      essentialVendors: [],
+      addOnVendors: matchedItems,
+      essentialServiceCount: 0,
+      relaxedEssentialNotes: [],
+      categoryCounts: allCategoryCounts,
+      matchTierMap,
+      matchLabelMap,
+      overallMatchTier: 'exact',
+      withinBudgetMap,
+      withinBudgetCount,
+      estimatedCostMap,
+      categoryLimitMap,
+      relaxedBudget: hasBudgetFilter && matchedItems.length > 0 && withinBudgetCount === 0,
+      relaxedTradition: false,
+      relaxedRegion: false,
+      relaxationMessage: null,
+      isPlanModeActive: false,
+    };
+  }
+
+  // PLAN MATCHING MODE (tiered essential categories first, then add-ons)
+  const essentialCategories = getEssentialCategoriesForEvent(eventType);
+  const optionalCategories = getOptionalCategoriesForEvent(eventType);
+
+  const allEssentialGroups: EssentialCategoryGroup[] = [];
+  const allEssentialItems: MatchedVendorItem[] = [];
+  const seenVendorIds = new Set<string>();
+  const extraEssentialMatches: MatchedVendorItem[] = [];
+
+  for (const essCat of essentialCategories) {
+    const evalResult = evaluateCategoryTiers({
+      vendors,
+      category: essCat,
+      eventType,
+      tradition,
+      traditions,
+      region,
+      budget,
+      guests,
+      isEssential: true,
+      searchQuery,
+      translatedDescriptions,
+      preferredKeywords,
+    });
+
+    const picked = evalResult.candidates.slice(0, maxPerEssentialCategory);
+    for (const item of picked) {
+      seenVendorIds.add(item.vendor.id);
+      allEssentialItems.push(item);
+    }
+
+    // Keep any additional exact-tier matches from essential categories as add-ons so no relevant vendor disappears
+    if (evalResult.winningTier === 'exact' && evalResult.candidates.length > maxPerEssentialCategory) {
+      for (const extra of evalResult.candidates.slice(maxPerEssentialCategory)) {
+        if (!seenVendorIds.has(extra.vendor.id)) {
+          seenVendorIds.add(extra.vendor.id);
+          extraEssentialMatches.push({ ...extra, isEssential: false });
+        }
+      }
+    }
+
+    allEssentialGroups.push({
+      category: essCat,
+      tier: evalResult.winningTier,
+      tierLabel: evalResult.winningTier ? MATCH_TIER_LABELS[evalResult.winningTier] : null,
+      vendors: picked,
+      emptyMessage:
+        picked.length === 0 ? `No vendors listed yet for ${essCat}` : null,
+      tierCounts: evalResult.tierCounts,
+    });
+  }
+
+  // Optional add-on categories
+  const allAddOnItems: MatchedVendorItem[] = [...extraEssentialMatches];
+  for (const optCat of optionalCategories) {
+    const evalResult = evaluateCategoryTiers({
+      vendors,
+      category: optCat,
+      eventType,
+      tradition,
+      traditions,
+      region,
+      budget,
+      guests,
+      isEssential: false,
+      searchQuery,
+      translatedDescriptions,
+      preferredKeywords,
+    });
+
+    if (evalResult.candidates.length === 0) continue;
+
+    // Show all exact matches for optional categories, or top 2 if relaxed
+    const limit = evalResult.winningTier === 'exact' ? evalResult.candidates.length : 2;
+    for (const item of evalResult.candidates.slice(0, limit)) {
+      if (!seenVendorIds.has(item.vendor.id)) {
+        seenVendorIds.add(item.vendor.id);
+        allAddOnItems.push(item);
       }
     }
   }
 
-  // Sort within-budget vendors first while preserving stable relative ordering
-  const sortedVendors = [...candidates].sort((a, b) => {
-    if (!hasBudgetFilter) return 0;
-    const aFits = withinBudgetMap[a.id] ? 1 : 0;
-    const bFits = withinBudgetMap[b.id] ? 1 : 0;
-    return bFits - aFits;
-  });
-
-  const relaxedBudget = hasBudgetFilter && sortedVendors.length > 0 && withinBudgetCount === 0;
-
-  let relaxationMessage: string | null = null;
-  if (relaxedRegion && relaxedTradition) {
-    relaxationMessage =
-      'No exact match in this area or cultural tradition, showing the closest options.';
-  } else if (relaxedRegion) {
-    relaxationMessage = 'No exact match in this area, showing the closest options.';
-  } else if (relaxedBudget && relaxedTradition) {
-    relaxationMessage =
-      'No exact matches within budget or cultural tradition, showing closest options for this celebration.';
-  } else if (relaxedBudget) {
-    relaxationMessage = 'No exact matches within budget, showing closest options.';
-  } else if (relaxedTradition) {
-    relaxationMessage =
-      'No exact matches for that cultural tradition, showing closest options for this celebration.';
+  // Category chip counts across ALL plan results (essentials + add-ons, including relaxed matches)
+  const allCombinedItems = [...allEssentialItems, ...allAddOnItems];
+  const categoryCounts: Record<string, number> = { All: allCombinedItems.length };
+  for (const item of allCombinedItems) {
+    categoryCounts[item.vendor.category] = (categoryCounts[item.vendor.category] || 0) + 1;
   }
 
+  // Filter displayed results if a category chip is selected
+  const visibleEssentialGroups =
+    category === 'All'
+      ? allEssentialGroups
+      : allEssentialGroups.filter((group) => group.category === category);
+
+  const visibleEssentialItems =
+    category === 'All'
+      ? allEssentialItems
+      : allEssentialItems.filter((item) => item.vendor.category === category);
+
+  const visibleAddOnItems =
+    category === 'All'
+      ? allAddOnItems
+      : allAddOnItems.filter((item) => item.vendor.category === category);
+
+  const visibleMatchedItems = [...visibleEssentialItems, ...visibleAddOnItems];
+  recordItemMaps(allCombinedItems);
+
+  const relaxedEssentialNotes: RelaxedCategoryNote[] = allEssentialGroups
+    .filter((g) => g.tier !== null && g.tier !== 'exact')
+    .map((g) => ({
+      category: g.category,
+      tier: g.tier as MatchTier,
+      label: MATCH_TIER_LABELS[g.tier as MatchTier],
+    }));
+
+  let overallMatchTier: MatchTier = 'exact';
+  for (const g of allEssentialGroups) {
+    if (g.tier && TIER_SEVERITY[g.tier] > TIER_SEVERITY[overallMatchTier]) {
+      overallMatchTier = g.tier;
+    }
+  }
+
+  const withinBudgetCount = hasBudgetFilter
+    ? visibleMatchedItems.filter((item) => item.withinBudget).length
+    : 0;
+
+  const relaxedRegion = relaxedEssentialNotes.some(
+    (n) => n.tier === 'area' || n.tier === 'closest'
+  );
+  const relaxedTradition = relaxedEssentialNotes.some(
+    (n) => n.tier === 'neutral' || n.tier === 'closest'
+  );
+  const relaxedBudget =
+    hasBudgetFilter && visibleMatchedItems.length > 0 && withinBudgetCount === 0;
+
+  const relaxationMessage =
+    relaxedEssentialNotes.length > 0
+      ? `Expanded matching used for: ${relaxedEssentialNotes
+          .map((n) => `${n.category} (${n.label})`)
+          .join(', ')}.`
+      : null;
+
   return {
-    vendors: sortedVendors,
+    vendors: visibleMatchedItems.map((i) => i.vendor),
+    matchedItems: visibleMatchedItems,
+    essentialGroups: visibleEssentialGroups,
+    essentialVendors: visibleEssentialItems,
+    addOnVendors: visibleAddOnItems,
+    essentialServiceCount: allEssentialItems.length,
+    relaxedEssentialNotes,
+    categoryCounts,
+    matchTierMap,
+    matchLabelMap,
+    overallMatchTier,
     withinBudgetMap,
     withinBudgetCount,
     estimatedCostMap,
@@ -522,5 +1147,6 @@ export function matchVendorsToPlan({
     relaxedTradition,
     relaxedRegion,
     relaxationMessage,
+    isPlanModeActive: true,
   };
 }

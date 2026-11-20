@@ -13,14 +13,11 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { howItWorksSteps, vendorsData } from '../data/mockData';
-import {
-  ALL_SERVICE_ZONES,
-  getZoneByName,
-  vendorServesZone,
-} from '../data/serviceZones';
+import { ALL_SERVICE_ZONES } from '../data/serviceZones';
 import {
   CulturalTradition,
   EventTypeTag,
+  MatchTier,
   PlanPreviewContextData,
   ServiceZone,
   Vendor,
@@ -28,6 +25,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
+import { matchVendorsToPlan } from '../utils/plannerMatching';
 import { PlanSummaryActions } from './PlanSummaryActions';
 import { VendorImage } from './VendorImage';
 
@@ -62,6 +60,9 @@ interface MatchedPackageItem {
   quoteLineItems: string[];
   matchedZone: ServiceZone;
   isExactZoneMatch: boolean;
+  matchTier: MatchTier;
+  matchLabel: string;
+  isEssential: boolean;
 }
 
 const EVENT_TYPE_OPTIONS: EventTypeTag[] = [
@@ -1243,38 +1244,18 @@ function specialtyMatchesActiveTraditions(
   return true;
 }
 
-function evaluateVendorZone(
-  vendor: Vendor,
-  chosenZone: ServiceZone
-): { score: number; exact: boolean; matchedZone: ServiceZone; nearbyRank: number } {
-  if (vendorServesZone(vendor, chosenZone)) {
-    const isStateWide = vendor.serviceAreas.length >= ALL_SERVICE_ZONES.length;
-    return {
-      score: isStateWide ? 18 : 24,
-      exact: true,
-      matchedZone: chosenZone,
-      nearbyRank: 0,
-    };
+function getMatchTierBadgeClasses(tier: MatchTier): string {
+  switch (tier) {
+    case 'exact':
+      return 'bg-[#F2CCC3]/55 text-[#724319] border-[#EBC1B6]';
+    case 'area':
+      return 'bg-[#FFF8F6] text-[#724319] border-[#8A5A44]/50';
+    case 'neutral':
+      return 'bg-amber-50 text-[#724319] border-amber-200';
+    case 'closest':
+    default:
+      return 'bg-stone-100 text-[#724319] border-stone-300';
   }
-
-  const nearbyZones = getZoneByName(chosenZone)?.nearbyZones || [];
-  const nearestIdx = nearbyZones.findIndex((nz) => vendor.serviceAreas.includes(nz));
-
-  if (nearestIdx >= 0) {
-    return {
-      score: Math.max(4, 14 - nearestIdx * 2),
-      exact: false,
-      matchedZone: nearbyZones[nearestIdx],
-      nearbyRank: nearestIdx + 1,
-    };
-  }
-
-  return {
-    score: 2,
-    exact: false,
-    matchedZone: vendor.serviceAreas[0] || chosenZone,
-    nearbyRank: 99,
-  };
 }
 
 function estimateVendorCost(
@@ -1522,10 +1503,23 @@ export const HowItWorksSection: React.FC = () => {
     setPreferredTime(nextTime);
     setChosenStep3VendorId('');
 
+    const previewPlan = matchVendorsToPlan({
+      vendors: vendorsData,
+      eventType: nextType,
+      tradition: activeTraditions.length === 1 ? activeTraditions[0] : 'All Traditions',
+      traditions: activeTraditions,
+      region: location,
+      budget: BUDGET_OPTIONS.find((b) => b.value === budget)?.maxAud ?? null,
+      guests: HEADCOUNT_OPTIONS.find((h) => h.value === nextHeadcount)?.midpoint ?? 80,
+      matchMode: 'plan',
+      maxPerEssentialCategory: 1,
+    });
+
     trackEvent('marketplace_filter_used', {
       event_type: nextType,
       cultural_tradition: selectedTradition,
       source: 'how_it_works_step1',
+      match_tier: previewPlan.overallMatchTier,
     });
     fireTimelineEvent(
       nextType,
@@ -1665,174 +1659,89 @@ export const HowItWorksSection: React.FC = () => {
     }
   };
 
-  // Generate culturally strict 2-3 vendor package directly from vendorsData using vendor.traditions & serviceAreas
+  // Use shared 4-tier matching engine so every event + tradition + zone covers all essential categories
   const {
     recommendedPackage,
     overallFitScore,
     packageEstimatedTotal,
     exceedsSelectedBudget,
+    essentialServiceCount,
+    relaxationMessage,
     isClosestFallback,
-    isAreaFallback,
   } = useMemo(() => {
     const budgetMax = BUDGET_OPTIONS.find((b) => b.value === budget)?.maxAud ?? null;
+    const headcountMidpoint =
+      HEADCOUNT_OPTIONS.find((h) => h.value === headcount)?.midpoint ?? 80;
+    const preferredKeywords = selectedChipObjects.flatMap((c) => c.keywords);
 
-    // Step A: Find exact matches for eventType + tradition(s)
-    const eventPool = vendorsData.filter((v) => v.eventTypes.includes(selectedEventType));
-    let exactPool: Vendor[] = [];
+    const planResult = matchVendorsToPlan({
+      vendors: vendorsData,
+      eventType: selectedEventType,
+      tradition: activeTraditions.length === 1 ? activeTraditions[0] : 'All Traditions',
+      traditions: activeTraditions,
+      region: location,
+      budget: budgetMax,
+      guests: headcountMidpoint,
+      matchMode: 'plan',
+      maxPerEssentialCategory: 1,
+      preferredKeywords,
+    });
 
-    if (activeTraditions.length === 0) {
-      // "Other" (no specific tradition picked inside Other or Fusion)
-      exactPool = eventPool;
-    } else if (activeTraditions.length === 1) {
-      exactPool = eventPool.filter((v) => v.traditions.includes(activeTraditions[0]));
-    } else {
-      // Fusion: vendor must cover BOTH selected traditions
-      exactPool = eventPool.filter((v) =>
-        activeTraditions.every((tr) => v.traditions.includes(tr))
-      );
+    // Always include every essential category's top pick first, then top up to 3 with best add-on if needed
+    const combinedItems = [...planResult.essentialVendors];
+    const seenIds = new Set(combinedItems.map((i) => i.vendor.id));
+    for (const addOn of planResult.addOnVendors) {
+      if (combinedItems.length >= 3) break;
+      if (seenIds.has(addOn.vendor.id)) continue;
+      seenIds.add(addOn.vendor.id);
+      combinedItems.push(addOn);
     }
 
-    let usingClosestFallback = false;
-    let culturalPool = exactPool;
-
-    // Step B: Friendly closest fallback if no exact vendor matches (e.g. uncommon Fusion combo or off-season event)
-    if (culturalPool.length === 0 && activeTraditions.length > 0) {
-      usingClosestFallback = true;
-      const partialEventMatch = eventPool.filter((v) =>
-        activeTraditions.some((tr) => v.traditions.includes(tr))
-      );
-      if (partialEventMatch.length > 0) {
-        culturalPool = partialEventMatch;
-      } else {
-        // Fallback to vendors covering the tradition across adjacent celebration types
-        const traditionAnyEvent = vendorsData.filter((v) =>
-          activeTraditions.some((tr) => v.traditions.includes(tr))
-        );
-        culturalPool = traditionAnyEvent.length > 0 ? traditionAnyEvent : eventPool;
-      }
-    }
-
-    // Step B2: Filter strictly to vendors serving the chosen zone (State-wide vendors include all 9 zones)
-    const zoneMatchedPool = culturalPool.filter((v) => vendorServesZone(v, location));
-    const usingAreaFallback = zoneMatchedPool.length === 0;
-    const candidatePool = usingAreaFallback ? culturalPool : zoneMatchedPool;
-
-    // Step C: Score candidates strictly within their own matching traditions, services & zone
-    const scored = candidatePool.map((vendor) => {
+    const chosen: MatchedPackageItem[] = combinedItems.map((matched) => {
+      const { vendor, matchTier, matchLabel, isEssential, matchedZone } = matched;
       const { matchedChips, quoteLineItems } = getScopedVendorDetails(
         vendor,
         selectedChipObjects,
         activeTraditions
       );
-
-      // Relevant chips this vendor could possibly serve (belonging to vendor.traditions or generic)
-      const eligibleChipCount = Math.max(
-        selectedChipObjects.filter((c) => !c.tradition || vendor.traditions.includes(c.tradition)).length,
-        1
-      );
-      const elementRatio = Math.min(1, matchedChips.length / eligibleChipCount);
-
-      // Prioritize vendors that specialize specifically in the chosen tradition (fewer unrelated traditions = higher cultural specificity)
-      const matchedTraditionCount = activeTraditions.filter((tr) => vendor.traditions.includes(tr)).length;
-      const culturalSpecificityBonus =
-        vendor.traditions.length <= 2
-          ? 16
-          : vendor.traditions.length <= 4
-            ? 8
-            : 0;
-
-      // Ensure at least one core service category (Caterer / Venue / Planner / Entertainment) surfaces cleanly
-      const coreCategoryPriority =
-        vendor.category === 'Caterers'
-          ? 12
-          : vendor.category === 'Entertainment & DJs' ||
-              vendor.category === 'Planners' ||
-              vendor.category === 'Cultural Specialists'
-            ? 10
-            : vendor.category === 'Venues & Marquees' || vendor.category === 'Decor & Styling'
-              ? 8
-              : 5;
-
-      const zoneEval = evaluateVendorZone(vendor, location);
       const costInfo = estimateVendorCost(vendor, headcount);
 
-      let budgetAdjust = 0;
-      if (budgetMax !== null) {
-        budgetAdjust =
-          costInfo.scaledEstimate <= budgetMax * 0.65
-            ? 8
-            : costInfo.scaledEstimate <= budgetMax
-              ? 2
-              : -10;
-      }
+      const tierBaseScore =
+        matchTier === 'exact'
+          ? 88
+          : matchTier === 'area'
+            ? 82
+            : matchTier === 'neutral'
+              ? 78
+              : 74;
 
-      let capacityAdjust = 0;
-      if (vendor.id === 'v22' && headcount === '200+') capacityAdjust = -15;
-      if (vendor.id === 'v23' && (headcount === '100-200' || headcount === '200+')) capacityAdjust = +10;
-
-      const rawFit =
-        (usingClosestFallback ? 54 : 62) +
-        matchedTraditionCount * 10 +
-        elementRatio * 18 +
-        (zoneEval.exact ? 8 : zoneEval.score >= 10 ? 5 : 2) +
-        (matchedChips.length > 0 ? 5 : 0) +
-        (budgetAdjust > 0 ? 3 : 0);
-
-      const fitScore = Math.max(68, Math.min(99, Math.round(rawFit)));
-
-      const rankScore =
-        matchedTraditionCount * 28 +
-        matchedChips.length * 22 +
-        culturalSpecificityBonus +
-        coreCategoryPriority +
-        zoneEval.score +
-        capacityAdjust +
-        budgetAdjust +
-        vendor.rating * 3;
+      const fitScore = Math.max(
+        70,
+        Math.min(
+          99,
+          Math.round(
+            tierBaseScore +
+              Math.min(7, matchedChips.length * 3) +
+              (matched.withinBudget ? 4 : 0)
+          )
+        )
+      );
 
       return {
         vendor,
         fitScore,
-        rankScore,
-        nearbyRank: zoneEval.nearbyRank,
-        matchedZone: zoneEval.matchedZone,
-        isExactZoneMatch: zoneEval.exact,
         unitPriceLabel: costInfo.unitPriceLabel,
         scaledEstimate: costInfo.scaledEstimate,
         scaledPriceSummary: costInfo.summary,
         matchedChips,
         quoteLineItems,
+        matchedZone: matchedZone ?? location,
+        isExactZoneMatch: matchTier === 'exact' || matchTier === 'neutral',
+        matchTier,
+        matchLabel,
+        isEssential,
       };
     });
-
-    // When showing nearest-area fallback, prefer closer zones first, then highest rank score
-    scored.sort((a, b) => {
-      if (usingAreaFallback && a.nearbyRank !== b.nearbyRank) {
-        return a.nearbyRank - b.nearbyRank;
-      }
-      return b.rankScore - a.rankScore;
-    });
-
-    // Step D: Pick up to 3 distinct-category vendors
-    const chosen: MatchedPackageItem[] = [];
-    const seenCategories = new Set<string>();
-
-    for (const item of scored) {
-      if (chosen.length >= 3) break;
-      if (seenCategories.has(item.vendor.category)) continue;
-      seenCategories.add(item.vendor.category);
-      chosen.push({
-        vendor: item.vendor,
-        fitScore: item.fitScore,
-        unitPriceLabel: item.unitPriceLabel,
-        scaledEstimate: item.scaledEstimate,
-        scaledPriceSummary: item.scaledPriceSummary,
-        matchedChips: item.matchedChips,
-        quoteLineItems: item.quoteLineItems,
-        matchedZone: item.matchedZone,
-        isExactZoneMatch: item.isExactZoneMatch,
-      });
-    }
 
     const avgFit =
       chosen.length > 0
@@ -1845,8 +1754,9 @@ export const HowItWorksSection: React.FC = () => {
       overallFitScore: avgFit,
       packageEstimatedTotal: totalAud,
       exceedsSelectedBudget: budgetMax !== null && totalAud > budgetMax,
-      isClosestFallback: usingClosestFallback,
-      isAreaFallback: usingAreaFallback,
+      essentialServiceCount: planResult.essentialServiceCount,
+      relaxationMessage: planResult.relaxationMessage,
+      isClosestFallback: planResult.overallMatchTier !== 'exact',
     };
   }, [selectedEventType, activeTraditions, selectedChipObjects, location, headcount, budget]);
 
@@ -2270,38 +2180,20 @@ export const HowItWorksSection: React.FC = () => {
                       </span>
                     </div>
 
-                    {isAreaFallback && (
-                      <div
-                        role="status"
-                        aria-live="polite"
-                        className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
-                      >
-                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
-                        <span>
-                          No exact match in this area, showing the closest options
-                        </span>
-                      </div>
-                    )}
-
-                    {isClosestFallback && (
-                      <div
-                        role="status"
-                        aria-live="polite"
-                        className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
-                      >
-                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
-                        <span>
-                          {t('how.mock2NoExactMatch')} —{' '}
-                          {t('how.mock2CoversLabel', {
-                            traditions: Array.from(
-                              new Set(recommendedPackage.flatMap((item) => item.vendor.traditions))
-                            )
-                              .slice(0, 5)
-                              .join(', '),
-                          })}
-                        </span>
-                      </div>
-                    )}
+                    <div
+                      aria-live="polite"
+                      className="p-2.5 bg-white border border-[#EBC1B6]/70 text-[#724319] rounded-xl text-[11px] space-y-1"
+                    >
+                      <p className="font-semibold">
+                        We found {essentialServiceCount} essential services for your plan
+                      </p>
+                      {relaxationMessage && (
+                        <p className="text-[#6E432F] flex items-start gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
+                          <span>{relaxationMessage}</span>
+                        </p>
+                      )}
+                    </div>
 
                     <div className="space-y-2.5 text-xs">
                       {recommendedPackage.map((item) => {
@@ -2315,6 +2207,11 @@ export const HowItWorksSection: React.FC = () => {
                           )
                           .slice(0, 3)
                           .join(', ');
+                        const coversText =
+                          displayedTraditions ||
+                          (item.vendor.traditions.length > 0
+                            ? item.vendor.traditions.slice(0, 2).join(', ')
+                            : 'All traditions');
 
                         return (
                           <div
@@ -2340,13 +2237,24 @@ export const HowItWorksSection: React.FC = () => {
                                   <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A5A44]">
                                     {t(`cat.${item.vendor.category}`)}
                                   </span>
-                                  <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
-                                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
-                                    {Number.isInteger(item.vendor.rating)
-                                      ? `${item.vendor.rating}.0`
-                                      : item.vendor.rating}
+                                  <span
+                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getMatchTierBadgeClasses(
+                                      item.matchTier
+                                    )}`}
+                                  >
+                                    {item.matchLabel}
                                   </span>
+                                  {typeof item.vendor.rating === 'number' && (
+                                    <>
+                                      <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
+                                      <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums">
+                                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+                                        {Number.isInteger(item.vendor.rating)
+                                          ? `${item.vendor.rating}.0`
+                                          : item.vendor.rating}
+                                      </span>
+                                    </>
+                                  )}
                                   <span className="text-[10px] font-mono font-semibold bg-[#FFF8F6] border border-[#EBC1B6] text-[#724319] px-1.5 py-0.5 rounded">
                                     {t('how.mock2VendorFit', { score: item.fitScore })}
                                   </span>
@@ -2361,8 +2269,7 @@ export const HowItWorksSection: React.FC = () => {
                                   </span>
                                   <span className="text-[10px] font-medium text-[#8A5A44]">
                                     {t('how.mock2CoversLabel', {
-                                      traditions:
-                                        displayedTraditions || item.vendor.traditions.slice(0, 2).join(', '),
+                                      traditions: coversText,
                                     })}
                                   </span>
                                 </div>
@@ -2446,28 +2353,14 @@ export const HowItWorksSection: React.FC = () => {
                       </h4>
                     </div>
 
-                    {isAreaFallback && (
+                    {relaxationMessage && (
                       <div
                         role="status"
                         aria-live="polite"
                         className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
                       >
                         <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
-                        <span>
-                          No exact match in this area, showing the closest options
-                        </span>
-                      </div>
-                    )}
-
-                    {isClosestFallback && (
-                      <div className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
-                        <span>
-                          {t('how.mock2NoExactMatch')} —{' '}
-                          {t('how.mock2CoversLabel', {
-                            traditions: activeStep3Item.vendor.traditions.join(', '),
-                          })}
-                        </span>
+                        <span>{relaxationMessage}</span>
                       </div>
                     )}
 
@@ -2556,14 +2449,17 @@ export const HowItWorksSection: React.FC = () => {
                           <div className="text-[10px] text-[#8A5A44]">
                             {t(`cat.${activeStep3Item.vendor.category}`)} ·{' '}
                             {t('how.mock2CoversLabel', {
-                              traditions: activeStep3Item.vendor.traditions
-                                .filter(
-                                  (tr) =>
-                                    activeTraditions.length === 0 ||
-                                    activeTraditions.includes(tr) ||
-                                    isClosestFallback
-                                )
-                                .join(', '),
+                              traditions:
+                                activeStep3Item.vendor.traditions.length > 0
+                                  ? activeStep3Item.vendor.traditions
+                                      .filter(
+                                        (tr) =>
+                                          activeTraditions.length === 0 ||
+                                          activeTraditions.includes(tr) ||
+                                          isClosestFallback
+                                      )
+                                      .join(', ') || activeStep3Item.vendor.traditions.join(', ')
+                                  : 'All traditions',
                             })}{' '}
                             · {headcount} · {location} · {preferredTime}
                           </div>

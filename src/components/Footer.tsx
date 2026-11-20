@@ -107,6 +107,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy, onOpenTerms }) =>
               </li>
               <li>
                 <a
+                  href={getPageHref('checklists')}
+                  className="hover:text-[#724319] transition-colors"
+                >
+                  Celebration Checklists
+                </a>
+              </li>
+              <li>
+                <a
                   href={getPageHref('ai-planner', '#faq')}
                   className="hover:text-[#724319] transition-colors"
                 >

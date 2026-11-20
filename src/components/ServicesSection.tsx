@@ -93,23 +93,39 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ isPagePrimary 
                   </p>
                 </div>
 
-                <div className="mt-8 pt-5 border-t border-[#EBC1B6]/40 flex items-center justify-between gap-4 text-xs font-medium">
+                <div className="mt-8 pt-5 border-t border-[#EBC1B6]/40 flex flex-wrap items-center justify-between gap-3 text-xs font-medium">
                   <span className="text-[#8A5A44] font-mono tabular-nums">
                     {metricsText}
                   </span>
-                  <a
-                    href={getServiceHref(service.id)}
-                    aria-label={`${ctaLabel}, ${titleText}`}
-                    onClick={() => {
-                      trackEvent('service_card_click', {
-                        service_name: service.title,
-                      });
-                    }}
-                    className="inline-flex items-center gap-1.5 text-[#724319] hover:text-[#8A5A44] font-semibold group-hover:translate-x-1 transition-all cursor-pointer rounded-lg px-1.5 py-1 -mr-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2 shrink-0"
-                  >
-                    <span>{ctaLabel}</span>
-                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  </a>
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    {service.id === 'event-resources' && (
+                      <a
+                        href={getPageHref('checklists')}
+                        onClick={() => {
+                          trackEvent('service_card_click', {
+                            service_name: 'Celebration Checklists',
+                          });
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FFF8F6] hover:bg-[#724319] text-[#724319] hover:text-white border border-[#EBC1B6] hover:border-[#724319] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2 shrink-0"
+                      >
+                        <span>Browse checklists</span>
+                        <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                      </a>
+                    )}
+                    <a
+                      href={getServiceHref(service.id)}
+                      aria-label={`${ctaLabel}, ${titleText}`}
+                      onClick={() => {
+                        trackEvent('service_card_click', {
+                          service_name: service.title,
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[#724319] hover:text-[#8A5A44] font-semibold group-hover:translate-x-1 transition-all cursor-pointer rounded-lg px-1.5 py-1 -mr-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2 shrink-0"
+                    >
+                      <span>{ctaLabel}</span>
+                      <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                    </a>
+                  </div>
                 </div>
               </div>
             );

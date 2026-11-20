@@ -102,6 +102,200 @@
   will-change: transform, filter;
 }
 
+/* Archival Journal Notebook Styling */
+.journal-notebook-cover {
+  background: linear-gradient(180deg, #F6E6DF 0%, #EFE0D8 100%);
+  border: 1px solid #D9B6A8;
+  box-shadow:
+    0 14px 34px -18px rgba(74, 43, 16, 0.22),
+    0 2px 6px rgba(114, 67, 25, 0.06);
+}
+
+.journal-notebook-paper {
+  background-color: #FFFDF9;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 31px,
+    rgba(138, 90, 68, 0.075) 31px,
+    rgba(138, 90, 68, 0.075) 32px
+  );
+  background-size: 100% 32px;
+}
+
+@media (min-width: 1024px) {
+  .journal-notebook-spread {
+    position: relative;
+  }
+
+  .journal-notebook-spread::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 36px;
+    transform: translateX(-50%);
+    background: linear-gradient(
+      to right,
+      rgba(114, 67, 25, 0) 0%,
+      rgba(114, 67, 25, 0.055) 47%,
+      rgba(114, 67, 25, 0.14) 50%,
+      rgba(114, 67, 25, 0.045) 53%,
+      rgba(114, 67, 25, 0) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .journal-notebook-spread::after {
+    content: "";
+    position: absolute;
+    top: 18px;
+    bottom: 18px;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(138, 90, 68, 0.32) 0,
+      rgba(138, 90, 68, 0.32) 6px,
+      transparent 6px,
+      transparent 13px
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+.journal-photo-mount {
+  position: relative;
+  background-color: #FFFFFF;
+  padding: 6px;
+  border: 1px solid rgba(217, 182, 168, 0.85);
+  box-shadow: 0 3px 10px -4px rgba(74, 43, 16, 0.14);
+}
+
+.journal-photo-mount::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 48px;
+  height: 13px;
+  transform: translateX(-50%) rotate(-1.5deg);
+  background: rgba(242, 204, 195, 0.72);
+  border: 1px solid rgba(217, 182, 168, 0.55);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.journal-article-margin {
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .journal-article-margin::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 28px;
+    width: 1px;
+    background: rgba(201, 134, 114, 0.28);
+    pointer-events: none;
+  }
+}
+
+/* Left-hinged Notebook Page Flip Stage */
+.journal-flip-stage {
+  perspective: 1600px;
+}
+
+@keyframes journal-page-turn-forward {
+  0% {
+    opacity: 0.35;
+    transform: rotateY(-16deg) translateX(-6px);
+    box-shadow: -14px 0 28px -12px rgba(74, 43, 16, 0.22);
+  }
+  55% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) translateX(0);
+    box-shadow: 0 0 0 0 rgba(74, 43, 16, 0);
+  }
+}
+
+@keyframes journal-page-turn-backward {
+  0% {
+    opacity: 0.35;
+    transform: rotateY(14deg) translateX(6px);
+    box-shadow: -10px 0 24px -12px rgba(74, 43, 16, 0.18);
+  }
+  55% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) translateX(0);
+    box-shadow: 0 0 0 0 rgba(74, 43, 16, 0);
+  }
+}
+
+.journal-page-flip-next {
+  transform-origin: left center;
+  animation: journal-page-turn-forward 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.journal-page-flip-prev {
+  transform-origin: left center;
+  animation: journal-page-turn-backward 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (min-width: 1024px) {
+  .journal-spine-divider {
+    position: relative;
+  }
+
+  .journal-spine-divider::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 18px;
+    background: linear-gradient(
+      to right,
+      rgba(114, 67, 25, 0.12) 0%,
+      rgba(114, 67, 25, 0.04) 45%,
+      rgba(114, 67, 25, 0) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .journal-spine-divider::after {
+    content: "";
+    position: absolute;
+    top: 16px;
+    bottom: 16px;
+    left: 0;
+    width: 1px;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(138, 90, 68, 0.38) 0,
+      rgba(138, 90, 68, 0.38) 6px,
+      transparent 6px,
+      transparent 13px
+    );
+    pointer-events: none;
+    z-index: 3;
+  }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -137,6 +331,23 @@
   section {
     padding-top: 1rem !important;
     padding-bottom: 1rem !important;
+  }
+
+  .checklist-print-root {
+    background: #ffffff !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .checklist-print-area {
+    border: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .checklist-print-area li {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   * {

@@ -43,8 +43,11 @@ export const VendorCompareModal: React.FC<VendorCompareModalProps> = ({
 
   if (!isOpen || vendors.length === 0) return null;
 
-  const maxRating = Math.max(...vendors.map((v) => v.rating));
-  const hasDifferentRatings = vendors.some((v) => v.rating !== maxRating);
+  const ratedVendors = vendors.filter((v) => typeof v.rating === 'number');
+  const maxRating =
+    ratedVendors.length > 0 ? Math.max(...ratedVendors.map((v) => v.rating as number)) : null;
+  const hasDifferentRatings =
+    maxRating !== null && ratedVendors.some((v) => v.rating !== maxRating);
 
   return (
     <div
@@ -117,7 +120,11 @@ export const VendorCompareModal: React.FC<VendorCompareModalProps> = ({
                     {t('compare.selectedCount', { count: vendors.length })}
                   </th>
                   {vendors.map((vendor) => {
-                    const isTopRated = hasDifferentRatings && vendor.rating === maxRating;
+                    const isTopRated =
+                      hasDifferentRatings &&
+                      maxRating !== null &&
+                      typeof vendor.rating === 'number' &&
+                      vendor.rating === maxRating;
                     return (
                       <th
                         key={vendor.id}
@@ -193,17 +200,22 @@ export const VendorCompareModal: React.FC<VendorCompareModalProps> = ({
                       key={vendor.id}
                       className="p-4 sm:px-5 border-r last:border-r-0 border-[#EBC1B6]/40 align-top"
                     >
-                      <div className="flex items-center gap-1.5 font-semibold text-[#724319] tabular-nums">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
-                        <span>
-                          {Number.isInteger(vendor.rating)
-                            ? `${vendor.rating}.0`
-                            : vendor.rating}
-                        </span>
-                        <span className="text-xs font-normal text-[#8A5A44]">
-                          ({t('compare.reviewsCount', { count: vendor.reviewCount })})
-                        </span>
-                      </div>
+                      {typeof vendor.rating === 'number' &&
+                      typeof vendor.reviewCount === 'number' ? (
+                        <div className="flex items-center gap-1.5 font-semibold text-[#724319] tabular-nums">
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
+                          <span>
+                            {Number.isInteger(vendor.rating)
+                              ? `${vendor.rating}.0`
+                              : vendor.rating}
+                          </span>
+                          <span className="text-xs font-normal text-[#8A5A44]">
+                            ({t('compare.reviewsCount', { count: vendor.reviewCount })})
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-[#8A5A44]">—</span>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -231,14 +243,18 @@ export const VendorCompareModal: React.FC<VendorCompareModalProps> = ({
                   <th className="p-4 sm:px-5 font-semibold text-[#724319] bg-[#FFF8F6]/70 border-r border-[#EBC1B6]/50 align-top">
                     {t('compare.row.overview')}
                   </th>
-                  {vendors.map((vendor) => (
-                    <td
-                      key={vendor.id}
-                      className="p-4 sm:px-5 border-r last:border-r-0 border-[#EBC1B6]/40 align-top text-xs text-[#724319]/85 leading-relaxed"
-                    >
-                      {t(`vendor.${vendor.id}.desc`)}
-                    </td>
-                  ))}
+                  {vendors.map((vendor) => {
+                    const key = `vendor.${vendor.id}.desc`;
+                    const translated = t(key);
+                    return (
+                      <td
+                        key={vendor.id}
+                        className="p-4 sm:px-5 border-r last:border-r-0 border-[#EBC1B6]/40 align-top text-xs text-[#724319]/85 leading-relaxed"
+                      >
+                        {translated === key ? vendor.description : translated}
+                      </td>
+                    );
+                  })}
                 </tr>
 
                 {/* Supported Event Types */}

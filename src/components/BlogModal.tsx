@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { BlogPost } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { resolvePostText } from '../utils/journalHelpers';
 
 interface BlogModalProps {
   post: BlogPost | null;
@@ -58,7 +59,7 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
             id="blog-modal-title"
             className="text-2xl sm:text-3xl font-serif font-bold text-[#724319] leading-tight"
           >
-            {t(`blog.${post.id}.title`)}
+            {resolvePostText(t, `blog.${post.id}.title`, post.title)}
           </h2>
 
           <div className="text-xs text-[#724319]/70 mt-2">
@@ -67,9 +68,9 @@ export const BlogModal: React.FC<BlogModalProps> = ({ post, onClose }) => {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 sm:p-8 space-y-4 max-h-[calc(80vh-12rem)] overflow-y-auto text-xs sm:text-sm text-[#724319]/85 leading-relaxed">
-          <div className="p-4 bg-[#FFF8F6] rounded-2xl border border-[#EBC1B6]/60 italic font-serif text-[#724319]">
-            "{t(`blog.${post.id}.summary`)}"
+        <div className="p-6 sm:p-8 space-y-4 max-h-[calc(80vh-12rem)] overflow-y-auto text-xs sm:text-sm text-[#724319]/85 leading-relaxed journal-notebook-paper">
+          <div className="py-3.5 px-4 bg-[#FFF6F2]/90 border-y border-[#DEC1B5] italic font-serif text-[#724319]">
+            "{resolvePostText(t, `blog.${post.id}.summary`, post.summary)}"
           </div>
 
           {post.content.map((paragraph, idx) => (

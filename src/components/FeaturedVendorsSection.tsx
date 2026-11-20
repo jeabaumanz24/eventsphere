@@ -102,11 +102,13 @@ export const FeaturedVendorsSection: React.FC<FeaturedVendorsSectionProps> = ({
                       <h3 className="text-lg font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] transition-colors leading-snug">
                         {vendor.businessName}
                       </h3>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0 tabular-nums">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span>{Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating}</span>
-                        <span className="text-[11px] text-[#724319]/50 font-normal">({vendor.reviewCount})</span>
-                      </div>
+                      {typeof vendor.rating === 'number' && typeof vendor.reviewCount === 'number' && (
+                        <div className="flex items-center gap-1 text-xs font-semibold text-[#724319] shrink-0 tabular-nums">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <span>{Number.isInteger(vendor.rating) ? `${vendor.rating}.0` : vendor.rating}</span>
+                          <span className="text-[11px] text-[#724319]/50 font-normal">({vendor.reviewCount})</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="text-xs font-medium text-[#8A5A44] mb-2">
@@ -119,7 +121,11 @@ export const FeaturedVendorsSection: React.FC<FeaturedVendorsSectionProps> = ({
                     </div>
 
                     <p className="text-xs text-[#724319]/80 line-clamp-2 leading-relaxed">
-                      {t(`vendor.${vendor.id}.desc`)}
+                      {(() => {
+                        const key = `vendor.${vendor.id}.desc`;
+                        const translated = t(key);
+                        return translated === key ? vendor.description : translated;
+                      })()}
                     </p>
                   </div>
                 </div>

@@ -29,6 +29,7 @@ import { PAGE_CONFIGS, getPageHref } from '../utils/navigation';
 import { trackEvent } from '../utils/analytics';
 import { JournalArticleBrowser } from './JournalArticleBrowser';
 import { VendorImage } from './VendorImage';
+import { getPostCelebrationType, resolvePostText } from '../utils/journalHelpers';
 
 interface BlogPageProps {
   activePostId: string;
@@ -261,10 +262,30 @@ export const BlogPage: React.FC<BlogPageProps> = ({
       )
     : 0;
 
+  const activeTitle = resolvePostText(t, `blog.${activePost.id}.title`, activePost.title);
+  const activeSummary = resolvePostText(t, `blog.${activePost.id}.summary`, activePost.summary);
+  const activeCelebration = getPostCelebrationType(activePost);
+  const activeEntryIndex = blogPostsData.findIndex((p) => p.id === activePost.id);
+  const activeEntryNumber = String((activeEntryIndex >= 0 ? activeEntryIndex : 0) + 1).padStart(2, '0');
+
   const pillarPost = blogPostsData.find((p) => p.clusterRole === 'pillar');
   const clusterPosts = blogPostsData.filter((p) => p.clusterRole === 'cluster');
-  const culturalPlaybooks = blogPostsData.filter((p) => p.id.startsWith('j'));
-  const editorialPosts = blogPostsData.filter((p) => p.clusterRole === 'editorial' && !p.id.startsWith('j'));
+  const relatedChapterPosts = useMemo(() => {
+    const sameCelebration = activeCelebration
+      ? blogPostsData.filter(
+          (p) => getPostCelebrationType(p) === activeCelebration
+        )
+      : [];
+    if (sameCelebration.length >= 2) {
+      return sameCelebration.slice(0, 6);
+    }
+    return blogPostsData
+      .filter((p) => (p.journalCategory || 'Planning Tips') === activeCategory)
+      .slice(0, 6);
+  }, [activeCelebration, activeCategory]);
+  const editorialPosts = blogPostsData.filter(
+    (p) => p.clusterRole === 'editorial' && !p.id.startsWith('j')
+  );
 
   const sameCategoryPosts = useMemo(
     () =>
@@ -360,65 +381,80 @@ export const BlogPage: React.FC<BlogPageProps> = ({
       {/* Main Two-Column Editorial Canvas */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-14">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Article Column */}
-          <article className="lg:col-span-8 bg-white rounded-3xl border border-[#EBC1B6]/70 shadow-sm overflow-hidden">
-            {/* Article Hero Header */}
-            <header className="p-7 sm:p-10 md:p-12 bg-gradient-to-br from-[#FFF8F6] via-white to-[#F2CCC3]/35 border-b border-[#EBC1B6]/60">
-              <div className="flex flex-wrap items-center gap-2.5 text-xs font-medium text-[#8A5A44] mb-4">
-                <span className="px-3 py-1 rounded-full bg-[#F2CCC3]/50 text-[#724319] font-semibold">
-                  {activePost.clusterRole === 'pillar'
-                    ? t('blog.pillarBadge')
-                    : activePost.clusterRole === 'cluster'
-                      ? `${t('blog.tabCluster')} · ${activePost.category}`
-                      : activePost.category}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {activePost.readTime}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {activePost.publishedDate}
-                </span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl lg:text-[2.55rem] font-serif font-bold text-[#724319] leading-[1.15] tracking-tight mb-5">
-                {t(`blog.${activePost.id}.title`)}
-              </h1>
-
-              {activePost.featuredImage && (
-                <div className="mb-6 rounded-2xl overflow-hidden border border-[#EBC1B6]/70 aspect-[16/9] bg-[#FFF8F6]">
-                  <img
-                    src={activePost.featuredImage}
-                    alt={activePost.seo?.featuredImageAlt || t(`blog.${activePost.id}.title`)}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+          {/* Open Journal Notebook Article Page */}
+          <div className="lg:col-span-8 journal-notebook-cover rounded-[26px] p-2 sm:p-3">
+            <article className="journal-notebook-paper journal-article-margin rounded-[20px] border border-[#DEC1B5] overflow-hidden">
+              {/* Article Hero Header */}
+              <header className="px-6 py-8 sm:px-10 md:pl-14 md:pr-12 md:py-11 bg-[#FFFBF7]/90 border-b border-[#DEC1B5]/85">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium text-[#8A5A44] pb-3.5 mb-5 border-b border-[#EBC1B6]/70">
+                  <div className="flex flex-wrap items-center gap-2 uppercase tracking-[0.12em]">
+                    <span className="font-mono font-semibold text-[#724319] tabular-nums">
+                      Entry No. {activeEntryNumber}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span className="font-semibold text-[#724319]">
+                      {activeCelebration
+                        ? activeCelebration
+                        : activePost.clusterRole === 'pillar'
+                          ? t('blog.pillarBadge')
+                          : activePost.category}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 font-mono tabular-nums">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {activePost.readTime}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {activePost.publishedDate}
+                    </span>
+                  </div>
                 </div>
-              )}
 
-              <p className="text-sm sm:text-base text-[#724319]/85 leading-relaxed font-serif italic bg-white/80 p-5 rounded-2xl border border-[#EBC1B6]/60">
-                {t(`blog.${activePost.id}.summary`)}
-              </p>
+                <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-serif font-bold text-[#724319] leading-[1.15] tracking-tight mb-6 [text-wrap:balance]">
+                  {activeTitle}
+                </h1>
 
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-[#724319]/75">
-                <div>
-                  {t('blog.by')}{' '}
-                  <span className="font-semibold text-[#724319]">
-                    {activePost.author}
-                  </span>
+                {activePost.featuredImage && (
+                  <figure className="mb-7 pt-1">
+                    <div className="journal-photo-mount rounded-sm">
+                      <div className="aspect-[16/9] overflow-hidden bg-[#F6E6DF]">
+                        <img
+                          src={activePost.featuredImage}
+                          alt={activePost.seo?.featuredImageAlt || activeTitle}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    </div>
+                    <figcaption className="mt-2 text-xs font-serif italic text-[#8A5A44]">
+                      Fig. {activeEntryNumber} — {activePost.seo?.featuredImageAlt || activeTitle}
+                    </figcaption>
+                  </figure>
+                )}
+
+                <p className="text-sm sm:text-base text-[#724319]/90 leading-relaxed font-serif italic py-4 border-y border-[#DEC1B5]">
+                  {activeSummary}
+                </p>
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-[#724319]/75">
+                  <div>
+                    {t('blog.by')}{' '}
+                    <span className="font-semibold text-[#724319]">
+                      {activePost.author}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center gap-1 text-[#8A5A44]">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{t('blog.editionFooter')}</span>
+                  </div>
                 </div>
-                <div className="inline-flex items-center gap-1 text-[#8A5A44]">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{t('blog.editionFooter')}</span>
-                </div>
-              </div>
-            </header>
+              </header>
 
-            {/* Article Body */}
-            <div className="p-7 sm:p-10 md:p-12 space-y-11 text-[#724319]/90">
+              {/* Article Body */}
+              <div className="px-6 py-8 sm:px-10 md:pl-14 md:pr-12 md:py-11 space-y-10 text-[#724319]/90">
               {currentLanguage !== 'en' && (
                 <div className="p-4 rounded-2xl bg-[#FFF8F6] border border-[#EBC1B6] text-xs text-[#8A5A44] leading-relaxed">
                   {t('blog.langNote')}
@@ -596,7 +632,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                     )}
 
                     {section.closingNote && (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-[#FFF8F6] border-l-4 border-[#8A5A44] text-sm text-[#724319] font-medium leading-relaxed">
+                      <div className="py-4 px-5 bg-[#FFF6F2]/85 border-y border-[#DEC1B5] text-sm text-[#724319] font-serif italic leading-relaxed">
                         {section.closingNote}
                       </div>
                     )}
@@ -767,10 +803,12 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                             <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A5A44] truncate">
                               {t(`cat.${vendor.category}`)}
                             </span>
-                            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums shrink-0">
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                              {vendor.rating}
-                            </span>
+                            {typeof vendor.rating === 'number' && (
+                              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums shrink-0">
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                {vendor.rating}
+                              </span>
+                            )}
                           </div>
                           <h3 className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] truncate">
                             {vendor.businessName}
@@ -853,7 +891,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                             <span>{t('blog.prevArticle')}</span>
                           </span>
                           <span className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] leading-snug">
-                            {t(`blog.${prevCategoryPost.id}.title`)}
+                            {resolvePostText(t, `blog.${prevCategoryPost.id}.title`, prevCategoryPost.title)}
                           </span>
                         </a>
                       ) : (
@@ -879,7 +917,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                           </span>
                           <span className="text-sm font-serif font-bold text-[#724319] group-hover:text-[#8A5A44] leading-snug">
-                            {t(`blog.${nextCategoryPost.id}.title`)}
+                            {resolvePostText(t, `blog.${nextCategoryPost.id}.title`, nextCategoryPost.title)}
                           </span>
                         </a>
                       )}
@@ -1049,13 +1087,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               )}
             </div>
           </article>
+          </div>
 
           {/* Sticky Editorial Sidebar */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
             {/* Table of Contents */}
             {activePost.sections && activePost.sections.length > 0 && (
-              <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A5A44] mb-4">
+              <div className="bg-[#FFFDF9] rounded-2xl border border-[#DEC1B5] p-6 shadow-2xs">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A5A44] mb-4 pb-2 border-b border-[#EBC1B6]/70">
                   {t('blog.inThisGuide')}
                 </h3>
                 <nav className="space-y-1.5">
@@ -1065,7 +1104,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                       onClick={() => scrollToSection(sec.id)}
                       className="w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm text-[#724319]/85 hover:text-[#724319] hover:bg-[#FFF8F6] transition-colors flex items-start gap-2.5 cursor-pointer"
                     >
-                      <span className="font-mono text-[11px] text-[#8A5A44] mt-0.5 shrink-0">
+                      <span className="font-mono text-[11px] text-[#8A5A44] mt-0.5 shrink-0 tabular-nums">
                         {i + 1 < 10 ? `0${i + 1}` : i + 1}
                       </span>
                       <span className="leading-snug">{sec.heading}</span>
@@ -1088,39 +1127,40 @@ export const BlogPage: React.FC<BlogPageProps> = ({
               </div>
             )}
 
-            {/* Cultural & Event Planning Journal Library */}
-            <div className="bg-white rounded-3xl border border-[#EBC1B6]/70 p-6 shadow-xs space-y-5">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8A5A44]">
+            {/* Focused Chapter Bookmark Sidebar */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#DEC1B5] p-6 shadow-2xs space-y-5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A5A44] pb-2 border-b border-[#EBC1B6]/70">
                 <Link2 className="w-3.5 h-3.5" />
-                <span>{t('blog.clusterSidebarTitle')}</span>
+                <span>{activeCelebration || t('blog.clusterSidebarTitle')}</span>
               </div>
 
-              {culturalPlaybooks.length > 0 && (
+              {relatedChapterPosts.length > 0 && (
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                    {t('blog.tabCluster')} ({culturalPlaybooks.length})
+                    In this chapter ({relatedChapterPosts.length})
                   </div>
                   <div className="space-y-2">
-                    {culturalPlaybooks.map((post) => {
+                    {relatedChapterPosts.map((post) => {
                       const isCurrent = post.id === activePost.id;
+                      const postTitle = resolvePostText(t, `blog.${post.id}.title`, post.title);
                       return (
                         <button
                           key={post.id}
                           type="button"
                           onClick={() => handleSelectArticle(post)}
-                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
+                          className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
                             isCurrent
                               ? 'bg-[#724319] text-white border-[#724319] shadow-2xs'
                               : 'bg-[#FFF8F6] border-[#EBC1B6]/70 text-[#724319] hover:bg-[#F2CCC3]/30'
                           }`}
                         >
-                          <div className={`flex items-center gap-2 text-[10px] mb-0.5 ${isCurrent ? 'text-white/75' : 'text-[#8A5A44]'}`}>
-                            <span>{t(`blog.cat.${post.journalCategory || 'Planning Tips'}`)}</span>
+                          <div className={`flex items-center gap-2 text-[10px] mb-0.5 font-mono ${isCurrent ? 'text-white/75' : 'text-[#8A5A44]'}`}>
+                            <span>{getPostCelebrationType(post) || t(`blog.cat.${post.journalCategory || 'Planning Tips'}`)}</span>
                             <span aria-hidden="true">·</span>
                             <span>{post.readTime}</span>
                           </div>
                           <div className="text-xs sm:text-sm font-serif font-bold leading-snug">
-                            {t(`blog.${post.id}.title`)}
+                            {postTitle}
                           </div>
                         </button>
                       );
@@ -1137,72 +1177,45 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSelectArticle(pillarPost)}
-                    className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
                       pillarPost.id === activePost.id
                         ? 'bg-[#724319] text-white border-[#724319] shadow-xs'
                         : 'bg-[#FFF8F6] border-[#EBC1B6] text-[#724319] hover:bg-[#F2CCC3]/30'
                     }`}
                   >
                     <div className="text-sm font-serif font-bold leading-snug">
-                      {t(`blog.${pillarPost.id}.title`)}
+                      {resolvePostText(t, `blog.${pillarPost.id}.title`, pillarPost.title)}
                     </div>
                   </button>
                 </div>
               )}
 
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                  {t('blog.supportingHeading')} ({clusterPosts.length})
-                </div>
-                <div className="space-y-2">
-                  {clusterPosts.map((post) => {
-                    const isCurrent = post.id === activePost.id;
-                    return (
-                      <button
-                        key={post.id}
-                        type="button"
-                        onClick={() => handleSelectArticle(post)}
-                        className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
-                          isCurrent
-                            ? 'bg-[#FFF8F6] border-[#8A5A44] shadow-2xs'
-                            : 'bg-white border-[#EBC1B6]/60 hover:bg-[#FFF8F6]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 text-[11px] text-[#8A5A44] mb-0.5">
-                          <span>{post.category}</span>
-                          <span aria-hidden="true">·</span>
-                          <span>{post.readTime}</span>
-                        </div>
-                        <div className="text-xs sm:text-sm font-serif font-bold text-[#724319] leading-snug">
-                          {t(`blog.${post.id}.title`)}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {editorialPosts.length > 0 && (
-                <div className="pt-2 border-t border-[#EBC1B6]/50">
+              {clusterPosts.length > 0 && activeCelebration === 'Weddings' && (
+                <div>
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
-                    {t('blog.adelaideSpotlight')}
+                    {t('blog.supportingHeading')} ({clusterPosts.length})
                   </div>
                   <div className="space-y-2">
-                    {editorialPosts.map((post) => {
+                    {clusterPosts.map((post) => {
                       const isCurrent = post.id === activePost.id;
                       return (
                         <button
                           key={post.id}
                           type="button"
                           onClick={() => handleSelectArticle(post)}
-                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
+                          className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
                             isCurrent
                               ? 'bg-[#FFF8F6] border-[#8A5A44] shadow-2xs'
                               : 'bg-white border-[#EBC1B6]/60 hover:bg-[#FFF8F6]'
                           }`}
                         >
-                          <div className="text-xs font-serif font-bold text-[#724319] leading-snug">
-                            {t(`blog.${post.id}.title`)}
+                          <div className="flex items-center gap-2 text-[11px] text-[#8A5A44] mb-0.5">
+                            <span>{post.category}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>{post.readTime}</span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-serif font-bold text-[#724319] leading-snug">
+                            {resolvePostText(t, `blog.${post.id}.title`, post.title)}
                           </div>
                         </button>
                       );
@@ -1210,6 +1223,43 @@ export const BlogPage: React.FC<BlogPageProps> = ({
                   </div>
                 </div>
               )}
+
+              {editorialPosts.length > 0 && (
+                <div className="pt-2 border-t border-[#EBC1B6]/50">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A5A44] mb-2">
+                    {t('blog.adelaideSpotlight')}
+                  </div>
+                  <div className="space-y-2">
+                    {editorialPosts.slice(0, 3).map((post) => {
+                      const isCurrent = post.id === activePost.id;
+                      return (
+                        <button
+                          key={post.id}
+                          type="button"
+                          onClick={() => handleSelectArticle(post)}
+                          className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                            isCurrent
+                              ? 'bg-[#FFF8F6] border-[#8A5A44] shadow-2xs'
+                              : 'bg-white border-[#EBC1B6]/60 hover:bg-[#FFF8F6]'
+                          }`}
+                        >
+                          <div className="text-xs font-serif font-bold text-[#724319] leading-snug">
+                            {resolvePostText(t, `blog.${post.id}.title`, post.title)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <a
+                href="#journal-directory"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#724319] hover:text-[#8A5A44] underline decoration-[#DEC1B5] underline-offset-4 pt-1"
+              >
+                <span>Browse all {blogPostsData.length} notebook entries</span>
+                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              </a>
             </div>
 
             {/* Return Home Card */}
@@ -1237,8 +1287,9 @@ export const BlogPage: React.FC<BlogPageProps> = ({
 
       {/* Unified Non-Scrolling Journal Browser Below Article Canvas */}
       <section
+        id="journal-directory"
         aria-label={t('blog.directoryHeading')}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 mt-14 border-t border-[#EBC1B6]/60"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 mt-14 border-t border-[#EBC1B6]/60 scroll-mt-24"
       >
         <JournalArticleBrowser
           selectedCategory={selectedJournalCategory}

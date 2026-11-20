@@ -187,6 +187,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
         tradition: plannerTraditionToMarketplace(selectedTradition),
         budget: totalBudget,
         guests: guestCount,
+        matchMode: 'plan',
       }),
     [selectedEventType, selectedTradition, totalBudget, guestCount]
   );
@@ -210,6 +211,7 @@ export const AIPlannerSection: React.FC<AIPlannerSectionProps> = ({
     trackEvent('marketplace_filter_used', {
       filter_type: 'planner_match',
       event_type: getEventSlug(selectedEventType),
+      match_tier: matchedPlan.overallMatchTier,
     });
   };
 

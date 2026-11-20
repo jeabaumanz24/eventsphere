@@ -19,6 +19,8 @@ import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
 import { VendorInsightsSection } from './components/VendorInsightsSection';
 import { JoinVendorSection } from './components/JoinVendorSection';
+import { ChecklistsHubPage } from './components/ChecklistsHubPage';
+import { ChecklistDetailPage } from './components/ChecklistDetailPage';
 import { Footer } from './components/Footer';
 import { VendorModal } from './components/VendorModal';
 import { WishlistModal } from './components/WishlistModal';
@@ -26,9 +28,19 @@ import { BlogModal } from './components/BlogModal';
 import { LegalModal } from './components/LegalModal';
 import { Toast } from './components/Toast';
 import { blogPostsData, vendorsData } from './data/mockData';
+import {
+  CHECKLISTS_HUB_SEO,
+  getChecklistAbsoluteUrl,
+  getChecklistBySlug,
+} from './data/checklistsData';
 import { Vendor, BlogPost, PageId, MarketplaceFilterContext } from './types';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { PAGE_CONFIGS, detectCurrentPage, getPageHref } from './utils/navigation';
+import {
+  PAGE_CONFIGS,
+  detectCurrentChecklistSlug,
+  detectCurrentPage,
+  getPageHref,
+} from './utils/navigation';
 import { trackEvent, trackPageView } from './utils/analytics';
 import { parseMarketplaceUrlParams } from './utils/plannerMatching';
 
@@ -60,6 +72,11 @@ function extractBlogPostIdFromLocation(): string | null {
 function EventSphereApp() {
   const { t, tFor, currentLanguage } = useLanguage();
   const currentPage: PageId = useMemo(() => detectCurrentPage(), []);
+  const currentChecklistSlug = useMemo(() => detectCurrentChecklistSlug(), []);
+  const activeChecklist = useMemo(
+    () => (currentPage === 'checklist-detail' ? getChecklistBySlug(currentChecklistSlug) : null),
+    [currentPage, currentChecklistSlug]
+  );
   const [activeBlogId, setActiveBlogId] = useState<string | null>(() =>
     extractBlogPostIdFromLocation()
   );
@@ -111,13 +128,32 @@ function EventSphereApp() {
       return;
     }
 
+    if (currentPage === 'checklist-detail' && activeChecklist) {
+      const canonical = getChecklistAbsoluteUrl(activeChecklist.slug);
+      document.title = activeChecklist.seoTitle;
+      const descTag = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+      if (descTag) descTag.setAttribute('content', activeChecklist.metaDescription);
+      const canonicalTag = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (canonicalTag) canonicalTag.setAttribute('href', canonical);
+      const ogTitleTag = document.querySelector<HTMLMetaElement>('meta[property="og:title"]');
+      if (ogTitleTag) ogTitleTag.setAttribute('content', activeChecklist.seoTitle);
+      const ogDescTag = document.querySelector<HTMLMetaElement>('meta[property="og:description"]');
+      if (ogDescTag) ogDescTag.setAttribute('content', activeChecklist.metaDescription);
+      const ogUrlTag = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+      if (ogUrlTag) ogUrlTag.setAttribute('content', canonical);
+      const ogImgTag = document.querySelector<HTMLMetaElement>('meta[property="og:image"]');
+      if (ogImgTag) ogImgTag.setAttribute('content', CHECKLISTS_HUB_SEO.ogImage);
+      trackPageView(`checklist:${activeChecklist.slug}`, activeChecklist.seoTitle);
+      return;
+    }
+
     document.title = config.title;
     const descTag = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (descTag) {
       descTag.setAttribute('content', config.description);
     }
     trackPageView(currentPage, config.title);
-  }, [currentPage, activeBlogId]);
+  }, [currentPage, activeBlogId, activeChecklist]);
 
   // Sync browser back/forward navigation & legacy #/blog/ hashes
   useEffect(() => {
@@ -379,6 +415,15 @@ function EventSphereApp() {
         {currentPage === 'join-as-a-vendor' && (
           <JoinVendorSection onOpenPrivacy={() => setLegalModalType('privacy')} />
         )}
+
+        {currentPage === 'checklists' && <ChecklistsHubPage />}
+
+        {currentPage === 'checklist-detail' &&
+          (activeChecklist ? (
+            <ChecklistDetailPage checklist={activeChecklist} />
+          ) : (
+            <ChecklistsHubPage />
+          ))}
       </main>
 
       {/* Shared Footer */}

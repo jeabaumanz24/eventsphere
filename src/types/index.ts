@@ -66,19 +66,22 @@ export type ServiceZone =
   | 'McLaren Vale & Fleurieu Peninsula'
   | 'Glenelg & the coast';
 
+export type MatchTier = 'exact' | 'area' | 'neutral' | 'closest';
+
 export interface Vendor {
   id: string;
   name: string;
   businessName: string;
   category: VendorCategory;
-  rating: number;
-  reviewCount: number;
+  rating?: number;
+  reviewCount?: number;
   location: string;
   serviceAreas: ServiceZone[];
   startingPrice: string;
   image: string | null;
   imageAlt: string;
   traditions: CulturalTradition[];
+  traditionNeutral?: boolean;
   culturalSpecialties: string[];
   eventTypes: EventTypeTag[];
   description: string;
@@ -150,6 +153,7 @@ export interface BlogPost {
   slug?: string;
   clusterRole?: 'pillar' | 'cluster' | 'editorial';
   journalCategory?: JournalCategory;
+  celebrationType?: EventTypeTag;
   title: string;
   category: string;
   readTime: string;
@@ -203,7 +207,9 @@ export type PageId =
   | 'blog'
   | 'contact'
   | 'vendor-insights'
-  | 'join-as-a-vendor';
+  | 'join-as-a-vendor'
+  | 'checklists'
+  | 'checklist-detail';
 
 export interface PlanPreviewVendorSummary {
   id: string;
