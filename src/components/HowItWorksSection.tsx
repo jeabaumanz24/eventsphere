@@ -10,27 +10,28 @@ import {
   Clock,
   Star,
   AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { howItWorksSteps, vendorsData } from '../data/mockData';
-import { CulturalTradition, EventTypeTag, PlanPreviewContextData, Vendor } from '../types';
+import {
+  ALL_SERVICE_ZONES,
+  getZoneByName,
+  vendorServesZone,
+} from '../data/serviceZones';
+import {
+  CulturalTradition,
+  EventTypeTag,
+  PlanPreviewContextData,
+  ServiceZone,
+  Vendor,
+} from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
 import { getPageHref } from '../utils/navigation';
-import { getEventSlug, marketplaceTraditionToSlug } from '../utils/plannerMatching';
 import { PlanSummaryActions } from './PlanSummaryActions';
 import { VendorImage } from './VendorImage';
 
 type HeadcountOption = 'Under 30' | '30-60' | '60-100' | '100-200' | '200+';
-
-type LocationOption =
-  | 'Adelaide CBD'
-  | 'Adelaide Hills'
-  | 'Barossa'
-  | 'McLaren Vale'
-  | 'Fleurieu Peninsula'
-  | 'Glenelg and beaches'
-  | 'Northern suburbs'
-  | 'Southern suburbs';
 
 type BudgetOption =
   | ''
@@ -59,6 +60,8 @@ interface MatchedPackageItem {
   scaledPriceSummary: string;
   matchedChips: CulturalChipOption[];
   quoteLineItems: string[];
+  matchedZone: ServiceZone;
+  isExactZoneMatch: boolean;
 }
 
 const EVENT_TYPE_OPTIONS: EventTypeTag[] = [
@@ -100,16 +103,7 @@ const HEADCOUNT_OPTIONS: { value: HeadcountOption; midpoint: number; looks: numb
   { value: '200+', midpoint: 240, looks: 5 },
 ];
 
-const LOCATION_OPTIONS: LocationOption[] = [
-  'Adelaide CBD',
-  'Adelaide Hills',
-  'Barossa',
-  'McLaren Vale',
-  'Fleurieu Peninsula',
-  'Glenelg and beaches',
-  'Northern suburbs',
-  'Southern suburbs',
-];
+const LOCATION_OPTIONS: ServiceZone[] = ALL_SERVICE_ZONES;
 
 const BUDGET_OPTIONS: { value: BudgetOption; label: string; maxAud: number }[] = [
   { value: 'under-2500', label: 'Under $2,500 AUD', maxAud: 2500 },
@@ -1249,29 +1243,38 @@ function specialtyMatchesActiveTraditions(
   return true;
 }
 
-function matchesLocation(vendorLocation: string, chosenLocation: LocationOption): { score: number; exact: boolean } {
-  const loc = vendorLocation.toLowerCase();
-  const isMetroWide = loc.includes('metro') || loc.includes('state-wide') || loc.includes('mobile') || loc.includes('greater');
+function evaluateVendorZone(
+  vendor: Vendor,
+  chosenZone: ServiceZone
+): { score: number; exact: boolean; matchedZone: ServiceZone; nearbyRank: number } {
+  if (vendorServesZone(vendor, chosenZone)) {
+    const isStateWide = vendor.serviceAreas.length >= ALL_SERVICE_ZONES.length;
+    return {
+      score: isStateWide ? 18 : 24,
+      exact: true,
+      matchedZone: chosenZone,
+      nearbyRank: 0,
+    };
+  }
 
-  const keywordsByLocation: Record<LocationOption, string[]> = {
-    'Adelaide CBD': ['cbd', 'chinatown', 'north adelaide', 'norwood', 'unley', 'thebarton', 'prospect'],
-    'Adelaide Hills': ['hills', 'stirling', 'mount barker', 'foothills'],
-    Barossa: ['barossa', 'tanunda'],
-    'McLaren Vale': ['mclaren vale', 'southern vales'],
-    'Fleurieu Peninsula': ['fleurieu', 'willunga', 'victor harbor'],
-    'Glenelg and beaches': ['glenelg', 'henley', 'port adelaide', 'coast'],
-    'Northern suburbs': ['northern', 'salisbury', 'kilburn', 'mawson lakes', 'woodville', 'prospect', 'elizabeth', 'campbelltown'],
-    'Southern suburbs': ['southern', 'torrensville', 'thebarton', 'unley', 'glenelg'],
+  const nearbyZones = getZoneByName(chosenZone)?.nearbyZones || [];
+  const nearestIdx = nearbyZones.findIndex((nz) => vendor.serviceAreas.includes(nz));
+
+  if (nearestIdx >= 0) {
+    return {
+      score: Math.max(4, 14 - nearestIdx * 2),
+      exact: false,
+      matchedZone: nearbyZones[nearestIdx],
+      nearbyRank: nearestIdx + 1,
+    };
+  }
+
+  return {
+    score: 2,
+    exact: false,
+    matchedZone: vendor.serviceAreas[0] || chosenZone,
+    nearbyRank: 99,
   };
-
-  const directHits = keywordsByLocation[chosenLocation];
-  if (directHits.some((kw) => loc.includes(kw))) {
-    return { score: 24, exact: true };
-  }
-  if (isMetroWide) {
-    return { score: 14, exact: false };
-  }
-  return { score: 4, exact: false };
 }
 
 function estimateVendorCost(
@@ -1378,6 +1381,56 @@ function getScopedVendorDetails(
   };
 }
 
+interface WrappingSelectOption {
+  value: string;
+  label: string;
+}
+
+interface WrappingSelectProps {
+  id: string;
+  value: string;
+  options: WrappingSelectOption[];
+  onChange: (nextValue: string) => void;
+  size?: 'sm' | 'md';
+}
+
+const WrappingSelect: React.FC<WrappingSelectProps> = ({
+  id,
+  value,
+  options,
+  onChange,
+  size = 'md',
+}) => {
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? value;
+  const textClass = size === 'sm' ? 'text-xs' : 'text-xs sm:text-sm';
+
+  return (
+    <div className="relative w-full">
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="peer absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div
+        aria-hidden="true"
+        className={`w-full min-h-[38px] flex items-center justify-between gap-2 bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2.5 py-2 font-semibold text-[#724319] transition-shadow peer-hover:border-[#8A5A44]/70 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#724319] peer-focus-visible:ring-offset-1 ${textClass}`}
+      >
+        <span className="whitespace-normal break-words leading-snug text-left min-w-0 flex-1">
+          {selectedLabel}
+        </span>
+        <ChevronDown className="w-4 h-4 text-[#8A5A44] shrink-0" aria-hidden="true" />
+      </div>
+    </div>
+  );
+};
+
 export const HowItWorksSection: React.FC = () => {
   const { t } = useLanguage();
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -1394,7 +1447,7 @@ export const HowItWorksSection: React.FC = () => {
     return getDefaultElementIds(initialChips);
   });
   const [headcount, setHeadcount] = useState<HeadcountOption>('60-100');
-  const [location, setLocation] = useState<LocationOption>('Adelaide CBD');
+  const [location, setLocation] = useState<ServiceZone>('Adelaide CBD & North Adelaide');
   const [budget, setBudget] = useState<BudgetOption>('');
   const [preferredTime, setPreferredTime] = useState<string>(
     DEFAULT_SERVICE_TIME['Diwali & Festival of Lights']
@@ -1426,7 +1479,7 @@ export const HowItWorksSection: React.FC = () => {
     nextTradition: TraditionDropdownValue,
     nextFusion: CulturalTradition[],
     nextHeadcount: HeadcountOption,
-    nextLocation: LocationOption,
+    nextLocation: ServiceZone,
     nextBudget: BudgetOption,
     nextElementIds: string[],
     stepIndex: number
@@ -1567,8 +1620,9 @@ export const HowItWorksSection: React.FC = () => {
     );
   };
 
-  const handleLocationChange = (nextLocation: LocationOption) => {
+  const handleLocationChange = (nextLocation: ServiceZone) => {
     setLocation(nextLocation);
+    setChosenStep3VendorId('');
     fireTimelineEvent(
       selectedEventType,
       selectedTradition,
@@ -1611,13 +1665,14 @@ export const HowItWorksSection: React.FC = () => {
     }
   };
 
-  // Generate culturally strict 2-3 vendor package directly from vendorsData using vendor.traditions
+  // Generate culturally strict 2-3 vendor package directly from vendorsData using vendor.traditions & serviceAreas
   const {
     recommendedPackage,
     overallFitScore,
     packageEstimatedTotal,
     exceedsSelectedBudget,
     isClosestFallback,
+    isAreaFallback,
   } = useMemo(() => {
     const budgetMax = BUDGET_OPTIONS.find((b) => b.value === budget)?.maxAud ?? null;
 
@@ -1638,26 +1693,31 @@ export const HowItWorksSection: React.FC = () => {
     }
 
     let usingClosestFallback = false;
-    let candidatePool = exactPool;
+    let culturalPool = exactPool;
 
     // Step B: Friendly closest fallback if no exact vendor matches (e.g. uncommon Fusion combo or off-season event)
-    if (candidatePool.length === 0 && activeTraditions.length > 0) {
+    if (culturalPool.length === 0 && activeTraditions.length > 0) {
       usingClosestFallback = true;
       const partialEventMatch = eventPool.filter((v) =>
         activeTraditions.some((tr) => v.traditions.includes(tr))
       );
       if (partialEventMatch.length > 0) {
-        candidatePool = partialEventMatch;
+        culturalPool = partialEventMatch;
       } else {
         // Fallback to vendors covering the tradition across adjacent celebration types
         const traditionAnyEvent = vendorsData.filter((v) =>
           activeTraditions.some((tr) => v.traditions.includes(tr))
         );
-        candidatePool = traditionAnyEvent.length > 0 ? traditionAnyEvent : eventPool;
+        culturalPool = traditionAnyEvent.length > 0 ? traditionAnyEvent : eventPool;
       }
     }
 
-    // Step C: Score candidates strictly within their own matching traditions & services
+    // Step B2: Filter strictly to vendors serving the chosen zone (State-wide vendors include all 9 zones)
+    const zoneMatchedPool = culturalPool.filter((v) => vendorServesZone(v, location));
+    const usingAreaFallback = zoneMatchedPool.length === 0;
+    const candidatePool = usingAreaFallback ? culturalPool : zoneMatchedPool;
+
+    // Step C: Score candidates strictly within their own matching traditions, services & zone
     const scored = candidatePool.map((vendor) => {
       const { matchedChips, quoteLineItems } = getScopedVendorDetails(
         vendor,
@@ -1693,7 +1753,7 @@ export const HowItWorksSection: React.FC = () => {
               ? 8
               : 5;
 
-      const locMatch = matchesLocation(vendor.location, location);
+      const zoneEval = evaluateVendorZone(vendor, location);
       const costInfo = estimateVendorCost(vendor, headcount);
 
       let budgetAdjust = 0;
@@ -1714,7 +1774,7 @@ export const HowItWorksSection: React.FC = () => {
         (usingClosestFallback ? 54 : 62) +
         matchedTraditionCount * 10 +
         elementRatio * 18 +
-        (locMatch.exact ? 8 : locMatch.score >= 12 ? 5 : 2) +
+        (zoneEval.exact ? 8 : zoneEval.score >= 10 ? 5 : 2) +
         (matchedChips.length > 0 ? 5 : 0) +
         (budgetAdjust > 0 ? 3 : 0);
 
@@ -1725,7 +1785,7 @@ export const HowItWorksSection: React.FC = () => {
         matchedChips.length * 22 +
         culturalSpecificityBonus +
         coreCategoryPriority +
-        locMatch.score +
+        zoneEval.score +
         capacityAdjust +
         budgetAdjust +
         vendor.rating * 3;
@@ -1734,6 +1794,9 @@ export const HowItWorksSection: React.FC = () => {
         vendor,
         fitScore,
         rankScore,
+        nearbyRank: zoneEval.nearbyRank,
+        matchedZone: zoneEval.matchedZone,
+        isExactZoneMatch: zoneEval.exact,
         unitPriceLabel: costInfo.unitPriceLabel,
         scaledEstimate: costInfo.scaledEstimate,
         scaledPriceSummary: costInfo.summary,
@@ -1742,7 +1805,13 @@ export const HowItWorksSection: React.FC = () => {
       };
     });
 
-    scored.sort((a, b) => b.rankScore - a.rankScore);
+    // When showing nearest-area fallback, prefer closer zones first, then highest rank score
+    scored.sort((a, b) => {
+      if (usingAreaFallback && a.nearbyRank !== b.nearbyRank) {
+        return a.nearbyRank - b.nearbyRank;
+      }
+      return b.rankScore - a.rankScore;
+    });
 
     // Step D: Pick up to 3 distinct-category vendors
     const chosen: MatchedPackageItem[] = [];
@@ -1760,6 +1829,8 @@ export const HowItWorksSection: React.FC = () => {
         scaledPriceSummary: item.scaledPriceSummary,
         matchedChips: item.matchedChips,
         quoteLineItems: item.quoteLineItems,
+        matchedZone: item.matchedZone,
+        isExactZoneMatch: item.isExactZoneMatch,
       });
     }
 
@@ -1775,6 +1846,7 @@ export const HowItWorksSection: React.FC = () => {
       packageEstimatedTotal: totalAud,
       exceedsSelectedBudget: budgetMax !== null && totalAud > budgetMax,
       isClosestFallback: usingClosestFallback,
+      isAreaFallback: usingAreaFallback,
     };
   }, [selectedEventType, activeTraditions, selectedChipObjects, location, headcount, budget]);
 
@@ -1824,40 +1896,6 @@ export const HowItWorksSection: React.FC = () => {
     return BUDGET_OPTIONS.find((b) => b.value === budget)?.label || t('how.mock1BudgetFlexible');
   }, [budget, t]);
 
-  const findVendorsHref = useMemo(() => {
-    const params = new URLSearchParams();
-    const eventSlug = getEventSlug(selectedEventType);
-    if (eventSlug) {
-      params.set('event', eventSlug);
-    }
-
-    const singleTradition =
-      selectedTradition !== 'Other or Fusion'
-        ? selectedTradition
-        : fusionTraditions.length === 1
-          ? fusionTraditions[0]
-          : null;
-    if (singleTradition) {
-      const traditionSlug = marketplaceTraditionToSlug(singleTradition);
-      if (traditionSlug) {
-        params.set('tradition', traditionSlug);
-      }
-    }
-
-    const selectedBudgetOption = BUDGET_OPTIONS.find((b) => b.value === budget);
-    if (selectedBudgetOption) {
-      params.set('budget', String(Math.round(selectedBudgetOption.maxAud)));
-    }
-
-    const selectedHeadcountOption = HEADCOUNT_OPTIONS.find((h) => h.value === headcount);
-    if (selectedHeadcountOption) {
-      params.set('guests', String(selectedHeadcountOption.midpoint));
-    }
-
-    const query = params.toString();
-    return getPageHref('vendors', query ? `?${query}` : '');
-  }, [selectedEventType, selectedTradition, fusionTraditions, budget, headcount]);
-
   const currentPlanPreviewData: PlanPreviewContextData | null = useMemo(() => {
     if (!activeStep3Item) return null;
     return {
@@ -1881,7 +1919,7 @@ export const HowItWorksSection: React.FC = () => {
         id: item.vendor.id,
         businessName: item.vendor.businessName,
         category: item.vendor.category,
-        location: item.vendor.location,
+        location: item.matchedZone,
         fitScore: item.fitScore,
         unitPriceLabel: item.unitPriceLabel,
         scaledPriceSummary: item.scaledPriceSummary,
@@ -2024,18 +2062,15 @@ export const HowItWorksSection: React.FC = () => {
                           >
                             {t('how.mock1TypeLabel')}
                           </label>
-                          <select
+                          <WrappingSelect
                             id="how-event-type-select"
                             value={selectedEventType}
-                            onChange={(e) => handleEventTypeChange(e.target.value as EventTypeTag)}
-                            className="w-full text-xs sm:text-sm font-semibold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
-                          >
-                            {EVENT_TYPE_OPTIONS.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {t(`eventType.${opt}`)}
-                              </option>
-                            ))}
-                          </select>
+                            options={EVENT_TYPE_OPTIONS.map((opt) => ({
+                              value: opt,
+                              label: t(`eventType.${opt}`),
+                            }))}
+                            onChange={(val) => handleEventTypeChange(val as EventTypeTag)}
+                          />
                         </div>
 
                         <div className="p-3 bg-white rounded-xl border border-[#EBC1B6]/50">
@@ -2045,20 +2080,17 @@ export const HowItWorksSection: React.FC = () => {
                           >
                             {t('how.mock1TraditionLabel')}
                           </label>
-                          <select
+                          <WrappingSelect
                             id="how-tradition-select"
                             value={selectedTradition}
-                            onChange={(e) =>
-                              handleTraditionChange(e.target.value as TraditionDropdownValue)
+                            options={TRADITION_DROPDOWN_OPTIONS.map((trOpt) => ({
+                              value: trOpt,
+                              label: t(`tradition.${trOpt}`),
+                            }))}
+                            onChange={(val) =>
+                              handleTraditionChange(val as TraditionDropdownValue)
                             }
-                            className="w-full text-xs sm:text-sm font-semibold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
-                          >
-                            {TRADITION_DROPDOWN_OPTIONS.map((trOpt) => (
-                              <option key={trOpt} value={trOpt}>
-                                {t(`tradition.${trOpt}`)}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
                       </div>
 
@@ -2155,8 +2187,8 @@ export const HowItWorksSection: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Headcount + Location + Budget Real Inputs */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {/* Headcount + Budget + Location Real Inputs (non-truncating, wrapping selects) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
                           <label
                             htmlFor="how-headcount-select"
@@ -2164,39 +2196,16 @@ export const HowItWorksSection: React.FC = () => {
                           >
                             {t('how.mock1Guests')}
                           </label>
-                          <select
+                          <WrappingSelect
                             id="how-headcount-select"
+                            size="sm"
                             value={headcount}
-                            onChange={(e) => handleHeadcountChange(e.target.value as HeadcountOption)}
-                            className="w-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
-                          >
-                            {HEADCOUNT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.value}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
-                          <label
-                            htmlFor="how-location-select"
-                            className="text-[10px] text-[#8A5A44] uppercase font-bold block mb-1"
-                          >
-                            {t('how.mock1Location')}
-                          </label>
-                          <select
-                            id="how-location-select"
-                            value={location}
-                            onChange={(e) => handleLocationChange(e.target.value as LocationOption)}
-                            className="w-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
-                          >
-                            {LOCATION_OPTIONS.map((locOpt) => (
-                              <option key={locOpt} value={locOpt}>
-                                {locOpt}
-                              </option>
-                            ))}
-                          </select>
+                            options={HEADCOUNT_OPTIONS.map((opt) => ({
+                              value: opt.value,
+                              label: opt.value,
+                            }))}
+                            onChange={(val) => handleHeadcountChange(val as HeadcountOption)}
+                          />
                         </div>
 
                         <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50">
@@ -2206,19 +2215,38 @@ export const HowItWorksSection: React.FC = () => {
                           >
                             {t('how.mock1BudgetLabel')}
                           </label>
-                          <select
+                          <WrappingSelect
                             id="how-budget-select"
+                            size="sm"
                             value={budget}
-                            onChange={(e) => handleBudgetChange(e.target.value as BudgetOption)}
-                            className="w-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] border border-[#EBC1B6] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/40 cursor-pointer"
+                            options={[
+                              { value: '', label: t('how.mock1BudgetFlexible') },
+                              ...BUDGET_OPTIONS.map((bOpt) => ({
+                                value: bOpt.value,
+                                label: bOpt.label,
+                              })),
+                            ]}
+                            onChange={(val) => handleBudgetChange(val as BudgetOption)}
+                          />
+                        </div>
+
+                        <div className="p-2.5 bg-white rounded-xl border border-[#EBC1B6]/50 sm:col-span-2">
+                          <label
+                            htmlFor="how-location-select"
+                            className="text-[10px] text-[#8A5A44] uppercase font-bold block mb-1"
                           >
-                            <option value="">{t('how.mock1BudgetFlexible')}</option>
-                            {BUDGET_OPTIONS.map((bOpt) => (
-                              <option key={bOpt.value} value={bOpt.value}>
-                                {bOpt.label}
-                              </option>
-                            ))}
-                          </select>
+                            {t('how.mock1Location')}
+                          </label>
+                          <WrappingSelect
+                            id="how-location-select"
+                            size="sm"
+                            value={location}
+                            options={LOCATION_OPTIONS.map((locOpt) => ({
+                              value: locOpt,
+                              label: locOpt,
+                            }))}
+                            onChange={(val) => handleLocationChange(val as ServiceZone)}
+                          />
                         </div>
                       </div>
                     </div>
@@ -2242,13 +2270,26 @@ export const HowItWorksSection: React.FC = () => {
                       </span>
                     </div>
 
+                    {isAreaFallback && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
+                      >
+                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
+                        <span>
+                          No exact match in this area, showing the closest options
+                        </span>
+                      </div>
+                    )}
+
                     {isClosestFallback && (
                       <div
                         role="status"
                         aria-live="polite"
                         className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
                       >
-                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
                         <span>
                           {t('how.mock2NoExactMatch')} —{' '}
                           {t('how.mock2CoversLabel', {
@@ -2301,7 +2342,7 @@ export const HowItWorksSection: React.FC = () => {
                                   </span>
                                   <span aria-hidden="true" className="text-[#EBC1B6]">·</span>
                                   <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#724319] tabular-nums">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
                                     {Number.isInteger(item.vendor.rating)
                                       ? `${item.vendor.rating}.0`
                                       : item.vendor.rating}
@@ -2315,8 +2356,8 @@ export const HowItWorksSection: React.FC = () => {
                                 </div>
                                 <div className="text-[11px] text-[#724319]/75 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                   <span className="inline-flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-[#8A5A44] shrink-0" />
-                                    <span>{item.vendor.location}</span>
+                                    <MapPin className="w-3 h-3 text-[#8A5A44] shrink-0" aria-hidden="true" />
+                                    <span>{item.matchedZone}</span>
                                   </span>
                                   <span className="text-[10px] font-medium text-[#8A5A44]">
                                     {t('how.mock2CoversLabel', {
@@ -2405,9 +2446,22 @@ export const HowItWorksSection: React.FC = () => {
                       </h4>
                     </div>
 
+                    {isAreaFallback && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2"
+                      >
+                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
+                        <span>
+                          No exact match in this area, showing the closest options
+                        </span>
+                      </div>
+                    )}
+
                     {isClosestFallback && (
                       <div className="p-2.5 bg-amber-50 border border-amber-200 text-[#724319] rounded-xl text-[11px] flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-[#8A5A44] shrink-0 mt-0.5" aria-hidden="true" />
                         <span>
                           {t('how.mock2NoExactMatch')} —{' '}
                           {t('how.mock2CoversLabel', {
@@ -2545,16 +2599,10 @@ export const HowItWorksSection: React.FC = () => {
                       {/* Step 3 Primary CTA + Secondary Back Button */}
                       <div className="pt-1 flex flex-wrap items-center gap-3">
                         <a
-                          href={findVendorsHref}
-                          onClick={() => {
-                            trackEvent('marketplace_filter_used', {
-                              filter_type: 'demo_match',
-                              event_type: getEventSlug(selectedEventType),
-                            });
-                          }}
+                          href={getPageHref('ai-planner')}
                           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#724319] hover:bg-[#8A5A44] rounded-full transition-colors shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
                         >
-                          <span>{t('how.mock3FindVendors')}</span>
+                          <span>{t('how.mock3OpenAiPlanner')}</span>
                           <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                         </a>
                         <button
@@ -2568,11 +2616,6 @@ export const HowItWorksSection: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Required Simulation Disclaimer Caption */}
-                <p className="text-[11px] text-[#8A5A44] text-center pt-1">
-                  {t('how.simulationCaption')}
-                </p>
               </div>
             </div>
           </div>

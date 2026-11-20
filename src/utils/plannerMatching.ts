@@ -1,5 +1,10 @@
 import { PLANNER_EVENT_CONFIGS, PlannerCulturalTradition } from '../data/plannerConfigs';
-import { CulturalTradition, EventTypeTag, Vendor, VendorCategory } from '../types';
+import {
+  parseRegionParam,
+  serviceZoneToSlug,
+  vendorServesZone,
+} from '../data/serviceZones';
+import { CulturalTradition, EventTypeTag, ServiceZone, Vendor, VendorCategory } from '../types';
 
 export const EVENT_SLUG_MAP: Record<EventTypeTag, string> = {
   Weddings: 'weddings',
@@ -225,6 +230,7 @@ export function buildPlanQueryString(input: PlanQueryInput): string {
 export interface MarketplaceUrlState {
   eventType: 'All Events' | EventTypeTag;
   tradition: 'All Traditions' | CulturalTradition;
+  region: 'All Regions' | ServiceZone;
   budget: number | null;
   guests: number | null;
   category: 'All' | VendorCategory;
@@ -236,6 +242,7 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
     const params = new URLSearchParams(search);
     const eventType = parseEventParam(params.get('event') ?? params.get('eventType'));
     const tradition = parseTraditionParam(params.get('tradition'));
+    const region = parseRegionParam(params.get('region'));
     const budget = parsePositiveIntParam(params.get('budget'), 500, 1000000);
     const guests = parsePositiveIntParam(params.get('guests'), 1, 10000);
     const category = parseCategoryParam(params.get('category'));
@@ -245,6 +252,7 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
     return {
       eventType,
       tradition,
+      region,
       budget,
       guests,
       category,
@@ -254,6 +262,7 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
     return {
       eventType: 'All Events',
       tradition: 'All Traditions',
+      region: 'All Regions',
       budget: null,
       guests: null,
       category: 'All',
@@ -264,7 +273,6 @@ export function parseMarketplaceUrlParams(search: string): MarketplaceUrlState {
 
 export function buildMarketplaceUrlQuery(state: MarketplaceUrlState): string {
   const params = new URLSearchParams();
-  const hasBudgetPlan = state.budget !== null && state.guests !== null;
 
   if (state.eventType !== 'All Events') {
     params.set('event', getEventSlug(state.eventType));
@@ -272,8 +280,13 @@ export function buildMarketplaceUrlQuery(state: MarketplaceUrlState): string {
 
   if (state.tradition !== 'All Traditions') {
     params.set('tradition', marketplaceTraditionToSlug(state.tradition));
-  } else if (hasBudgetPlan) {
-    params.set('tradition', '');
+  }
+
+  if (state.region !== 'All Regions') {
+    const regionSlug = serviceZoneToSlug(state.region);
+    if (regionSlug) {
+      params.set('region', regionSlug);
+    }
   }
 
   if (state.budget !== null) {
@@ -347,6 +360,7 @@ export interface MatchVendorsInput {
   vendors: Vendor[];
   eventType: 'All Events' | EventTypeTag;
   tradition: 'All Traditions' | CulturalTradition;
+  region?: 'All Regions' | ServiceZone;
   budget: number | null;
   guests: number | null;
   category?: 'All' | VendorCategory;
@@ -362,6 +376,7 @@ export interface MatchVendorsResult {
   categoryLimitMap: Record<string, number>;
   relaxedBudget: boolean;
   relaxedTradition: boolean;
+  relaxedRegion: boolean;
   relaxationMessage: string | null;
 }
 
@@ -369,6 +384,7 @@ export function matchVendorsToPlan({
   vendors,
   eventType,
   tradition,
+  region = 'All Regions',
   budget,
   guests,
   category = 'All',
@@ -384,6 +400,7 @@ export function matchVendorsToPlan({
       vendor.name.toLowerCase().includes(q) ||
       vendor.businessName.toLowerCase().includes(q) ||
       vendor.location.toLowerCase().includes(q) ||
+      vendor.serviceAreas.some((area) => area.toLowerCase().includes(q)) ||
       vendor.description.toLowerCase().includes(q) ||
       translatedDesc.includes(q) ||
       vendor.features.some((feat) => feat.toLowerCase().includes(q)) ||
@@ -401,19 +418,49 @@ export function matchVendorsToPlan({
   const matchesTradition = (vendor: Vendor): boolean =>
     tradition === 'All Traditions' || vendor.traditions.includes(tradition);
 
+  const matchesRegion = (vendor: Vendor): boolean =>
+    region === 'All Regions' || vendorServesZone(vendor, region);
+
   let relaxedTradition = false;
+  let relaxedRegion = false;
+
   let candidates = vendors.filter(
-    (v) => matchesEvent(v) && matchesTradition(v) && matchesCategory(v) && matchesSearch(v)
+    (v) =>
+      matchesEvent(v) &&
+      matchesTradition(v) &&
+      matchesRegion(v) &&
+      matchesCategory(v) &&
+      matchesSearch(v)
   );
 
-  // If no matches with the selected tradition, relax tradition while still respecting event, category, and search.
-  if (candidates.length === 0 && tradition !== 'All Traditions') {
-    const eventWithoutTradition = vendors.filter(
-      (v) => matchesEvent(v) && matchesCategory(v) && matchesSearch(v)
+  // If no exact match in the chosen region, first try relaxing region while keeping event + tradition
+  if (candidates.length === 0 && region !== 'All Regions') {
+    const withoutRegion = vendors.filter(
+      (v) => matchesEvent(v) && matchesTradition(v) && matchesCategory(v) && matchesSearch(v)
     );
-    if (eventWithoutTradition.length > 0) {
-      candidates = eventWithoutTradition;
+    if (withoutRegion.length > 0) {
+      candidates = withoutRegion;
+      relaxedRegion = true;
+    }
+  }
+
+  // If still no matches with the selected tradition, relax tradition while respecting region/event/category/search
+  if (candidates.length === 0 && tradition !== 'All Traditions') {
+    const eventInRegionWithoutTradition = vendors.filter(
+      (v) => matchesEvent(v) && matchesRegion(v) && matchesCategory(v) && matchesSearch(v)
+    );
+    if (eventInRegionWithoutTradition.length > 0) {
+      candidates = eventInRegionWithoutTradition;
       relaxedTradition = true;
+    } else if (region !== 'All Regions') {
+      const eventAnyRegion = vendors.filter(
+        (v) => matchesEvent(v) && matchesCategory(v) && matchesSearch(v)
+      );
+      if (eventAnyRegion.length > 0) {
+        candidates = eventAnyRegion;
+        relaxedTradition = true;
+        relaxedRegion = true;
+      }
     }
   }
 
@@ -450,7 +497,12 @@ export function matchVendorsToPlan({
   const relaxedBudget = hasBudgetFilter && sortedVendors.length > 0 && withinBudgetCount === 0;
 
   let relaxationMessage: string | null = null;
-  if (relaxedBudget && relaxedTradition) {
+  if (relaxedRegion && relaxedTradition) {
+    relaxationMessage =
+      'No exact match in this area or cultural tradition, showing the closest options.';
+  } else if (relaxedRegion) {
+    relaxationMessage = 'No exact match in this area, showing the closest options.';
+  } else if (relaxedBudget && relaxedTradition) {
     relaxationMessage =
       'No exact matches within budget or cultural tradition, showing closest options for this celebration.';
   } else if (relaxedBudget) {
@@ -468,6 +520,7 @@ export function matchVendorsToPlan({
     categoryLimitMap,
     relaxedBudget,
     relaxedTradition,
+    relaxedRegion,
     relaxationMessage,
   };
 }

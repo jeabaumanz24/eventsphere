@@ -1,8 +1,28 @@
-import React, { useState } from 'react';
-import { MapPin, Mail, Phone, Send, CheckCircle2 } from 'lucide-react';
-import { adelaideRegions } from '../data/mockData';
+import React, { useMemo, useState } from 'react';
+import { MapPin, Mail, Send, CheckCircle2, ArrowRight } from 'lucide-react';
+import { vendorsData } from '../data/mockData';
+import { SERVICE_ZONES, countVendorsInZone } from '../data/serviceZones';
+import { EventTypeTag } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/analytics';
+import { getPageHref } from '../utils/navigation';
+import { getEventSlug } from '../utils/plannerMatching';
+
+export const CONTACT_EMAIL = 'concierge@eventsphere.com.au';
+
+const CONTACT_EVENT_TYPES: { value: EventTypeTag; label: string }[] = [
+  { value: 'Weddings', label: 'Weddings' },
+  { value: 'Engagements & Proposals', label: 'Engagements and Proposals' },
+  { value: 'Elopements', label: 'Elopements' },
+  { value: 'Milestone Birthdays', label: 'Milestone Birthdays' },
+  { value: 'Diwali & Festival of Lights', label: 'Diwali and Festival of Lights' },
+  { value: 'Lunar New Year', label: 'Lunar New Year' },
+  { value: 'Eid', label: 'Eid' },
+  { value: 'Christenings & Baby Showers', label: 'Christenings and Baby Showers' },
+  { value: 'Graduations', label: 'Graduations' },
+  { value: 'Community Festivals', label: 'Community Festivals' },
+  { value: 'Corporate Events', label: 'Corporate Events' },
+];
 
 interface ContactSectionProps {
   isPagePrimary?: boolean;
@@ -15,31 +35,52 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 }) => {
   const { t } = useLanguage();
   const HeadingTag = isPagePrimary ? 'h1' : 'h2';
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    eventType: '' | EventTypeTag;
+    preferredArea: string;
+    message: string;
+  }>({
     name: '',
     email: '',
     phone: '',
-    eventType: 'eventType.0',
+    eventType: '',
+    preferredArea: '',
     message: '',
   });
 
-  const [activeRegionId, setActiveRegionId] = useState('cbd');
+  const [activeZoneId, setActiveZoneId] = useState<string>(SERVICE_ZONES[0].id);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const eventTypeKeys = [
-    'eventType.5',
-    'eventType.4',
-    'eventType.6',
-    'eventType.7',
-    'eventType.8',
-    'eventType.9',
-    'eventType.0',
-    'eventType.1',
-    'eventType.2',
-    'eventType.3',
-  ];
+  const zoneVendorCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const zone of SERVICE_ZONES) {
+      counts[zone.id] = countVendorsInZone(vendorsData, zone.name);
+    }
+    return counts;
+  }, []);
+
+  const currentZone = useMemo(
+    () => SERVICE_ZONES.find((z) => z.id === activeZoneId) || SERVICE_ZONES[0],
+    [activeZoneId]
+  );
+
+  const handleSelectZoneTile = (zoneId: string) => {
+    setActiveZoneId(zoneId);
+    setFormData((prev) => ({ ...prev, preferredArea: zoneId }));
+  };
+
+  const handlePreferredAreaChange = (nextZoneId: string) => {
+    setFormData((prev) => ({ ...prev, preferredArea: nextZoneId }));
+    if (nextZoneId) {
+      setActiveZoneId(nextZoneId);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,16 +101,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       setIsSubmitting(false);
       setSubmitted(true);
       trackEvent('contact_form_submit', {
-        event_type: t(formData.eventType),
-        region: activeRegionId,
+        event_type: formData.eventType ? getEventSlug(formData.eventType) : 'unspecified',
+        region: formData.preferredArea || activeZoneId,
       });
       if (onFormSubmitted) {
         onFormSubmitted({ name: formData.name, email: formData.email });
       }
     }, 500);
   };
-
-  const currentRegion = adelaideRegions.find((r) => r.id === activeRegionId) || adelaideRegions[0];
 
   return (
     <section
@@ -91,42 +130,47 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* Left Column: Contact Form */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-8 sm:p-10 border border-[#EBC1B6] shadow-md">
+          <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-10 border border-[#EBC1B6] shadow-md">
             {submitted ? (
               <div className="py-12 text-center space-y-4" aria-live="polite">
                 <div className="w-16 h-16 rounded-full bg-[#F2CCC3] border border-[#8A5A44]/30 flex items-center justify-center text-[#724319] mx-auto shadow-sm">
-                  <CheckCircle2 className="w-8 h-8 text-[#724319]" />
+                  <CheckCircle2 className="w-8 h-8 text-[#724319]" aria-hidden="true" />
                 </div>
-                <h3 className="text-2xl font-serif font-bold text-[#724319]">
+                <h2 className="text-2xl font-serif font-bold text-[#724319]">
                   {t('contact.thankYou', { name: formData.name })}
-                </h3>
+                </h2>
                 <p className="text-sm text-[#724319]/80 max-w-md mx-auto leading-relaxed">
                   {t('contact.receivedDesc')}
                 </p>
                 <div className="pt-4">
                   <button
+                    type="button"
                     onClick={() => {
                       setSubmitted(false);
                       setFormData({
                         name: '',
                         email: '',
                         phone: '',
-                        eventType: 'eventType.0',
+                        eventType: '',
+                        preferredArea: '',
                         message: '',
                       });
                     }}
-                    className="px-6 py-2.5 bg-[#724319] text-white text-xs font-semibold rounded-full hover:bg-[#8A5A44] transition-colors cursor-pointer"
+                    className="px-6 py-2.5 bg-[#724319] text-white text-xs font-semibold rounded-full hover:bg-[#8A5A44] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
                   >
                     {t('contact.sendAnother')}
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 text-left">
+              <form onSubmit={handleSubmit} className="space-y-5 text-left" noValidate>
                 {errorMessage && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
+                  <div
+                    role="alert"
+                    className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl"
+                  >
                     {errorMessage}
                   </div>
                 )}
@@ -134,10 +178,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#724319]">
+                    <label
+                      htmlFor="contact-full-name"
+                      className="text-xs font-semibold text-[#724319] block"
+                    >
                       {t('contact.fullName')} <span className="text-rose-500">*</span>
                     </label>
                     <input
+                      id="contact-full-name"
                       type="text"
                       required
                       placeholder="e.g. Diwata dela Cruz"
@@ -149,10 +197,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
                   {/* Email */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#724319]">
+                    <label
+                      htmlFor="contact-email"
+                      className="text-xs font-semibold text-[#724319] block"
+                    >
                       {t('contact.emailLabel')} <span className="text-rose-500">*</span>
                     </label>
                     <input
+                      id="contact-email"
                       type="email"
                       required
                       placeholder="diwata@example.com.au"
@@ -166,12 +218,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Phone Number */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#724319]">
+                    <label
+                      htmlFor="contact-phone"
+                      className="text-xs font-semibold text-[#724319] block"
+                    >
                       {t('contact.phoneLabel')}
                     </label>
                     <input
+                      id="contact-phone"
                       type="tel"
-                      placeholder="+61 400 123 456"
+                      placeholder="+61 400 000 000"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-4 py-3 bg-[#FFF8F6] border border-[#EBC1B6] rounded-xl text-sm text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all"
@@ -180,29 +236,66 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
                   {/* Event Type */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#724319]">
+                    <label
+                      htmlFor="contact-event-type"
+                      className="text-xs font-semibold text-[#724319] block"
+                    >
                       {t('contact.eventTypeLabel')}
                     </label>
                     <select
+                      id="contact-event-type"
                       value={formData.eventType}
-                      onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          eventType: e.target.value as '' | EventTypeTag,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-[#FFF8F6] border border-[#EBC1B6] rounded-xl text-sm text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all cursor-pointer"
                     >
-                      {eventTypeKeys.map((typeKey) => (
-                        <option key={typeKey} value={typeKey}>
-                          {t(typeKey)}
+                      <option value="">Select event type</option>
+                      {CONTACT_EVENT_TYPES.map((ev) => (
+                        <option key={ev.value} value={ev.value}>
+                          {ev.label}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
+                {/* Optional Preferred Area (synced both ways with the 9-zone explorer) */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="contact-preferred-area"
+                    className="text-xs font-semibold text-[#724319] block"
+                  >
+                    Preferred area <span className="font-normal text-[#8A5A44]">(optional)</span>
+                  </label>
+                  <select
+                    id="contact-preferred-area"
+                    value={formData.preferredArea}
+                    onChange={(e) => handlePreferredAreaChange(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#FFF8F6] border border-[#EBC1B6] rounded-xl text-sm text-[#724319] focus:outline-none focus:ring-2 focus:ring-[#8A5A44]/30 focus:border-[#8A5A44] transition-all cursor-pointer"
+                  >
+                    <option value="">Select preferred area</option>
+                    {SERVICE_ZONES.map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Message */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[#724319]">
+                  <label
+                    htmlFor="contact-details"
+                    className="text-xs font-semibold text-[#724319] block"
+                  >
                     {t('contact.detailsLabel')} <span className="text-rose-500">*</span>
                   </label>
                   <textarea
+                    id="contact-details"
                     required
                     rows={4}
                     placeholder={t('contact.detailsPlaceholder')}
@@ -216,14 +309,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-70"
+                  className="w-full py-3.5 px-6 bg-[#724319] hover:bg-[#8A5A44] text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
                 >
                   {isSubmitting ? (
                     <span>{t('contact.sending')}</span>
                   ) : (
                     <>
                       <span>{t('contact.submit')}</span>
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4" aria-hidden="true" />
                     </>
                   )}
                 </button>
@@ -231,78 +324,103 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
             )}
           </div>
 
-          {/* Right Column: Adelaide South Australia Interactive Map Card */}
-          <div className="lg:col-span-5 space-y-6">
+          {/* Right Column: Serving Adelaide & South Australia 9-Zone Explorer */}
+          <div className="lg:col-span-6 space-y-6">
             <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EBC1B6] shadow-md space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EBC1B6]/50">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-[#8A5A44]" />
-                  <h3 className="text-base font-serif font-bold text-[#724319]">
-                    Adelaide, South Australia
-                  </h3>
-                </div>
-                <span className="text-[11px] font-mono text-[#8A5A44] bg-[#FFF8F6] px-2.5 py-0.5 rounded-full border border-[#EBC1B6]">
-                  {t('contact.adelaideHQ')}
-                </span>
+              <div className="flex items-center gap-2 pb-3 border-b border-[#EBC1B6]/50">
+                <MapPin className="w-5 h-5 text-[#8A5A44] shrink-0" aria-hidden="true" />
+                <h2 className="text-base sm:text-lg font-serif font-bold text-[#724319]">
+                  Serving Adelaide and South Australia
+                </h2>
               </div>
 
-              {/* Stylized Visual Map Representation of Greater Adelaide */}
-              <div className="relative bg-[#FFF8F6] rounded-2xl p-5 border border-[#EBC1B6]/60 overflow-hidden">
-                <div className="text-[11px] font-semibold text-[#8A5A44] mb-3 uppercase tracking-wider">
+              {/* 9 Shared South Australian Service Zones */}
+              <div className="relative bg-[#FFF8F6] rounded-2xl p-4 sm:p-5 border border-[#EBC1B6]/60 space-y-4">
+                <div
+                  id="contact-zone-explorer-label"
+                  className="text-[11px] font-semibold text-[#8A5A44] uppercase tracking-wider"
+                >
                   {t('contact.selectZone')}
                 </div>
 
-                {/* Region Selector Buttons */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {adelaideRegions.map((region) => {
-                    const isSelected = activeRegionId === region.id;
-                    const regionName = t(`region.${region.id}.name`);
+                {/* 3 columns on desktop, 2 on tablet, 1 on mobile */}
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"
+                  role="group"
+                  aria-labelledby="contact-zone-explorer-label"
+                >
+                  {SERVICE_ZONES.map((zone) => {
+                    const isSelected = activeZoneId === zone.id;
+                    const count = zoneVendorCounts[zone.id] ?? 0;
                     return (
                       <button
-                        key={region.id}
+                        key={zone.id}
                         type="button"
-                        onClick={() => setActiveRegionId(region.id)}
-                        className={`p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                        aria-pressed={isSelected}
+                        onClick={() => handleSelectZoneTile(zone.id)}
+                        className={`p-3 rounded-xl text-left text-xs transition-all cursor-pointer flex flex-col justify-between gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2 ${
                           isSelected
                             ? 'bg-[#724319] text-white shadow-xs font-semibold'
                             : 'bg-white text-[#724319] border border-[#EBC1B6]/70 hover:bg-[#F2CCC3]/40'
                         }`}
                       >
-                        <div className="truncate font-semibold">{regionName.split('&')[0]}</div>
-                        <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-white/80' : 'text-[#8A5A44]'}`}>
-                          {t('contact.vendorsCount', { count: region.vendorCount })}
-                        </div>
+                        <span className="font-semibold leading-snug break-words">{zone.name}</span>
+                        <span
+                          className={`text-[10px] tabular-nums ${
+                            isSelected ? 'text-white/85' : 'text-[#8A5A44]'
+                          }`}
+                        >
+                          {t('contact.vendorsCount', { count })}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Region detail highlight */}
-                <div className="p-3.5 bg-white rounded-xl border border-[#EBC1B6]/60 text-xs space-y-1.5">
-                  <div className="font-serif font-bold text-[#724319]">{t(`region.${currentRegion.id}.name`)}</div>
-                  <p className="text-[#724319]/80 leading-relaxed text-[11px]">
-                    {t(`region.${currentRegion.id}.desc`)}
+                {/* Zone detail panel announced live on change */}
+                <div
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="p-4 bg-white rounded-xl border border-[#EBC1B6]/60 text-xs space-y-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-serif font-bold text-sm text-[#724319]">
+                      {currentZone.name}
+                    </h3>
+                    <span className="text-[11px] font-medium text-[#8A5A44] tabular-nums">
+                      {t('contact.vendorsCount', { count: zoneVendorCounts[currentZone.id] ?? 0 })}
+                    </span>
+                  </div>
+                  <p className="text-[#724319]/85 leading-relaxed text-xs">
+                    {currentZone.description}
                   </p>
-                  <div className="pt-1 text-[10px] text-[#8A5A44]">
-                    <span className="font-semibold">{t('contact.topVenues')}</span> {currentRegion.popularVenues.join(' · ')}
+                  <div className="pt-0.5 text-[11px] text-[#8A5A44]">
+                    <span className="font-semibold text-[#724319]">
+                      Popular celebration settings:
+                    </span>{' '}
+                    {currentZone.popularSettings.join(' · ')}
+                  </div>
+                  <div className="pt-2">
+                    <a
+                      href={getPageHref('vendors', `?region=${encodeURIComponent(currentZone.id)}`)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#724319] hover:text-[#8A5A44] underline decoration-[#EBC1B6] underline-offset-4 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
+                    >
+                      <span>Browse vendors in {currentZone.name}</span>
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    </a>
                   </div>
                 </div>
               </div>
 
-              {/* Contact Information & Hours */}
-              <div className="space-y-3 pt-2 text-xs text-[#724319]/80">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-[#8A5A44] shrink-0" />
-                  <span>concierge@eventsphere.com.au</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-[#8A5A44] shrink-0" />
-                  <span>+61 (08) 8234 5678 (Mon–Fri 9am–6pm ACDT)</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-[#8A5A44] shrink-0" />
-                  <span>Level 4, North Terrace Cultural Precinct, Adelaide SA 5000</span>
-                </div>
+              {/* Single email contact detail */}
+              <div className="pt-1 text-xs text-[#724319]/85">
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="inline-flex items-center gap-2.5 font-medium text-[#724319] hover:text-[#8A5A44] transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#724319] focus-visible:ring-offset-2"
+                >
+                  <Mail className="w-4 h-4 text-[#8A5A44] shrink-0" aria-hidden="true" />
+                  <span>{CONTACT_EMAIL}</span>
+                </a>
               </div>
             </div>
           </div>

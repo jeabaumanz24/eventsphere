@@ -55,6 +55,17 @@ export type CulturalTradition =
   | 'Vietnamese'
   | 'Korean';
 
+export type ServiceZone =
+  | 'Adelaide CBD & North Adelaide'
+  | 'Eastern suburbs'
+  | 'Western suburbs'
+  | 'Northern suburbs'
+  | 'Southern suburbs'
+  | 'Adelaide Hills'
+  | 'Barossa Valley'
+  | 'McLaren Vale & Fleurieu Peninsula'
+  | 'Glenelg & the coast';
+
 export interface Vendor {
   id: string;
   name: string;
@@ -63,6 +74,7 @@ export interface Vendor {
   rating: number;
   reviewCount: number;
   location: string;
+  serviceAreas: ServiceZone[];
   startingPrice: string;
   image: string | null;
   imageAlt: string;
@@ -226,5 +238,6 @@ export interface PlanPreviewContextData {
 export interface MarketplaceFilterContext {
   eventType: 'All Events' | EventTypeTag;
   tradition: 'All Traditions' | CulturalTradition;
+  region?: 'All Regions' | ServiceZone;
   guests?: number | null;
 }

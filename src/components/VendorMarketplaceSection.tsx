@@ -14,9 +14,14 @@ import {
 } from 'lucide-react';
 import { vendorsData } from '../data/mockData';
 import {
+  MARKETPLACE_REGION_FILTERS,
+  serviceZoneToSlug,
+} from '../data/serviceZones';
+import {
   CulturalTradition,
   EventTypeTag,
   MarketplaceFilterContext,
+  ServiceZone,
   Vendor,
   VendorCategory,
 } from '../types';
@@ -98,6 +103,9 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
   const [selectedTradition, setSelectedTradition] = useState<'All Traditions' | CulturalTradition>(
     initialUrlState.tradition
   );
+  const [selectedRegion, setSelectedRegion] = useState<'All Regions' | ServiceZone>(
+    initialUrlState.region
+  );
   const [planBudget, setPlanBudget] = useState<number | null>(initialUrlState.budget);
   const [planGuests, setPlanGuests] = useState<number | null>(initialUrlState.guests);
   const [selectedCategory, setSelectedCategory] = useState<'All' | VendorCategory>(
@@ -117,6 +125,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
       const parsed = parseMarketplaceUrlParams(window.location.search);
       setSelectedEventType(parsed.eventType);
       setSelectedTradition(parsed.tradition);
+      setSelectedRegion(parsed.region);
       setPlanBudget(parsed.budget);
       setPlanGuests(parsed.guests);
       setSelectedCategory(parsed.category);
@@ -138,6 +147,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     const nextQuery = buildMarketplaceUrlQuery({
       eventType: selectedEventType,
       tradition: selectedTradition,
+      region: selectedRegion,
       budget: planBudget,
       guests: planGuests,
       category: selectedCategory,
@@ -154,6 +164,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
   }, [
     selectedEventType,
     selectedTradition,
+    selectedRegion,
     planBudget,
     planGuests,
     selectedCategory,
@@ -170,20 +181,29 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     return map;
   }, [t]);
 
-  // Match across all categories first so category tab counts mirror the active event/tradition/search
+  // Match across all categories first so category tab counts mirror the active event/tradition/region/search
   const allCategoriesMatch = useMemo(
     () =>
       matchVendorsToPlan({
         vendors: vendorsData,
         eventType: selectedEventType,
         tradition: selectedTradition,
+        region: selectedRegion,
         budget: planBudget,
         guests: planGuests,
         category: 'All',
         searchQuery,
         translatedDescriptions,
       }),
-    [selectedEventType, selectedTradition, planBudget, planGuests, searchQuery, translatedDescriptions]
+    [
+      selectedEventType,
+      selectedTradition,
+      selectedRegion,
+      planBudget,
+      planGuests,
+      searchQuery,
+      translatedDescriptions,
+    ]
   );
 
   // Active filtered and sorted vendor list
@@ -193,6 +213,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
         vendors: vendorsData,
         eventType: selectedEventType,
         tradition: selectedTradition,
+        region: selectedRegion,
         budget: planBudget,
         guests: planGuests,
         category: selectedCategory,
@@ -202,6 +223,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     [
       selectedEventType,
       selectedTradition,
+      selectedRegion,
       planBudget,
       planGuests,
       selectedCategory,
@@ -212,9 +234,11 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
 
   const filteredVendors = matchedResult.vendors;
   const hasBudgetPlan = planBudget !== null && planGuests !== null;
+  const showMatchedPlanBar = hasBudgetPlan || selectedRegion !== 'All Regions';
   const hasAnyActiveFilter =
     selectedEventType !== 'All Events' ||
     selectedTradition !== 'All Traditions' ||
+    selectedRegion !== 'All Regions' ||
     selectedCategory !== 'All' ||
     searchQuery.trim() !== '' ||
     hasBudgetPlan;
@@ -234,6 +258,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
   const clearAllFilters = useCallback(() => {
     setSelectedEventType('All Events');
     setSelectedTradition('All Traditions');
+    setSelectedRegion('All Regions');
     setPlanBudget(null);
     setPlanGuests(null);
     setSelectedCategory('All');
@@ -244,9 +269,10 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
     () => ({
       eventType: selectedEventType,
       tradition: selectedTradition,
+      region: selectedRegion,
       guests: planGuests,
     }),
-    [selectedEventType, selectedTradition, planGuests]
+    [selectedEventType, selectedTradition, selectedRegion, planGuests]
   );
 
   const editPlanHref = useMemo(() => {
@@ -328,8 +354,8 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
           </p>
         </div>
 
-        {/* Matched Plan Summary Bar (Shown when navigated with planner budget/guest context) */}
-        {hasBudgetPlan && (
+        {/* Matched Plan Summary Bar (Shown when navigated with planner context or a selected region) */}
+        {showMatchedPlanBar && (
           <div
             aria-live="polite"
             className="mb-6 bg-white rounded-2xl border border-[#724319]/30 shadow-xs px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -342,28 +368,44 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                 <p className="text-xs sm:text-sm font-semibold text-[#724319] leading-snug">
                   Matched to your plan:{' '}
                   <span className="font-bold">
-                    {t(`eventType.${selectedEventType}`)}
-                    {selectedTradition !== 'All Traditions' ? ` · ${selectedTradition}` : ''}
-                    {` · $${planBudget.toLocaleString()} AUD · ${planGuests} guests`}
+                    {[
+                      selectedEventType !== 'All Events'
+                        ? t(`eventType.${selectedEventType}`)
+                        : hasBudgetPlan
+                          ? t('eventType.All Events')
+                          : null,
+                      selectedTradition !== 'All Traditions' ? selectedTradition : null,
+                      selectedRegion !== 'All Regions' ? selectedRegion : null,
+                      hasBudgetPlan && planBudget !== null
+                        ? `$${planBudget.toLocaleString()} AUD`
+                        : null,
+                      hasBudgetPlan && planGuests !== null ? `${planGuests} guests` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </span>
                 </p>
                 <p className="text-xs text-[#6E432F]">
-                  {matchedResult.withinBudgetCount > 0
-                    ? `${matchedResult.withinBudgetCount} ${
-                        matchedResult.withinBudgetCount === 1 ? 'vendor fits' : 'vendors fit'
-                      } your category budget share — sorted first.`
-                    : 'Sorted by category relevance for your selected celebration.'}
+                  {hasBudgetPlan
+                    ? matchedResult.withinBudgetCount > 0
+                      ? `${matchedResult.withinBudgetCount} ${
+                          matchedResult.withinBudgetCount === 1 ? 'vendor fits' : 'vendors fit'
+                        } your category budget share — sorted first.`
+                      : 'Sorted by category relevance for your selected celebration.'
+                    : `Showing vendors serving ${selectedRegion}.`}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <a
-                href={editPlanHref}
-                className="px-3.5 py-2 rounded-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/45 border border-[#EBC1B6] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
-              >
-                Edit plan
-              </a>
+              {hasBudgetPlan && (
+                <a
+                  href={editPlanHref}
+                  className="px-3.5 py-2 rounded-full text-xs font-semibold text-[#724319] bg-[#FFF8F6] hover:bg-[#F2CCC3]/45 border border-[#EBC1B6] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
+                >
+                  Edit plan
+                </a>
+              )}
               <button
                 type="button"
                 onClick={clearAllFilters}
@@ -463,6 +505,9 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                           traditionOpt === 'All Traditions'
                             ? 'all'
                             : marketplaceTraditionToSlug(traditionOpt),
+                        ...(selectedRegion !== 'All Regions'
+                          ? { region: serviceZoneToSlug(selectedRegion) }
+                          : {}),
                       });
                     }}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-all motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
@@ -472,6 +517,58 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
                     }`}
                   >
                     {traditionOpt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Region Filter (Shared 9 South Australian Service Zones) */}
+          <div
+            className="pt-4 border-t border-[#EBC1B6]/50 space-y-3"
+            role="group"
+            aria-labelledby="region-filter-label"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span
+                id="region-filter-label"
+                className="text-xs font-semibold uppercase tracking-wider text-[#6E432F]"
+              >
+                Region
+              </span>
+              {selectedRegion !== 'All Regions' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedRegion('All Regions')}
+                  className="text-xs font-medium text-[#724319] hover:text-[#4A2B10] underline decoration-[#EBC1B6] underline-offset-4 cursor-pointer rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319]"
+                >
+                  All Regions
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {MARKETPLACE_REGION_FILTERS.map((regionOpt) => {
+                const isSelected = selectedRegion === regionOpt;
+                return (
+                  <button
+                    key={regionOpt}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setSelectedRegion(regionOpt);
+                      trackEvent('marketplace_filter_used', {
+                        filter_type: 'region',
+                        region:
+                          regionOpt === 'All Regions' ? 'all' : serviceZoneToSlug(regionOpt),
+                      });
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all motion-reduce:transition-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#724319] ${
+                      isSelected
+                        ? 'bg-[#724319] text-white shadow-xs font-semibold'
+                        : 'bg-[#FFF8F6] hover:bg-[#F2CCC3]/50 text-[#724319] border border-[#EBC1B6]/70'
+                    }`}
+                  >
+                    {regionOpt}
                   </button>
                 );
               })}
@@ -567,7 +664,7 @@ export const VendorMarketplaceSection: React.FC<VendorMarketplaceSectionProps> =
               )}
             </p>
 
-            {hasAnyActiveFilter && !hasBudgetPlan && (
+            {hasAnyActiveFilter && !showMatchedPlanBar && (
               <button
                 type="button"
                 onClick={clearAllFilters}
